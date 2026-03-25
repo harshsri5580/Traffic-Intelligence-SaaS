@@ -38,8 +38,8 @@ from routers import (
 )
 
 # Models (important for table creation)
-from models import raw_hit_log
-from models import used_token
+# from models import raw_hit_log
+# from models import used_token
 
 
 # ===============================
