@@ -1,16 +1,25 @@
 "use client";
 export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
 import { useEffect,useState } from "react";
 import { useSearchParams,useRouter } from "next/navigation";
 import api from "../../../../services/api";
 import { toast } from "react-hot-toast";
 function EditCampaign(){
 
-const params = useSearchParams();
+
 const router = useRouter();
 const [sources,setSources] = useState([]);
 
-const id = typeof window !== "undefined" ? params.get("id") : null;
+const params = useSearchParams();
+
+const [id, setId] = useState(null);
+
+useEffect(() => {
+  if (params) {
+    setId(params.get("id"));
+  }
+}, [params]);
 
 const [form,setForm] = useState({
   name:"",
