@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, Float, DateTime, String
 from sqlalchemy.sql import func
-from ..database import Base
+from database import Base
 
 
 class Conversion(Base):

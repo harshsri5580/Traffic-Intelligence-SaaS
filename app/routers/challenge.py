@@ -43,7 +43,7 @@ async def challenge_page(slug: str, request: Request, db: Session = Depends(get_
 <!DOCTYPE html>
 <html>
 <head>
-<title>Checking your browser...</title>
+<title>Checking your browser.</title>
 <meta charset="UTF-8">
 <style>
 body {{
@@ -56,7 +56,7 @@ padding-top: 80px;
 
 <body>
 
-<h3>Checking your browser...</h3>
+<h3>Checking your browser.</h3>
 
 <script>
 

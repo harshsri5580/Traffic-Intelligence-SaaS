@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
-from ..database import Base
+from database import Base
 
 
 class RuleCondition(Base):
@@ -9,9 +9,7 @@ class RuleCondition(Base):
     id = Column(Integer, primary_key=True, index=True)
 
     rule_id = Column(
-        Integer,
-        ForeignKey("rules.id", ondelete="CASCADE"),
-        nullable=False
+        Integer, ForeignKey("rules.id", ondelete="CASCADE"), nullable=False
     )
 
     # visitor field name (country, device, ip, etc.)

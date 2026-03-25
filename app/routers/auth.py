@@ -5,9 +5,9 @@ from datetime import datetime, timedelta
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 from core.config import SECRET_KEY, ALGORITHM
-from ..database import get_db
-from ..models.user import User
-from ..services.security import hash_password, verify_password
+from database import get_db
+from models.user import User
+from services.security import hash_password, verify_password
 from models.system_log import SystemLog
 import re
 from models.system_settings import SystemSettings

@@ -125,7 +125,7 @@ for real-time systems.
 // simple interaction (anti-bot behavior signal)
 
 document.addEventListener("scroll",function(){
-console.log("User scrolling page...");
+console.log("User scrolling page.");
 });
 
 setTimeout(function(){
