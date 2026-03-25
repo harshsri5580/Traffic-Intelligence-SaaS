@@ -1,5 +1,9 @@
 "use client";
 
+export default function AdminLayout({ children }) {
+  return <>{children}</>;
+}
+
 import { useEffect } from "react";   // ✅ ADD
 import Sidebar from "./sidebar";
 

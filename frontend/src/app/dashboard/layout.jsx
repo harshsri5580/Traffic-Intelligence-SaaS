@@ -1,8 +1,13 @@
 "use client";
 
+export default function DashboardLayout({ children }) {
+  return <>{children}</>;
+}
+
 import { useEffect } from "react";   // ✅ ADD
 import Sidebar from "./sidebar";
 import { Toaster } from "react-hot-toast";
+
 
 export default function DashboardLayout({ children }) {
 
