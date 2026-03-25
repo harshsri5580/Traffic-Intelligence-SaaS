@@ -21,8 +21,6 @@ from routers import behavior
 from models.system_log import SystemLog
 from database import SessionLocal
 
-db = SessionLocal()
-
 
 # Routers
 from routers import (
@@ -57,7 +55,7 @@ logging.basicConfig(
 # CREATE DATABASE TABLES
 # ===============================
 
-Base.metadata.create_all(bind=engine)
+# Base.metadata.create_all(bind=engine)
 
 
 # ===============================
@@ -71,9 +69,15 @@ app = FastAPI(title="Traffic Intelligence SaaS", version="1.0")
 # CORS (FRONTEND CONNECTION)
 # ===============================
 
+# REMOVE THIS ❌
+# db = SessionLocal()
+
+# COMMENT THIS ❌
+# Base.metadata.create_all(bind=engine)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
