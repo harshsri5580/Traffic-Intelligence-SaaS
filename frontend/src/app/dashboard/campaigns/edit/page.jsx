@@ -4,7 +4,7 @@ import { useEffect,useState } from "react";
 import { useSearchParams,useRouter } from "next/navigation";
 import api from "../../../../services/api";
 import { toast } from "react-hot-toast";
-export default function EditCampaign(){
+function EditCampaign(){
 
 const params = useSearchParams();
 const router = useRouter();
@@ -236,3 +236,9 @@ Cancel
 );
 
 }
+
+import dynamic from "next/dynamic";
+
+export default dynamic(() => Promise.resolve(EditCampaign), {
+  ssr: false,
+});
