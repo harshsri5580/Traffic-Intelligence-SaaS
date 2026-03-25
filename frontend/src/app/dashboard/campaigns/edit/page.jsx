@@ -1,5 +1,5 @@
 "use client";
-
+export const dynamic = "force-dynamic";
 import { useEffect,useState } from "react";
 import { useSearchParams,useRouter } from "next/navigation";
 import api from "../../../../services/api";
@@ -10,7 +10,7 @@ const params = useSearchParams();
 const router = useRouter();
 const [sources,setSources] = useState([]);
 
-const id = params.get("id");
+const id = typeof window !== "undefined" ? params.get("id") : null;
 
 const [form,setForm] = useState({
   name:"",
@@ -22,15 +22,13 @@ const [form,setForm] = useState({
   sub2:null
 });
 
-useEffect(()=>{
+useEffect(() => {
+  if (!id) return;
 
-loadSources();
+  loadSources();
+  loadCampaign();
 
-if(id){
-loadCampaign();
-}
-
-},[id]);
+}, [id]);
 
 const loadCampaign = async()=>{
 
