@@ -4,7 +4,7 @@ import hashlib
 
 from sqlalchemy.orm import Session
 
-from app.services.smart_rotation import select_best_offer
+from services.smart_rotation import select_best_offer
 
 
 class RoutingEngine:

@@ -8,24 +8,24 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
 # Database
-from app.database import engine, Base
-from app.routers import landing, traffic_filters
-from app.routers import challenge
-from app.routers import decoy
-from app.routers import traffic_filters
-from app.routers import traffic_sources
-from app.routers import billing
-from app.routers import realtime
-from app.routers import user
-from app.routers import behavior
-from app.models.system_log import SystemLog
-from app.database import SessionLocal
+from database import engine, Base
+from routers import landing, traffic_filters
+from routers import challenge
+from routers import decoy
+from routers import traffic_filters
+from routers import traffic_sources
+from routers import billing
+from routers import realtime
+from routers import user
+from routers import behavior
+from models.system_log import SystemLog
+from database import SessionLocal
 
 db = SessionLocal()
 
 
 # Routers
-from app.routers import (
+from routers import (
     campaign,
     offer,
     redirect,
@@ -40,8 +40,8 @@ from app.routers import (
 )
 
 # Models (important for table creation)
-from app.models import raw_hit_log
-from app.models import used_token
+from models import raw_hit_log
+from models import used_token
 
 
 # ===============================

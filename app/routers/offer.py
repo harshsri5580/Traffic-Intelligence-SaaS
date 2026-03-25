@@ -2,12 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
-from app.database import get_db
-from app.models.offer import Offer
-from app.models.campaign import Campaign
-from app.dependencies.auth import get_current_user
-from app.models.user import User
-from app.models.rule_offer import RuleOffer
+from database import get_db
+from models.offer import Offer
+from models.campaign import Campaign
+from dependencies.auth import get_current_user
+from models.user import User
+from models.rule_offer import RuleOffer
 
 
 router = APIRouter(tags=["Offers"])

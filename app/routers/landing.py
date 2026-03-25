@@ -1,10 +1,10 @@
 from fastapi import APIRouter, HTTPException
-from app.services.token_service import (
+from services.token_service import (
     decode_secure_token,
     is_token_used,
     mark_token_used,
 )
-from app.services.redis_client import redis_client
+from services.redis_client import redis_client
 
 
 router = APIRouter(prefix="/api/landing", tags=["Landing Protection"])

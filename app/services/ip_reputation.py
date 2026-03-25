@@ -1,4 +1,4 @@
-from app.services.redis_client import redis_client
+from services.redis_client import redis_client
 
 
 def get_ip_reputation(ip: str):

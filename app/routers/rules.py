@@ -3,14 +3,14 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 from pydantic import BaseModel
 
-from app.database import get_db
-from app.models.rule import Rule
-from app.models.campaign import Campaign
-from app.models.user import User
-from app.models.rule_condition import RuleCondition
-from app.models.offer import Offer
-from app.models.rule_offer import RuleOffer
-from app.dependencies.auth import get_current_user
+from database import get_db
+from models.rule import Rule
+from models.campaign import Campaign
+from models.user import User
+from models.rule_condition import RuleCondition
+from models.offer import Offer
+from models.rule_offer import RuleOffer
+from dependencies.auth import get_current_user
 
 router = APIRouter(prefix="/api/rules", tags=["Rules"])
 

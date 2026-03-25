@@ -1,8 +1,8 @@
 from sqlalchemy.orm import Session
 import re
 
-from app.models.rule import Rule
-from app.services.risk_engine import RiskEngine
+from models.rule import Rule
+from services.risk_engine import RiskEngine
 
 
 class RuleEngine:

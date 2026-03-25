@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, Boolean
-from app.database import Base
+from database import Base
 
 
 class SystemSettings(Base):

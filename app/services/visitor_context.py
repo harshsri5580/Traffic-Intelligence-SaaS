@@ -3,7 +3,7 @@ from fastapi import Request
 from user_agents import parse
 from urllib.parse import parse_qs
 
-from app.services.geo import get_geo_data, get_asn_data
+from services.geo import get_geo_data, get_asn_data
 
 
 class VisitorContext:
@@ -274,7 +274,7 @@ class VisitorContext:
         # VPN / PROXY / TOR DETECTION
         # ================================
 
-        from app.services.vpn_detector import detect_vpn
+        from services.vpn_detector import detect_vpn
 
         vpn_info = detect_vpn(self.ip, org=self.org, asn=self.asn)
 

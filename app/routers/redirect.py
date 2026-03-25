@@ -6,42 +6,42 @@ import random
 import httpx
 import urllib.parse
 import hashlib
-from app.core.config import ENABLE_CHALLENGE, BASE_URL
-from app.database import get_db
-from app.models import campaign
-from app.models.campaign import Campaign
-from app.models.offer import Offer
-from app.models.blocked_ip import BlockedIP
-from app.models.click_log import ClickLog
-from app.models.raw_hit_log import RawHitLog
-from app.services.bot_classifier import BotClassifier
+from core.config import ENABLE_CHALLENGE, BASE_URL
+from database import get_db
+from models import campaign
+from models.campaign import Campaign
+from models.offer import Offer
+from models.blocked_ip import BlockedIP
+from models.click_log import ClickLog
+from models.raw_hit_log import RawHitLog
+from services.bot_classifier import BotClassifier
 
-from app.routers.challenge import get_real_ip
-from app.services.visitor_context import VisitorContext
-from app.services.rule_engine import RuleEngine
-from app.services.rotation import choose_offer_for_rule, choose_offer_for_campaign
-from app.services.routing_engine import RoutingEngine
-from app.services.analytics import update_daily_stats
-from app.services.risk_engine import RiskEngine
-from app.services.rewrite_engine import RewriteEngine
-from app.services.traffic_filter_service import check_traffic_filters
-from app.services.realtime_service import broadcast
-from app.services.ip_reputation import increase_ip_risk
-from app.services.learning_engine import (
+from routers.challenge import get_real_ip
+from services.visitor_context import VisitorContext
+from services.rule_engine import RuleEngine
+from services.rotation import choose_offer_for_rule, choose_offer_for_campaign
+from services.routing_engine import RoutingEngine
+from services.analytics import update_daily_stats
+from services.risk_engine import RiskEngine
+from services.rewrite_engine import RewriteEngine
+from services.traffic_filter_service import check_traffic_filters
+from services.realtime_service import broadcast
+from services.ip_reputation import increase_ip_risk
+from services.learning_engine import (
     update_campaign_learning,
     update_source_learning,
 )
 
-from app.services.token_service import (
+from services.token_service import (
     generate_secure_token,
     decode_secure_token,
     is_token_used,
     mark_token_used,
 )
 
-from app.services.rate_limiter import check_rate_limit
-from app.services.redis_client import redis_client
-from app.services.session_engine import evaluate_session
+from services.rate_limiter import check_rate_limit
+from services.redis_client import redis_client
+from services.session_engine import evaluate_session
 
 router = APIRouter(tags=["Redirect"])
 
@@ -224,7 +224,7 @@ async def redirect_campaign(
     # 🔥 ZONE BLOCK CHECK (FINAL FIX)
     # ==============================
 
-    from app.models.blocked_zone import BlockedZone
+    from models.blocked_zone import BlockedZone
 
     # 🔥 SAFE EXTRACT
     sub1 = query.get("sub1")
@@ -317,7 +317,7 @@ async def redirect_campaign(
 
     try:
 
-        from app.models.traffic_filter import TrafficFilter
+        from models.traffic_filter import TrafficFilter
 
         filters = db.query(TrafficFilter).filter(TrafficFilter.is_active == True).all()
 

@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, DateTime
 from datetime import datetime
-from app.database import Base
+from database import Base
 
 
 class BlockedIP(Base):

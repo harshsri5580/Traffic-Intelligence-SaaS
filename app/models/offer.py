@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, DateTime
 from sqlalchemy.orm import relationship
 from datetime import datetime
 
-from app.database import Base
+from database import Base
 
 
 class Offer(Base):

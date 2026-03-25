@@ -2,14 +2,14 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 
-from app.database import get_db
-from app.dependencies.auth import get_current_user
-from app.models.user import User
-from app.models.campaign import Campaign
-from app.models.click_log import ClickLog
-from app.models.offer import Offer
-from app.models.rule import Rule
-from app.services.analytics import get_campaign_stats
+from database import get_db
+from dependencies.auth import get_current_user
+from models.user import User
+from models.campaign import Campaign
+from models.click_log import ClickLog
+from models.offer import Offer
+from models.rule import Rule
+from services.analytics import get_campaign_stats
 
 router = APIRouter(tags=["Stats"])
 

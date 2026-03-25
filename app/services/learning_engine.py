@@ -1,4 +1,4 @@
-from app.services.redis_client import redis_client
+from services.redis_client import redis_client
 
 
 def update_campaign_learning(campaign_id: int, decision: str):

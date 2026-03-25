@@ -2,12 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 import secrets
 from sqlalchemy import func
-from app.models.click_log import ClickLog
-from app.models.conversion import Conversion
-from app.database import get_db
-from app.models.user import User
-from app.routers.auth import get_current_user
-from app.services.security import verify_password, hash_password
+from models.click_log import ClickLog
+from models.conversion import Conversion
+from database import get_db
+from models.user import User
+from routers.auth import get_current_user
+from services.security import verify_password, hash_password
 from sqlalchemy import cast, Integer
 
 router = APIRouter(prefix="/user", tags=["User"])

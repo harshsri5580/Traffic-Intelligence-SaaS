@@ -1,7 +1,8 @@
 from sqlalchemy import Column, Integer, Date, ForeignKey, DateTime
 from sqlalchemy.sql import func
 
-from app.database import Base
+from database import Base
+
 
 class RuleDailyStats(Base):
     __tablename__ = "rule_daily_stats"

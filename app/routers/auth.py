@@ -4,13 +4,13 @@ from jose import jwt, JWTError
 from datetime import datetime, timedelta
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
-from app.core.config import SECRET_KEY, ALGORITHM
+from core.config import SECRET_KEY, ALGORITHM
 from ..database import get_db
 from ..models.user import User
 from ..services.security import hash_password, verify_password
-from app.models.system_log import SystemLog
+from models.system_log import SystemLog
 import re
-from app.models.system_settings import SystemSettings
+from models.system_settings import SystemSettings
 
 
 router = APIRouter(tags=["Auth"])

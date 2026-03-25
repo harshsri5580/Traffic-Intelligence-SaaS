@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app.database import get_db
-from app.models.traffic_source import TrafficSource
+from database import get_db
+from models.traffic_source import TrafficSource
 
 router = APIRouter(prefix="/sources", tags=["Traffic Sources"])
 

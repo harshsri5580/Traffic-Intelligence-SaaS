@@ -2,7 +2,7 @@ import geoip2.database
 import os
 import json
 
-from app.services.redis_client import redis_client
+from services.redis_client import redis_client
 
 BASE_DIR = os.path.dirname(__file__)
 

@@ -1,4 +1,4 @@
-from app.services.redis_client import redis_client
+from services.redis_client import redis_client
 
 
 MAX_IPS_PER_DEVICE = 3
