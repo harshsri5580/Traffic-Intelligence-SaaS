@@ -1,0 +1,561 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import api from "../../../services/api";
+import { useRouter } from "next/navigation";
+import Select from "react-select";
+import { toast } from "react-hot-toast";
+
+export default function Campaigns(){
+
+const [campaigns,setCampaigns]=useState([]);
+const [loading,setLoading]=useState(true);
+const [creating,setCreating]=useState(false);
+
+const router = useRouter();
+
+const [sources,setSources] = useState([]);
+const [sub1,setSub1] = useState("zoneid")
+const [sub2,setSub2] = useState("cost")
+const macros = [
+{value:"clickid",label:"Click ID"},
+{value:"zoneid",label:"Zone ID"},
+{value:"campaignid",label:"Campaign ID"},
+{value:"source",label:"Traffic Source"},
+{value:"keyword",label:"Keyword"},
+{value:"cost",label:"Cost (Required for ROI)"}
+]
+
+useEffect(()=>{
+loadSources();
+},[]);
+
+const loadSources = async () => {
+try{
+const res = await api.get("/sources/");
+setSources(res.data || []);
+}catch(err){
+console.error("Source load error",err);
+setSources([]);
+}
+};
+
+const generateTrackingLink = (c) => {
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+  let url = `${API_URL}/r/${c.slug}`;
+
+  const params = [];
+
+  if (c.sub1) params.push(`sub1={${c.sub1}}`);
+  if (c.sub2) params.push(`sub2={${c.sub2}}`);
+
+  if (params.length > 0) {
+    url += "?" + params.join("&");
+  }
+
+  return url;
+};
+
+const [form,setForm]=useState({
+name:"",
+fallback_url:"",
+safe_page_url:"",
+bot_url:"",
+traffic_source:"direct"
+});
+
+const [autoOptimize, setAutoOptimize] = useState(false)
+const [roiThreshold, setRoiThreshold] = useState(0)
+useEffect(()=>{
+
+const token=localStorage.getItem("token");
+
+if(!token){
+window.location.href="/login";
+return;
+}
+
+loadCampaigns();
+
+},[]);
+
+const loadCampaigns = async () => {
+
+try{
+
+const res = await api.get("/campaigns/");
+const sorted = (res.data || []).sort((a,b)=>a.id - b.id);
+setCampaigns(sorted);
+
+}catch(err){
+
+console.error("Campaign load error",err);
+setCampaigns([]);
+
+}finally{
+
+setLoading(false);
+
+}
+
+};
+
+const toggleCampaign = async (id) => {
+
+  try {
+
+    const res = await api.put(`/campaigns/${id}/toggle`);
+
+    // 🔥 ADD THIS (SUCCESS CASE)
+    if (res.data?.is_active) {
+      toast.success("Campaign activated ✅");
+    } else {
+      toast("Campaign paused ⏸️");
+    }
+
+    loadCampaigns();
+
+  } catch (err) {
+
+    if (err.response?.status === 403) {
+      toast("Limit reached 🚫 Upgrade your plan to activate", {
+        icon: "⚠️",
+      });
+    } else {
+      toast.error("Toggle failed");
+    }
+
+  }
+
+};
+
+const deleteCampaign = async (id) => {
+
+const campaign = campaigns.find(c=>c.id===id);
+
+if(!campaign) return;
+
+if(campaign.is_active){
+alert("Pause campaign before deleting");
+return;
+}
+
+if(Number(campaign.offer_count)>0 || Number(campaign.rule_count)>0){
+alert("Delete offers and rules first");
+return;
+}
+
+if(!confirm("Delete campaign?")) return;
+
+try{
+
+await api.delete(`/campaigns/${id}`);
+
+loadCampaigns();
+
+}catch(err){
+
+console.error(err);
+alert("Delete failed");
+
+}
+
+};
+
+
+const createCampaign = async () => {
+  if (!form.name) {
+    toast.error("Campaign name required");
+    return;
+  }
+
+  if (!form.traffic_source) {
+    toast.error("Select traffic source");
+    return;
+  }
+
+  setCreating(true);
+
+  try {
+    const payload = {
+      name: form.name,
+      fallback_url: form.fallback_url || null,
+      safe_page_url: form.safe_page_url || null,
+      bot_url: form.bot_url || null,
+      traffic_source: form.traffic_source, // ✅ FIXED
+      sub1: sub1,
+      sub2: sub2,
+      auto_optimize: autoOptimize,
+      roi_threshold: Number(roiThreshold),
+    };
+
+    console.log("PAYLOAD 👉", payload); // 🔥 DEBUG
+
+const res = await api.post("/campaigns/", payload);
+
+if (res.data?.campaign && !res.data.campaign.is_active) {
+  toast("Limit reached ⚠️ Campaign created as inactive", {
+    icon: "⚠️",
+  });
+} else {
+  toast.success("Campaign Created 🚀");
+}
+
+    toast.success("Campaign Created 🚀");
+
+    setForm({
+      name:"",
+      fallback_url:"",
+      safe_page_url:"",
+      bot_url:"",
+     
+    });
+    setAutoOptimize(false)
+    setRoiThreshold(0)
+    setSub1(null);
+    setSub2(null);
+
+    loadCampaigns();
+
+  } catch (err) {
+    console.error(err);
+    toast.error("Campaign creation failed");
+  }
+
+  setCreating(false);
+};
+
+if(loading){
+return <div className="p-10">Loading...</div>
+}
+
+return(
+
+<div className="p-8">
+
+<h1 className="text-3xl font-bold mb-8">
+Campaign Manager
+</h1>
+
+{/* CREATE CAMPAIGN */}
+
+<div className="bg-white shadow p-6 rounded mb-10">
+
+<h2 className="font-semibold mb-4">
+Create Campaign
+</h2>
+
+
+
+<div className="grid grid-cols-3 gap-3">
+
+<input
+className="border p-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+placeholder="Campaign Name"
+value={form.name}
+onChange={(e)=>setForm({...form,name:e.target.value})}
+/>
+
+<input
+className="border p-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+placeholder="Fallback URL"
+value={form.fallback_url}
+onChange={(e)=>setForm({...form,fallback_url:e.target.value})}
+/>
+
+<input
+className="border p-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+placeholder="Safe Page URL"
+value={form.safe_page_url}
+onChange={(e)=>setForm({...form,safe_page_url:e.target.value})}
+/>
+
+<input
+className="border p-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+placeholder="Bot URL"
+value={form.bot_url}
+onChange={(e)=>setForm({...form,bot_url:e.target.value})}
+/>
+
+<select
+  className="border p-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+  value={form.traffic_source}
+  onChange={(e)=>setForm({...form,traffic_source:e.target.value})}
+>
+  <option value="">Select Source</option>
+
+  {sources.map(s=>(
+    <option key={s.id} value={s.name}>
+      {s.name}
+    </option>
+  ))}
+</select>
+
+
+
+</div>
+
+{/* AUTO OPTIMIZATION */}
+
+<div className="mt-6 border-t pt-4">
+
+  <div className="font-semibold mb-3">
+    Auto Optimization
+  </div>
+
+  <div className="grid grid-cols-2 gap-4">
+
+    {/* TOGGLE */}
+    <div>
+      <label className="text-sm">Enable Auto Optimize</label>
+      <div className="mt-1">
+        <input
+          type="checkbox"
+          checked={autoOptimize}
+          onChange={(e)=>setAutoOptimize(e.target.checked)}
+        />
+      </div>
+    </div>
+
+    {/* ROI INPUT */}
+   <div className="w-full">
+  <label className="text-sm font-medium text-gray-700">
+    ROI Threshold (%)
+  </label>
+
+  <input
+    type="range"
+    min={-100}
+    max={100}
+    step={1}
+    value={roiThreshold || 0}
+    onChange={(e) => setRoiThreshold(Number(e.target.value))}
+    className="w-full mt-2 accent-blue-500"
+  />
+
+  <div className="flex justify-between text-xs text-gray-500 mt-1">
+    <span>-100%</span>
+    <span>0%</span>
+    <span>100%</span>
+  </div>
+
+  <div className={`text-sm mt-1 ${
+  roiThreshold < 0 ? "text-red-500" : "text-green-600"
+}`}>
+  Current: {roiThreshold || 0}%
+</div>
+</div>
+
+  </div>
+
+</div>
+
+{/* MACRO SELECTOR */}
+
+<div className="mt-6 border-t pt-4">
+
+<div className="font-semibold mb-3">
+Tracking Macros
+</div>
+
+<div className="grid grid-cols-2 gap-4">
+
+<div>
+<div className="text-sm mb-1">Sub1</div>
+<Select
+options={macros}
+value={macros.find(m=>m.value===sub1)}
+onChange={(v)=>setSub1(v?.value || null)}
+/>
+</div>
+
+<div>
+<div className="text-sm mb-1">Sub2</div>
+<Select
+options={macros}
+value={macros.find(m=>m.value===sub2)}
+onChange={(v)=>setSub2(v?.value || null)}
+/>
+</div>
+
+</div>
+
+</div>
+
+
+<button
+onClick={createCampaign}
+disabled={creating}
+className="mt-4 bg-blue-600 hover:bg-blue-700 transition text-white px-5 py-2 rounded-lg shadow"
+>
+{creating ? "Creating..." : "Create Campaign"}
+</button>
+
+</div>
+
+{/* CAMPAIGN TABLE */}
+
+<div className="bg-white shadow rounded overflow-x-auto">
+
+<table className="w-full text-sm">
+
+<thead className="bg-gray-100">
+
+<tr>
+
+<th className="p-3 border">Campaign</th>
+<th className="p-3 border">Status</th>
+<th className="p-3 border">Source</th>
+<th className="p-3 border">Pass</th>
+<th className="p-3 border">Block</th>
+<th className="p-3 border">Offers</th>
+<th className="p-3 border">Rules</th>
+<th className="p-3 border">Logs</th>
+<th className="p-3 border">Actions</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{campaigns.map(c=>(
+
+<tr key={c.id} className="text-center">
+
+<td className="p-3 border">
+
+<div className="font-semibold">
+{c.name}
+</div>
+
+<div className="text-xs text-gray-500">
+{c.slug}
+</div>
+
+</td>
+
+<td className="p-3 border">
+
+<button
+onClick={()=>toggleCampaign(c.id)}
+className={`px-3 py-1 rounded-full text-xs font-medium transition ${
+c.is_active
+? "bg-green-100 text-green-700 hover:bg-green-200"
+: "bg-gray-200 text-gray-700 hover:bg-gray-300"
+}`}
+>
+{c.is_active ? "Active" : "Paused"}
+</button>
+
+</td>
+
+
+<td className="p-3 border">
+
+<span className={`px-2 py-1 rounded text-xs font-semibold
+${c.traffic_source==="facebook"?"bg-blue-100 text-blue-700":
+c.traffic_source==="google"?"bg-green-100 text-green-700":
+c.traffic_source==="push"?"bg-purple-100 text-purple-700":
+c.traffic_source==="adult"?"bg-red-100 text-red-700":
+"bg-gray-100 text-gray-700"}`}>
+
+{c.traffic_source || "Direct"}
+
+</span>
+
+</td>
+
+<td className="p-3 border text-green-600 font-semibold">
+{Number(c.pass_count) || 0}
+</td>
+
+<td className="p-3 border text-red-600 font-semibold">
+{Number(c.block_count) || 0}
+</td>
+
+<td className="p-3 border">
+{Number(c.offer_count) || 0}
+</td>
+<td className="p-3 border">
+{c.rule_count || 0}
+</td>
+<td className="p-3 border">
+
+<button
+onClick={()=>router.push(`/dashboard/logs?campaign=${c.id}`)}
+className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 transition"
+>
+Logs
+</button>
+
+</td>
+
+<td className="p-3 border flex justify-center gap-2 flex-wrap">
+
+<button
+onClick={async () => {
+  const link = generateTrackingLink(c)
+
+  try {
+    await navigator.clipboard.writeText(link)
+    toast.success("Copied!")
+  } catch {
+    toast.error("Copy failed")
+  }
+}}
+className="px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition"
+>
+Tracking Link
+</button>
+
+<button
+onClick={()=>router.push(`/dashboard/campaigns/manage?id=${c.id}`)}
+className="px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 transition"
+>
+Manage
+</button>
+
+<button
+onClick={()=>router.push(`/dashboard/campaigns/edit?id=${c.id}`)}
+className="px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700 hover:bg-yellow-200 transition"
+>
+Edit
+</button>
+
+<button
+onClick={()=>router.push(`/dashboard/campaigns/scripts?slug=${c.slug}`)}
+className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 hover:bg-green-200 transition"
+>
+Scripts
+</button>
+
+{!c.is_active &&
+Number(c.offer_count) === 0 &&
+Number(c.rule_count) === 0 && (
+<button
+onClick={()=>deleteCampaign(c.id)}
+className="px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 transition"
+>
+Delete
+</button>
+)}
+
+</td>
+
+</tr>
+
+))}
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+);
+
+}

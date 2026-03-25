@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ================= INPUT ================= */
+.input {
+  @apply border border-gray-300 p-2.5 rounded-lg w-full bg-white
+  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+  transition placeholder-gray-400;
+}
+
+/* ================= BUTTONS ================= */
+.btn-primary {
+  @apply bg-blue-600 hover:bg-blue-700 text-white py-2 px-4
+  rounded-lg transition font-medium shadow-sm hover:shadow;
+}
+
+.btn-dark {
+  @apply bg-gray-800 hover:bg-gray-900 text-white px-4 py-2
+  rounded-lg transition font-medium shadow-sm hover:shadow;
+}
+
+.btn-danger {
+  @apply bg-red-600 hover:bg-red-700 text-white px-4 py-2
+  rounded-lg transition font-medium shadow-sm hover:shadow;
+}
+
+/* ================= CARD ================= */
+.card {
+  @apply bg-white shadow-lg rounded-xl p-6 border border-gray-100;
+}
+
+/* ================= TABLE ================= */
+.table {
+  @apply w-full text-sm border rounded-lg overflow-hidden;
+}
+
+.table th {
+  @apply bg-gray-100 text-gray-700 font-semibold;
+}
+
+.table td, .table th {
+  @apply p-2 border;
+}
+
+/* ================= BODY ================= */
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background-color: #f9fafb; /* light gray */
+}
+
+/* ================= SCROLLBAR (optional sexy UI 😎) ================= */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5f5;
+  border-radius: 10px;
+}
