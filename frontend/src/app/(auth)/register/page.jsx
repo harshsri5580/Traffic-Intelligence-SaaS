@@ -42,10 +42,11 @@ const register = async () => {
 
     setLoading(true);
 
-    await api.post("/auth/register", {
-      email,
-      password
-    });
+   const formData = new URLSearchParams();
+formData.append("email", email);
+formData.append("password", password);
+
+await api.post("/auth/register", formData);
 
     alert("Registration successful");
     window.location.href = "/login";

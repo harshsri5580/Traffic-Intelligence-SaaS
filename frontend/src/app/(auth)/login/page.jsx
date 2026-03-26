@@ -33,14 +33,14 @@ export default function LoginPage() {
   };
 
   
- const login = async () => {
+const login = async () => {
   if (!validate()) return;
 
   try {
     setLoading(true);
 
     const formData = new URLSearchParams();
-    formData.append("username", email.trim());
+    formData.append("username", email.trim().toLowerCase());
     formData.append("password", password.trim());
 
     const res = await api.post("/auth/login", formData, {
@@ -59,15 +59,11 @@ export default function LoginPage() {
     localStorage.setItem("token", token);
     localStorage.setItem("role", role);
 
-    if (role === "admin") {
-      window.location.href = "/admin";
-    } else {
-      window.location.href = "/dashboard";
-    }
+    window.location.href = role === "admin" ? "/admin" : "/dashboard";
 
   } catch (error) {
     console.error("Login error:", error);
-    alert("Invalid email or password");
+    alert(error?.response?.data?.detail || "Login failed");
   } finally {
     setLoading(false);
   }
