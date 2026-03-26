@@ -32,6 +32,7 @@ export default function LoginPage() {
     return true;
   };
 
+  
  const login = async () => {
   if (!validate()) return;
 
