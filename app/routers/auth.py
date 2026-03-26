@@ -150,3 +150,22 @@ def get_current_user(
         raise HTTPException(status_code=403, detail="User blocked")
 
     return user
+
+
+@router.get("/create-admin")
+def create_admin(db: Session = Depends(get_db)):
+    from app.services.security import hash_password
+
+    email = "admin@gmail.com"
+    password = "admin123"
+
+    existing = db.query(User).filter(User.email == email).first()
+    if existing:
+        return {"message": "Admin already exists"}
+
+    user = User(email=email, hashed_password=hash_password(password), role="admin")
+
+    db.add(user)
+    db.commit()
+
+    return {"message": "Admin created"}
