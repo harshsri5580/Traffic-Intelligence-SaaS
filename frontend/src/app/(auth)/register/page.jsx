@@ -55,7 +55,13 @@ const register = async () => {
 
   } catch (e) {
     console.error(e);
-    alert(e?.response?.data?.detail || "Registration failed");
+    console.log("FULL ERROR:", e.response?.data);
+
+alert(
+  typeof e?.response?.data === "string"
+    ? e.response.data
+    : JSON.stringify(e.response?.data)
+);
   } finally {
     setLoading(false);
   }
