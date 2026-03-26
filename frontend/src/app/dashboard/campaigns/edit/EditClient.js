@@ -1,5 +1,5 @@
 "use client";
-
+export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import api from "../../../../services/api";
@@ -75,7 +75,9 @@ console.error(err);
 toast.error("Campaign Failed to Update");
 }
 };
-
+if (!id) {
+  return <div>Loading...</div>;
+}
 return(
 <div className="p-8">
 
