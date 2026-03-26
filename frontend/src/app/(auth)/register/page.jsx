@@ -35,31 +35,29 @@ export default function RegisterPage() {
   };
 
 const register = async () => {
-
   if (!validate()) return;
 
   try {
-
     setLoading(true);
 
-   const formData = new URLSearchParams();
-formData.append("email", email);
-formData.append("password", password);
+    const formData = new URLSearchParams();
+    formData.append("email", email.trim());
+    formData.append("password", password.trim());
 
-await api.post("/auth/register", formData);
+    await api.post("/auth/register", formData.toString(), {
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+    });
 
     alert("Registration successful");
     window.location.href = "/login";
 
   } catch (e) {
-
     console.error(e);
-    alert("Registration failed");
-
+    alert(e?.response?.data?.detail || "Registration failed");
   } finally {
-
     setLoading(false);
-
   }
 };
 
