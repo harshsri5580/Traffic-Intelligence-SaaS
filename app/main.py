@@ -12,6 +12,7 @@ from app.database import engine, Base, SessionLocal
 
 # ✅ MODELS
 from app.models.system_log import SystemLog
+from app.models import user
 
 # ✅ ROUTERS (ONLY app.)
 from app.routers import (
