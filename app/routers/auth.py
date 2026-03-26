@@ -40,7 +40,7 @@ def create_access_token(data: dict):
 @router.post("/register")
 def register(data: RegisterRequest, db: Session = Depends(get_db)):
 
-    email = data.email
+    email = data.email.strip().lower()
     password = data.password
 
     # 🔒 REGISTRATION TOGGLE (ADMIN CONTROL)
