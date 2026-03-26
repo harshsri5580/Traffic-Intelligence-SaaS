@@ -1,9 +1,14 @@
 "use client";
-export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import api from "../../../../services/api";
 import { toast } from "react-hot-toast";
+
+import dynamicImport from "next/dynamic";
+
+const Component = dynamicImport(() => import("./EditClient"), {
+  ssr: false,
+});
 
 export default function EditClient() {
 
