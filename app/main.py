@@ -55,7 +55,7 @@ logging.basicConfig(
 # CREATE DATABASE TABLES
 # ===============================
 
-# Base.metadata.create_all(bind=engine)
+Base.metadata.create_all(bind=engine)
 
 
 # ===============================
