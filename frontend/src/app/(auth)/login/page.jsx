@@ -32,7 +32,7 @@ export default function LoginPage() {
     return true;
   };
 
-  
+
  const login = async () => {
   if (!validate()) return;
 
@@ -43,7 +43,7 @@ export default function LoginPage() {
     formData.append("username", email.trim());
     formData.append("password", password.trim());
 
-    const res = await api.post("/auth/login", formData, {
+    const res = await api.post("/api/auth/login", formData, {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
