@@ -9,7 +9,7 @@ from sqlalchemy import (
     Float,
 )
 from datetime import datetime
-from database import Base
+from app.database import Base
 
 
 class ClickLog(Base):

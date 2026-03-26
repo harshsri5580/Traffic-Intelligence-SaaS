@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from database import get_db
-from models.traffic_filter import TrafficFilter
+from app.database import get_db
+from app.models.traffic_filter import TrafficFilter
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/filters", tags=["Traffic Filters"])

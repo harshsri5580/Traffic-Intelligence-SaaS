@@ -1,11 +1,11 @@
 from sqlalchemy import func, and_
 from datetime import datetime, timedelta, date
 
-from models.click_log import ClickLog
-from models.campaign_daily_stats import CampaignDailyStats
-from models.offer_daily_stats import OfferDailyStats
-from models.rule_daily_stats import RuleDailyStats
-from database import SessionLocal
+from app.models.click_log import ClickLog
+from app.models.campaign_daily_stats import CampaignDailyStats
+from app.models.offer_daily_stats import OfferDailyStats
+from app.models.rule_daily_stats import RuleDailyStats
+from app.database import SessionLocal
 
 
 # ======================================

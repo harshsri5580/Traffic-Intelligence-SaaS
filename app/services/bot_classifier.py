@@ -1,4 +1,4 @@
-from services.redis_client import redis_client
+from app.services.redis_client import redis_client
 
 
 class BotClassifier:

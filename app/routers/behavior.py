@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request
 from pydantic import BaseModel
-from services.redis_client import redis_client
+from app.services.redis_client import redis_client
 
 router = APIRouter(tags=["Behavior"])
 

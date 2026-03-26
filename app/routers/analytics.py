@@ -2,14 +2,14 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
-from database import get_db
-from models.click_log import ClickLog
-from dependencies.auth import get_current_user
-from models.user import User
+from app.database import get_db
+from app.models.click_log import ClickLog
+from app.dependencies.auth import get_current_user
+from app.models.user import User
 from sqlalchemy import func
-from models.click_log import ClickLog
+from app.models.click_log import ClickLog
 from sqlalchemy import func, text
-from models.conversion import Conversion
+from app.models.conversion import Conversion
 
 
 router = APIRouter(prefix="/api/analytics", tags=["Analytics"])
@@ -20,8 +20,8 @@ router = APIRouter(prefix="/api/analytics", tags=["Analytics"])
 # ================================
 
 
-from models.campaign import Campaign
-from models.offer import Offer
+from app.models.campaign import Campaign
+from app.models.offer import Offer
 
 
 @router.get("/recent")

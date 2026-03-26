@@ -3,8 +3,8 @@ from sqlalchemy import func
 import random
 import math
 
-from models.offer import Offer
-from models.click_log import ClickLog
+from app.models.offer import Offer
+from app.models.click_log import ClickLog
 
 
 MIN_CLICKS_FOR_CONFIDENCE = 20

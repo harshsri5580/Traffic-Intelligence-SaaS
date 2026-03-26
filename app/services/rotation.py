@@ -2,9 +2,9 @@ import random
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
-from models.offer import Offer
-from models.rule_offer import RuleOffer
-from models.offer_daily_stats import OfferDailyStats
+from app.models.offer import Offer
+from app.models.rule_offer import RuleOffer
+from app.models.offer_daily_stats import OfferDailyStats
 
 
 # =========================================

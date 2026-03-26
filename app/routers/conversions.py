@@ -3,9 +3,9 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from database import get_db
-from models.conversion import Conversion
-from models.blocked_zone import BlockedZone
+from app.database import get_db
+from app.models.conversion import Conversion
+from app.models.blocked_zone import BlockedZone
 
 router = APIRouter()
 
@@ -20,7 +20,7 @@ def track_conversion(
 ):
     try:
         # ✅ 1. check click exists
-        from models.click_log import ClickLog
+        from app.models.click_log import ClickLog
 
         click = db.query(ClickLog).filter(ClickLog.click_id == click_id).first()
         print("CLICK FOUND:", click_id)
@@ -53,8 +53,8 @@ def track_conversion(
         # =====================================================
 
         try:
-            from models.campaign import Campaign
-            from models.click_log import ClickLog
+            from app.models.campaign import Campaign
+            from app.models.click_log import ClickLog
             from sqlalchemy import func
 
             # reload campaign safely

@@ -4,10 +4,10 @@ from fastapi import APIRouter, Request, Depends, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
 from sqlalchemy.orm import Session
 
-from database import get_db
-from models.campaign import Campaign
-from services.redis_client import redis_client
-from services.visitor_context import VisitorContext
+from app.database import get_db
+from app.models.campaign import Campaign
+from app.services.redis_client import redis_client
+from app.services.visitor_context import VisitorContext
 
 
 router = APIRouter(tags=["Challenge"])

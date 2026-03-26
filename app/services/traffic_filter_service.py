@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from models.traffic_filter import TrafficFilter
+from app.models.traffic_filter import TrafficFilter
 
 
 def check_traffic_filters(visitor, db: Session):

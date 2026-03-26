@@ -7,39 +7,39 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
-# Database
-from database import engine, Base
-from routers import landing, traffic_filters
-from routers import challenge
-from routers import decoy
-from routers import traffic_filters
-from routers import traffic_sources
-from routers import billing
-from routers import realtime
-from routers import user
-from routers import behavior
-from models.system_log import SystemLog
-from database import SessionLocal
+# ✅ DATABASE (ONLY THIS)
+from app.database import engine, Base, SessionLocal
 
+# ✅ MODELS
+from app.models.system_log import SystemLog
 
-# Routers
-from routers import (
+# ✅ ROUTERS (ONLY app.)
+from app.routers import (
+    auth,
     campaign,
+    analytics,
     offer,
     redirect,
     stats,
     admin,
-    auth,
     dashboard,
     rules,
-    analytics,
     tools,
     conversions,
+    landing,
+    traffic_filters,
+    challenge,
+    decoy,
+    traffic_sources,
+    billing,
+    realtime,
+    user,
+    behavior,
 )
 
 # Models (important for table creation)
-# from models import raw_hit_log
-# from models import used_token
+# from app.models import raw_hit_log
+# from app.models import used_token
 
 
 # ===============================

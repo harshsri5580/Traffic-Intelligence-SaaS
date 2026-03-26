@@ -3,19 +3,19 @@ from sqlalchemy.orm import Session
 from slugify import slugify
 import uuid
 
-from database import get_db
-from models.campaign import Campaign
-from dependencies.auth import get_current_user
-from models.user import User
-from models.system_log import SystemLog
+from app.database import get_db
+from app.models.campaign import Campaign
+from app.dependencies.auth import get_current_user
+from app.models.user import User
+from app.models.system_log import SystemLog
 from pydantic import BaseModel, HttpUrl
 from typing import List, Optional
-from models.offer import Offer
-from models.rule import Rule
+from app.models.offer import Offer
+from app.models.rule import Rule
 from sqlalchemy import func
-from models.click_log import ClickLog
+from app.models.click_log import ClickLog
 from sqlalchemy import func
-from services.plan_limits import get_final_campaign_limit
+from app.services.plan_limits import get_final_campaign_limit
 
 
 router = APIRouter(tags=["Campaigns"])

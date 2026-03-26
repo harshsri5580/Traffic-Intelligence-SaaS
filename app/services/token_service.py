@@ -6,7 +6,7 @@ import os
 from dotenv import load_dotenv
 from typing import Tuple
 
-from services.redis_client import redis_client
+from app.services.redis_client import redis_client
 
 load_dotenv()
 

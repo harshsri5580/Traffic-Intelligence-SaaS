@@ -1,9 +1,9 @@
 import json
 
-from services.redis_client import redis_client
-from services.vpn_detector import detect_vpn
-from services.proxy_rotation_detector import detect_proxy_rotation
-from services.ip_reputation import get_ip_reputation, increase_ip_risk
+from app.services.redis_client import redis_client
+from app.services.vpn_detector import detect_vpn
+from app.services.proxy_rotation_detector import detect_proxy_rotation
+from app.services.ip_reputation import get_ip_reputation, increase_ip_risk
 
 
 class RiskEngine:
@@ -401,7 +401,7 @@ class RiskEngine:
         # ---------------------------------
 
         try:
-            from services.ip_reputation import (
+            from app.services.ip_reputation import (
                 update_ip_reputation,
                 get_ip_reputation,
             )

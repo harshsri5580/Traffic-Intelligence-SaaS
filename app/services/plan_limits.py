@@ -2,13 +2,13 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from datetime import datetime
 
-from models.subscription import Subscription
-from models.plan import Plan
-from models.campaign import Campaign
-from models.offer import Offer
-from models.rule import Rule
-from models.click_log import ClickLog
-from models.system_settings import SystemSettings
+from app.models.subscription import Subscription
+from app.models.plan import Plan
+from app.models.campaign import Campaign
+from app.models.offer import Offer
+from app.models.rule import Rule
+from app.models.click_log import ClickLog
+from app.models.system_settings import SystemSettings
 
 
 # ======================================

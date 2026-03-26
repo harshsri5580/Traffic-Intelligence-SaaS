@@ -3,18 +3,18 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, case
 from datetime import date, timedelta
 
-from database import get_db
-from models.campaign import Campaign
-from models.user import User
-from models.campaign_daily_stats import CampaignDailyStats
-from models.offer import Offer
-from models.offer_daily_stats import OfferDailyStats
-from models.click_log import ClickLog
-from models.rule import Rule
-from models.rule_daily_stats import RuleDailyStats
-from dependencies.auth import get_current_user
+from app.database import get_db
+from app.models.campaign import Campaign
+from app.models.user import User
+from app.models.campaign_daily_stats import CampaignDailyStats
+from app.models.offer import Offer
+from app.models.offer_daily_stats import OfferDailyStats
+from app.models.click_log import ClickLog
+from app.models.rule import Rule
+from app.models.rule_daily_stats import RuleDailyStats
+from app.dependencies.auth import get_current_user
 from fastapi import WebSocket, WebSocketDisconnect
-from services.realtime_service import connect, disconnect
+from app.services.realtime_service import connect, disconnect
 
 router = APIRouter(tags=["Dashboard"])
 

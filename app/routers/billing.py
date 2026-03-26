@@ -3,11 +3,11 @@ from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 import os
 
-from database import get_db
-from models.plan import Plan
-from models.subscription import Subscription
-from models.user import User
-from dependencies.auth import get_admin_user, get_current_user
+from app.database import get_db
+from app.models.plan import Plan
+from app.models.subscription import Subscription
+from app.models.user import User
+from app.dependencies.auth import get_admin_user, get_current_user
 
 
 router = APIRouter(prefix="/billing", tags=["Billing"])
