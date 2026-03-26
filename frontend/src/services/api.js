@@ -2,47 +2,45 @@ import axios from "axios";
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api",
-  timeout: 30000
+  timeout: 30000,
 });
 
-// Request interceptor (JWT token attach)
+// ✅ Request interceptor (safe)
 api.interceptors.request.use(
   (config) => {
 
-    const token = localStorage.getItem("token");
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("token");
 
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
 
     return config;
-
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Response interceptor (auto logout if token expired)
+// ✅ Response interceptor (safe)
 api.interceptors.response.use(
-
   (response) => response,
 
   (error) => {
 
-    if (error.response && error.response.status === 401) {
-
+    if (
+      typeof window !== "undefined" &&
+      error.response &&
+      error.response.status === 401
+    ) {
       localStorage.removeItem("token");
       localStorage.removeItem("role");
 
       window.location.href = "/login";
-
     }
 
     return Promise.reject(error);
-
   }
-
 );
 
 export default api;
