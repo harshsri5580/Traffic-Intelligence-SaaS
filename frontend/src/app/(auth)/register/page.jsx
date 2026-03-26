@@ -42,7 +42,7 @@ const register = async () => {
 
     setLoading(true);
 
-    await api.post("/api/auth/register", {
+    await api.post("/auth/register", {
       email,
       password
     });
