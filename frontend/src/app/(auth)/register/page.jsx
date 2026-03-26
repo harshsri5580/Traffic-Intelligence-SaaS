@@ -34,33 +34,33 @@ export default function RegisterPage() {
     return true;
   };
 
-  // 🔥 REGISTER
-  const register = async () => {
+const register = async () => {
 
-    if (!validate()) return;
+  if (!validate()) return;
 
-    try {
+  try {
 
-      setLoading(true);
+    setLoading(true);
 
-      await api.post("/auth/register", null, {
-        params: { email, password }
-      });
+    await api.post("/auth/register", {
+      email,
+      password
+    });
 
-      alert("Registration successful");
-      window.location.href = "/login";
+    alert("Registration successful");
+    window.location.href = "/login";
 
-    } catch (e) {
+  } catch (e) {
 
-      console.error(e);
-      alert("Registration failed");
+    console.error(e);
+    alert("Registration failed");
 
-    } finally {
+  } finally {
 
-      setLoading(false);
+    setLoading(false);
 
-    }
-  };
+  }
+};
 
   return (
 

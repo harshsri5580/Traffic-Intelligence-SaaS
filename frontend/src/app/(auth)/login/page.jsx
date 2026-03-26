@@ -32,46 +32,45 @@ export default function LoginPage() {
     return true;
   };
 
-  const login = async () => {
-    if (!validate()) return;
+ const login = async () => {
+  if (!validate()) return;
 
-    try {
-      setLoading(true);
+  try {
+    setLoading(true);
 
-      const formData = new URLSearchParams();
-      formData.append("username", email.trim());
-      formData.append("password", password.trim());
+    const formData = new URLSearchParams();
+    formData.append("username", email.trim());
+    formData.append("password", password.trim());
 
-      const res = await api.post("/auth/login", formData, {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-      });
+    const res = await api.post("/auth/login", formData, {
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+    });
 
-      const token = res?.data?.access_token;
-      const role = res?.data?.user?.role;
+    const token = res?.data?.access_token;
+    const role = res?.data?.user?.role || "member";
 
-      if (!token || !role) {
-        throw new Error("Invalid server response");
-      }
-
-      localStorage.setItem("token", token);
-      localStorage.setItem("role", role);
-
-      if (role === "admin") {
-        window.location.href = "/admin";
-      } else if (role === "member") {
-        window.location.href = "/dashboard";
-      } else {
-        alert("Unknown role");
-      }
-    } catch (error) {
-      console.error("Login error:", error);
-      alert("Invalid email or password");
-    } finally {
-      setLoading(false);
+    if (!token) {
+      throw new Error("Invalid server response");
     }
-  };
+
+    localStorage.setItem("token", token);
+    localStorage.setItem("role", role);
+
+    if (role === "admin") {
+      window.location.href = "/admin";
+    } else {
+      window.location.href = "/dashboard";
+    }
+
+  } catch (error) {
+    console.error("Login error:", error);
+    alert("Invalid email or password");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="flex h-screen items-center justify-center bg-gray-100">
