@@ -40,15 +40,10 @@ const register = async () => {
   try {
     setLoading(true);
 
-    const formData = new URLSearchParams();
-    formData.append("email", email.trim());
-    formData.append("password", password.trim());
-
-    await api.post("/auth/register", formData.toString(), {
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-    });
+   await api.post("/auth/register", {
+  email: email.trim(),
+  password: password.trim(),
+});
 
     alert("Registration successful");
     window.location.href = "/login";
