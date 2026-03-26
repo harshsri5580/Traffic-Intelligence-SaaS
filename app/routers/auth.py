@@ -12,6 +12,13 @@ from app.services.security import hash_password, verify_password
 from app.models.system_log import SystemLog
 import re
 from app.models.system_settings import SystemSettings
+from pydantic import BaseModel
+
+
+# 👇 ये add कर
+class RegisterRequest(BaseModel):
+    email: str
+    password: str
 
 
 router = APIRouter(tags=["Auth"])
@@ -31,7 +38,10 @@ def create_access_token(data: dict):
 
 
 @router.post("/register")
-def register(email: str, password: str, db: Session = Depends(get_db)):
+def register(data: RegisterRequest, db: Session = Depends(get_db)):
+
+    email = data.email
+    password = data.password
 
     # 🔒 REGISTRATION TOGGLE (ADMIN CONTROL)
     settings = db.query(SystemSettings).first()
