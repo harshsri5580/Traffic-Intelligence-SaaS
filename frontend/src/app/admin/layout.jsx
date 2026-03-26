@@ -1,31 +1,23 @@
 "use client";
 
-export default function AdminLayout({ children }) {
-  return <>{children}</>;
-}
-
-import { useEffect } from "react";   // ✅ ADD
+import { useEffect } from "react";
 import Sidebar from "./sidebar";
 
 export default function AdminLayout({ children }) {
 
   useEffect(() => {
-
     const token = localStorage.getItem("token");
     const role = localStorage.getItem("role");
 
-    // ❌ not logged in
     if (!token) {
       window.location.href = "/login";
       return;
     }
 
-    // ❌ not admin
     if (role !== "admin") {
       window.location.href = "/dashboard";
       return;
     }
-
   }, []);
 
   return (
