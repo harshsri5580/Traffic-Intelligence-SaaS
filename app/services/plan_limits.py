@@ -57,7 +57,11 @@ def check_campaign_limit(db: Session, user_id: int):
 
     count = (
         db.query(Campaign.id)
-        .filter(Campaign.user_id == user_id, Campaign.is_deleted == False)
+        .filter(
+            Campaign.user_id == user_id,
+            Campaign.is_deleted == False,
+            Campaign.is_active == True,  # 🔥 ONLY ACTIVE CAMPAIGNS
+        )
         .count()
     )
 
@@ -89,7 +93,7 @@ def check_offer_limit(db: Session, user_id: int):
     if limit is not None and count >= limit:
         raise HTTPException(
             status_code=403,
-            detail="Offer limit reached",
+            detail="Active campaign limit reached for your plan",
         )
 
 
@@ -113,7 +117,7 @@ def check_rule_limit(db: Session, user_id: int):
     if limit is not None and count >= limit:
         raise HTTPException(
             status_code=403,
-            detail="Rule limit reached",
+            detail="Active campaign limit reached for your plan",
         )
 
 
@@ -149,7 +153,7 @@ def check_click_limit(db: Session, user_id: int):
     if limit is not None and count >= limit:
         raise HTTPException(
             status_code=403,
-            detail="Monthly click limit reached",
+            detail="Active campaign limit reached for your plan",
         )
 
 
@@ -178,7 +182,7 @@ def check_daily_click_limit(db: Session, user_id: int):
     if limit is not None and count >= limit:
         raise HTTPException(
             status_code=403,
-            detail="Daily click limit reached",
+            detail="Active campaign limit reached for your plan",
         )
 
 

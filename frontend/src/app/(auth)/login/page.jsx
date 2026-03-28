@@ -1,114 +1,184 @@
 "use client";
-
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import api from "../../../services/api";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
+
+
+
 
 export default function LoginPage() {
+
+  const router = useRouter();
+  const errorRef = useRef("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
-  const validate = () => {
-    const trimmedEmail = email.trim();
-    const trimmedPassword = password.trim();
 
-    if (!trimmedEmail || !trimmedPassword) {
-      alert("Please enter email and password");
-      return false;
+    useEffect(() => {
+    if (errorRef.current) {
+      setErrorMsg(errorRef.current);
     }
+  }, []);
 
+const validate = () => {
+  if (!email || !password) {
+    return "Enter email & password";
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return "Invalid email";
+  }
+
+  if (password.length < 6) {
+    return "Password too short";
+  }
+
+  return null;
+};
+
+ const login = async () => {
+
+  if (loading) return;
+
+  // 🔥 VALIDATION HANDLE (NO STATE CONFLICT)
+  let error = "";
+
+  if (!email || !password) {
+    error = "Enter email & password";
+  } else {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(trimmedEmail)) {
-      alert("Please enter a valid email");
-      return false;
+    if (!emailRegex.test(email)) {
+      error = "Invalid email";
+    } else if (password.length < 6) {
+      error = "Password too short";
     }
+  }
 
-    if (trimmedPassword.length < 6) {
-      alert("Password must be at least 6 characters");
-      return false;
-    }
+  if (error) {
+    setErrorMsg(error); // ✅ UI me dikhega
+    toast.error(error, { duration: 4000 }); // ✅ toast stable
+    return;
+  }
 
-    return true;
-  };
-
-  
-const login = async () => {
-  if (!validate()) return;
+  setErrorMsg(""); // ✅ sirf valid hone ke baad clear
 
   try {
     setLoading(true);
 
-    const formData = new URLSearchParams();
-    formData.append("username", email.trim().toLowerCase());
-    formData.append("password", password.trim());
-
-    const res = await api.post("/auth/login", formData, {
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
+    const res = await api.post("/auth/login", {
+      email: email.trim().toLowerCase(),
+      password: password.trim(),
     });
 
     const token = res?.data?.access_token;
     const role = res?.data?.user?.role || "member";
 
-    if (!token) {
-      throw new Error("Invalid server response");
-    }
-
     localStorage.setItem("token", token);
     localStorage.setItem("role", role);
 
-    window.location.href = role === "admin" ? "/admin" : "/dashboard";
+    const sub = await api.get("/billing/my-subscription");
 
-  } catch (error) {
-    console.error("Login error:", error);
-    alert(error?.response?.data?.detail || "Login failed");
-  } finally {
+    if (role === "admin") {
+      router.push("/admin");
+    } else if (!sub.data?.plan) {
+      router.push("/dashboard/pricing");
+    } else {
+      router.push("/dashboard");
+    }
+
+ } catch (error) {
+
+  let msg = "";
+
+  if (typeof error?.response?.data === "string") {
+    msg = error.response.data;
+  } else if (error?.response?.data?.detail) {
+    msg = error.response.data.detail;
+  }
+
+  msg = msg.toLowerCase();
+
+  let finalMsg = "Login failed ❌";
+
+  if (msg.includes("invalid")) {
+    finalMsg = "Wrong email or password ❌";
+  } else if (msg.includes("verify")) {
+    finalMsg = "Verify your email first 📩";
+  } else if (msg.includes("blocked")) {
+    finalMsg = "Account blocked 🚫";
+  }
+
+  // ✅ YAHAN ADD KARO
+  errorRef.current = finalMsg;
+
+  setErrorMsg(finalMsg);
+  toast.error(finalMsg, { duration: 4000 });
+
+} finally {
     setLoading(false);
   }
 };
 
   return (
-    <div className="flex h-screen items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 shadow-lg rounded w-96">
-        
-        <h1 className="text-2xl font-semibold mb-6 text-center">
-          Login
+
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+
+      <form
+  onSubmit={(e) => {
+    e.preventDefault(); // 🔥 STOP RELOAD
+    login();
+  }} noValidate
+  className="bg-white p-8 shadow-xl rounded-2xl w-96 border"
+>
+
+        <h1 className="text-3xl font-bold mb-6 text-center">
+          Welcome Back
         </h1>
 
         <input
-          className="border p-2 w-full mb-3 rounded"
+          className="border p-3 w-full mb-3 rounded-lg focus:ring-2 focus:ring-indigo-500"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
 
         <input
-          className="border p-2 w-full mb-4 rounded"
+          className="border p-3 w-full mb-2 rounded-lg focus:ring-2 focus:ring-indigo-500"
           type="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
 
+        <div className="text-right mb-4">
+          <Link href="/forgot-password" className="text-sm text-indigo-600 hover:underline">
+            Forgot Password?
+          </Link>
+        </div>
+
         <button
-          onClick={login}
+        type="submit"
+         
           disabled={loading}
-          className="bg-blue-500 hover:bg-blue-600 text-white w-full p-2 rounded"
+          className="bg-indigo-600 hover:bg-indigo-700 text-white w-full py-3 rounded-lg font-semibold"
         >
           {loading ? "Logging in..." : "Login"}
         </button>
 
-        {/* ✅ NEW PART (Register link) */}
-        <p className="text-center text-sm mt-4">
-  Don’t have an account?
-  <Link href="/register" className="text-blue-500 ml-1">
-    Register
-  </Link>
-</p>
+        <p className="text-center text-sm mt-4 text-gray-600">
+          Don’t have an account?
+          <Link href="/register" className="text-indigo-600 ml-1 font-medium">
+            Register
+          </Link>
+        </p>
 
-      </div>
+      </form>
+
     </div>
   );
 }

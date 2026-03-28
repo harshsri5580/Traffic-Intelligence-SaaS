@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Column, Integer, String, DateTime, Boolean
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.database import Base
@@ -18,6 +18,7 @@ class User(Base):
     timezone = Column(String, default="UTC")
     webhook_url = Column(String, nullable=True)
     api_key = Column(String, nullable=True)
+    is_verified = Column(Boolean, default=False)
 
     role = Column(String, default="member")
     plan = Column(String, default="basic")

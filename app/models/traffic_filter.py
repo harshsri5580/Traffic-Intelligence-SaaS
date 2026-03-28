@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
 from app.database import Base
 
 
@@ -12,3 +12,4 @@ class TrafficFilter(Base):
     value = Column(String, nullable=False)
 
     is_active = Column(Boolean, default=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)

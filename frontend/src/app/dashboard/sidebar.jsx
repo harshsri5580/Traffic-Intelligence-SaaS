@@ -19,6 +19,7 @@ export default function Sidebar() {
     { name: "Offers", path: "/dashboard/offers" },
     { name: "Rules", path: "/dashboard/rules" },
     { name: "Analytics", path: "/dashboard/analytics" },
+    { name: "Pricing", path: "/dashboard/pricing" }, // ✅ ADDED
     { name: "Traffic Logs", path: "/dashboard/logs" },
     { name: "Traffic Filters", path: "/dashboard/filters" },
     { name: "Settings", path: "/dashboard/settings" }

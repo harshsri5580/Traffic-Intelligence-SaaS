@@ -19,7 +19,7 @@ class ClickLog(Base):
     click_id = Column(String, unique=True, index=True, nullable=False)
 
     campaign_id = Column(Integer, ForeignKey("campaigns.id"))
-    user_id = Column(Integer, ForeignKey("users.id"))
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     rule_id = Column(Integer, ForeignKey("rules.id"), nullable=True)
     offer_id = Column(Integer, ForeignKey("offers.id"), nullable=True)
 

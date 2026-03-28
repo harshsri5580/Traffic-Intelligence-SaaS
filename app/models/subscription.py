@@ -9,7 +9,7 @@ class Subscription(Base):
 
     id = Column(Integer, primary_key=True, index=True)
 
-    user_id = Column(Integer, ForeignKey("users.id"), index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True)
     plan_id = Column(Integer, ForeignKey("plans.id"), index=True)
 
     status = Column(String, default="active")

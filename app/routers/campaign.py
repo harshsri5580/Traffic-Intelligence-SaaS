@@ -413,7 +413,6 @@ def update_campaign(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-
     campaign = (
         db.query(Campaign)
         .filter(
@@ -426,6 +425,12 @@ def update_campaign(
 
     if not campaign:
         raise HTTPException(status_code=404, detail="Campaign not found")
+
+    # 🔥 CRITICAL FIX
+    data.pop("user_id", None)
+
+    # 🔥 FORCE USER
+    campaign.user_id = current_user.id
 
     campaign.name = data.get("name", campaign.name)
     campaign.fallback_url = data.get("fallback_url", campaign.fallback_url)

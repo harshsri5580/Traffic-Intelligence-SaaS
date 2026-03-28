@@ -204,3 +204,41 @@ def admin_billing_data(db: Session = Depends(get_db), admin=Depends(get_admin_us
         )
 
     return result
+
+
+@router.post("/subscribe/{plan_id}")
+def subscribe_local(
+    plan_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+
+    plan = db.query(Plan).filter(Plan.id == plan_id).first()
+
+    if not plan:
+        raise HTTPException(404, "Plan not found")
+
+    # old sub cancel
+    old = (
+        db.query(Subscription)
+        .filter(
+            Subscription.user_id == current_user.id, Subscription.status == "active"
+        )
+        .first()
+    )
+
+    if old:
+        old.status = "cancelled"
+
+    new_sub = Subscription(
+        user_id=current_user.id,
+        plan_id=plan.id,
+        start_date=datetime.utcnow(),
+        expire_date=datetime.utcnow() + timedelta(days=30),
+        status="active",
+    )
+
+    db.add(new_sub)
+    db.commit()
+
+    return {"message": "Subscribed successfully"}
