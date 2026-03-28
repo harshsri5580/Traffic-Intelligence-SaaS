@@ -7,11 +7,19 @@ import toast from "react-hot-toast";
 export default function PricingPage() {
   const [plans, setPlans] = useState([]);
   const [currentPlan, setCurrentPlan] = useState(null);
+  const [token, setToken] = useState(null);
 
-  useEffect(() => {
-     loadPlans();
+useEffect(() => {
+  const t = localStorage.getItem("token");
+  setToken(t);
+}, []);
+
+ useEffect(() => {
+  if (!token) return;
+
+  loadPlans();
   loadCurrentPlan();
-  }, []);
+}, [token]);
 
   const loadCurrentPlan = async () => {
   try {
@@ -44,6 +52,10 @@ const subscribe = async (id) => {
     toast.error("Failed ❌", { id: toastId });
   }
 };
+
+if (!token) {
+  return <div className="p-10 text-center">Loading...</div>;
+}
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-10">
