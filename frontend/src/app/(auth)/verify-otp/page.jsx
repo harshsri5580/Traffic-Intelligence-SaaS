@@ -1,26 +1,30 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import api from "../../../services/api";
 import toast from "react-hot-toast";
 
 export default function VerifyOTPPage() {
 
-  const searchParams = useSearchParams();
   const router = useRouter();
 
-  const email = searchParams.get("email");
-
+  const [email, setEmail] = useState(""); // ✅ FIX
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // ✅ SAFE PARAM FETCH (NO SSR ERROR)
   useEffect(() => {
-    if (!email) {
+    const params = new URLSearchParams(window.location.search);
+    const emailParam = params.get("email");
+
+    if (!emailParam) {
       toast.error("Invalid access");
       router.push("/register");
+    } else {
+      setEmail(emailParam);
     }
-  }, [email]);
+  }, []);
 
   const verify = async () => {
 
@@ -44,11 +48,16 @@ export default function VerifyOTPPage() {
       }, 1000);
 
     } catch (e) {
-      toast.error(
-        typeof e?.response?.data === "string"
-          ? e.response.data
-          : "Invalid or expired OTP ❌"
-      );
+
+      let msg = "Invalid or expired OTP ❌";
+
+      if (typeof e?.response?.data === "string") {
+        msg = e.response.data;
+      } else if (e?.response?.data?.detail) {
+        msg = e.response.data.detail;
+      }
+
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -86,18 +95,18 @@ export default function VerifyOTPPage() {
         </button>
 
         <button
-  onClick={async () => {
-    try {
-      await api.post("/auth/resend-otp", { email });
-      toast.success("OTP resent 📩");
-    } catch {
-      toast.error("Failed to resend");
-    }
-  }}
-  className="mt-3 text-sm text-indigo-600 hover:underline"
->
-  Resend OTP
-</button>
+          onClick={async () => {
+            try {
+              await api.post("/auth/resend-otp", { email });
+              toast.success("OTP resent 📩");
+            } catch {
+              toast.error("Failed to resend");
+            }
+          }}
+          className="mt-3 text-sm text-indigo-600 hover:underline"
+        >
+          Resend OTP
+        </button>
 
       </div>
 

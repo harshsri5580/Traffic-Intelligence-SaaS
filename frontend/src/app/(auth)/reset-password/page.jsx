@@ -1,20 +1,27 @@
 "use client";
 
-import { useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import api from "../../../services/api";
 import toast from "react-hot-toast";
 
 export default function ResetPassword() {
 
   const router = useRouter();
-  const email = useSearchParams().get("email");
 
+  const [email, setEmail] = useState(""); // ✅ FIX
   const [otp, setOtp] = useState("");
   const [password, setPassword] = useState("");
 
+  // ✅ SAFE WAY (NO SSR ERROR)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setEmail(params.get("email") || "");
+  }, []);
+
   const reset = async () => {
     try {
+
       await api.post("/auth/reset-password", {
         email,
         otp,
@@ -48,7 +55,10 @@ export default function ResetPassword() {
           onChange={(e)=>setPassword(e.target.value)}
         />
 
-        <button onClick={reset} className="bg-green-600 text-white w-full p-2 rounded">
+        <button
+          onClick={reset}
+          className="bg-green-600 text-white w-full p-2 rounded"
+        >
           Reset Password
         </button>
 
