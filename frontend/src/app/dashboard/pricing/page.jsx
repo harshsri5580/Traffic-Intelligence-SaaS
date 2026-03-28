@@ -30,14 +30,24 @@ useEffect(() => {
   }
 };
 
-  const loadPlans = async () => {
+const loadPlans = async () => {
+  try {
     const res = await api.get("/billing/plans");
 
-    // ✅ ORDER FIX (Basic → Pro → Enterprise)
-    const sorted = (res.data || []).sort((a, b) => a.price - b.price);
+    console.log("PLANS API:", res.data); // 👈 ADD THIS
+
+    const data = Array.isArray(res.data)
+      ? res.data
+      : res.data?.plans || [];
+
+    const sorted = data.sort((a, b) => a.price - b.price);
 
     setPlans(sorted);
-  };
+
+  } catch (err) {
+    console.log("Plans error:", err);
+  }
+};
 const subscribe = async (id) => {
   const toastId = toast.loading("Processing...");
 
