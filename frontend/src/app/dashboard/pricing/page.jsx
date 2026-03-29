@@ -30,6 +30,12 @@ useEffect(() => {
   }
 };
 
+const checkoutLinks = {
+  Basic: "https://traffic-intelligence.lemonsqueezy.com/checkout/buy/2e53426d-cf76-4ce2-9ea7-e794f4604cff",
+  Pro: "https://traffic-intelligence.lemonsqueezy.com/checkout/buy/43392cb4-bd85-4b66-b4a3-aa0452b03da2",
+  Enterprise: "https://traffic-intelligence.lemonsqueezy.com/checkout/buy/2dedcb1e-dbd3-4375-a929-6e1474a3d098",
+};
+
 const loadPlans = async () => {
   try {
     const res = await api.get("/billing/plans");
@@ -48,20 +54,20 @@ const loadPlans = async () => {
     console.log("Plans error:", err);
   }
 };
-const subscribe = async (id) => {
-  const toastId = toast.loading("Processing...");
+// const subscribe = async (id) => {
+//   const toastId = toast.loading("Processing...");
 
-  try {
-    await api.post(`/billing/subscribe/${id}`);
+//   try {
+//     await api.post(`/billing/subscribe/${id}`);
 
-    toast.success("Plan activated 🚀", { id: toastId });
+//     toast.success("Plan activated 🚀", { id: toastId });
 
-    setTimeout(() => window.location.reload(), 1000);
+//     setTimeout(() => window.location.reload(), 1000);
 
-  } catch {
-    toast.error("Failed ❌", { id: toastId });
-  }
-};
+//   } catch {
+//     toast.error("Failed ❌", { id: toastId });
+//   }
+// };
 
 if (!token) {
   return <div className="p-10 text-center">Loading...</div>;
@@ -130,7 +136,9 @@ if (!token) {
 
               <button
                 disabled={isCurrent}
-                onClick={() => subscribe(p.id)}
+                onClick={() => {
+  window.location.href = checkoutLinks[p.name];
+}}
                 className={`mt-8 w-full py-3 rounded-lg font-semibold transition
                   ${
                     isCurrent

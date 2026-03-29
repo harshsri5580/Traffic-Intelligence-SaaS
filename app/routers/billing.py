@@ -17,8 +17,8 @@ router = APIRouter(prefix="/billing", tags=["Billing"])
 # PADDLE CONFIG
 # ======================================
 
-PADDLE_VENDOR_ID = os.getenv("PADDLE_VENDOR_ID")
-PADDLE_API_KEY = os.getenv("PADDLE_API_KEY")
+# PADDLE_VENDOR_ID = os.getenv("PADDLE_VENDOR_ID")
+# PADDLE_API_KEY = os.getenv("PADDLE_API_KEY")
 
 
 # ======================================
@@ -76,23 +76,23 @@ def my_subscription(
 # ======================================
 
 
-@router.post("/create-checkout/{plan_id}")
-def create_checkout(
-    plan_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)
-):
+# @router.post("/create-checkout/{plan_id}")
+# def create_checkout(
+#     plan_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)
+# ):
 
-    plan = db.query(Plan).filter(Plan.id == plan_id, Plan.is_active == True).first()
+#     plan = db.query(Plan).filter(Plan.id == plan_id, Plan.is_active == True).first()
 
-    if not plan:
-        raise HTTPException(status_code=404, detail="Plan not found")
+#     if not plan:
+#         raise HTTPException(status_code=404, detail="Plan not found")
 
-    # 👉 Paddle me product/price already create hona chahiye
-    if not plan.paddle_price_id:
-        raise HTTPException(status_code=400, detail="Paddle price ID missing")
+#     # 👉 Paddle me product/price already create hona chahiye
+#     if not plan.paddle_price_id:
+#         raise HTTPException(status_code=400, detail="Paddle price ID missing")
 
-    return {
-        "checkout_url": f"https://checkout.paddle.com/checkout/{plan.paddle_price_id}?passthrough={current_user.id}"
-    }
+#     return {
+#         "checkout_url": f"https://checkout.paddle.com/checkout/{plan.paddle_price_id}?passthrough={current_user.id}"
+#     }
 
 
 # ======================================
@@ -100,51 +100,51 @@ def create_checkout(
 # ======================================
 
 
-@router.post("/webhook")
-async def paddle_webhook(request: Request, db: Session = Depends(get_db)):
+# @router.post("/webhook")
+# async def paddle_webhook(request: Request, db: Session = Depends(get_db)):
 
-    data = await request.json()
+#     data = await request.json()
 
-    event_type = data.get("event_type")
+#     event_type = data.get("event_type")
 
-    if event_type == "subscription_created":
+#     if event_type == "subscription_created":
 
-        user_id = data.get("passthrough")
-        plan_id = data.get("subscription", {}).get("plan_id")
+#         user_id = data.get("passthrough")
+#         plan_id = data.get("subscription", {}).get("plan_id")
 
-        if not user_id:
-            return {"status": "no user"}
+#         if not user_id:
+#             return {"status": "no user"}
 
-        existing = (
-            db.query(Subscription)
-            .filter(
-                Subscription.user_id == int(user_id), Subscription.status == "active"
-            )
-            .first()
-        )
+#         existing = (
+#             db.query(Subscription)
+#             .filter(
+#                 Subscription.user_id == int(user_id), Subscription.status == "active"
+#             )
+#             .first()
+#         )
 
-        if existing:
-            existing.status = "cancelled"
+#         if existing:
+#             existing.status = "cancelled"
 
-        expire = datetime.utcnow() + timedelta(days=30)
+#         expire = datetime.utcnow() + timedelta(days=30)
 
-        new_sub = Subscription(
-            user_id=int(user_id),
-            plan_id=int(plan_id),
-            start_date=datetime.utcnow(),
-            expire_date=expire,
-            status="active",
-        )
+#         new_sub = Subscription(
+#             user_id=int(user_id),
+#             plan_id=int(plan_id),
+#             start_date=datetime.utcnow(),
+#             expire_date=expire,
+#             status="active",
+#         )
 
-        db.add(new_sub)
-        db.commit()
+#         db.add(new_sub)
+#         db.commit()
 
-        print(f"✅ Paddle subscription created user {user_id}")
+#         print(f"✅ Paddle subscription created user {user_id}")
 
-    elif event_type == "subscription_cancelled":
-        print("❌ Subscription cancelled")
+#     elif event_type == "subscription_cancelled":
+#         print("❌ Subscription cancelled")
 
-    return {"status": "success"}
+#     return {"status": "success"}
 
 
 # ======================================
@@ -242,3 +242,39 @@ def subscribe_local(
     db.commit()
 
     return {"message": "Subscribed successfully"}
+
+
+@router.post("/webhook/lemonsqueezy")
+async def lemonsqueezy_webhook(request: Request, db: Session = Depends(get_db)):
+    try:
+        data = await request.json()
+
+        print("🔥 WEBHOOK DATA:", data)  # debug
+
+        event = data.get("meta", {}).get("event_name")
+
+        # ✅ only handle successful subscription
+        if event == "subscription_created":
+
+            attributes = data.get("data", {}).get("attributes", {})
+
+            email = attributes.get("user_email")
+            product_name = attributes.get("product_name")
+
+            if not email:
+                return {"status": "no email"}
+
+            user = db.query(User).filter(User.email == email).first()
+
+            if user:
+                user.plan = product_name
+                user.is_active = True
+                db.commit()
+
+                print(f"✅ Plan activated for {email}: {product_name}")
+
+        return {"status": "ok"}
+
+    except Exception as e:
+        print("❌ WEBHOOK ERROR:", str(e))
+        return {"status": "error"}
