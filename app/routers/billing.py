@@ -254,7 +254,11 @@ async def lemonsqueezy_webhook(request: Request, db: Session = Depends(get_db)):
         event = data.get("meta", {}).get("event_name")
 
         # ✅ only handle successful subscription
-        if event == "subscription_created":
+        if event in [
+            "subscription_created",
+            "subscription_updated",
+            "subscription_payment_success",
+        ]:
 
             attributes = data.get("data", {}).get("attributes", {})
 
