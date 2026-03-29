@@ -248,34 +248,59 @@ def subscribe_local(
 async def lemonsqueezy_webhook(request: Request, db: Session = Depends(get_db)):
     try:
         data = await request.json()
-
-        print("🔥 WEBHOOK DATA:", data)  # debug
+        print("🔥 WEBHOOK DATA:", data)
 
         event = data.get("meta", {}).get("event_name")
+        attributes = data.get("data", {}).get("attributes", {})
 
-        # ✅ only handle successful subscription
-        if event in [
-            "subscription_created",
-            "subscription_updated",
-            "subscription_payment_success",
-        ]:
+        email = attributes.get("user_email")
 
-            attributes = data.get("data", {}).get("attributes", {})
+        if not email:
+            return {"status": "no email"}
 
-            email = attributes.get("user_email")
+        user = db.query(User).filter(User.email == email).first()
+
+        if not user:
+            return {"status": "user not found"}
+
+        # ✅ ONLY handle subscription_updated (BEST EVENT)
+        if event == "subscription_updated":
+
             product_name = attributes.get("product_name")
 
-            if not email:
-                return {"status": "no email"}
+            # plan find karo DB se
+            plan = db.query(Plan).filter(Plan.name == product_name).first()
 
-            user = db.query(User).filter(User.email == email).first()
+            if not plan:
+                print("❌ Plan not found in DB")
+                return {"status": "plan not found"}
 
-            if user:
-                user.plan = product_name
-                user.is_active = True
-                db.commit()
+            # old subscription cancel
+            old = (
+                db.query(Subscription)
+                .filter(
+                    Subscription.user_id == user.id,
+                    Subscription.status == "active",
+                )
+                .first()
+            )
 
-                print(f"✅ Plan activated for {email}: {product_name}")
+            if old:
+                old.status = "cancelled"
+
+            # new subscription create
+            new_sub = Subscription(
+                user_id=user.id,
+                plan_id=plan.id,
+                start_date=datetime.utcnow(),
+                expire_date=datetime.utcnow() + timedelta(days=30),
+                status="active",
+            )
+
+            db.add(new_sub)
+            db.commit()
+
+            print(f"✅ Subscription created for {email}: {product_name}")
 
         return {"status": "ok"}
 
