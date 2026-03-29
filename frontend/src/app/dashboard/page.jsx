@@ -42,6 +42,8 @@ export default function Dashboard() {
   const [zones,setZones] = useState([]);
   const [plan, setPlan] = useState({});
   const [showUpgrade, setShowUpgrade] = useState(false);
+  const [daysLeft, setDaysLeft] = useState(0);
+  const [expired, setExpired] = useState(false);
   
   
 useEffect(() => {
@@ -53,6 +55,11 @@ useEffect(() => {
     window.location.href = "/login";
     return;
   }
+
+  if (expired) {
+  window.location.href = "/pricing";
+  return;
+}
 
   loadDashboard();
 
@@ -125,6 +132,8 @@ useEffect(() => {
     setStats(statsRes.data || {});
     const planRes = await api.get("/billing/my-subscription");
     setPlan(planRes.data || {});
+    setDaysLeft(planRes.data?.days_left || 0);
+    setExpired(planRes.data?.expired || false);
 
     await loadRecent();
     await loadSources(range);
@@ -300,6 +309,27 @@ recent.forEach((log) => {
     );
   }
 
+  if (expired) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="bg-white p-8 rounded shadow text-center">
+        <h2 className="text-2xl font-bold mb-4">
+          Your plan has expired 🚫
+        </h2>
+        <p className="mb-6 text-gray-600">
+          Upgrade your plan to continue using the platform.
+        </p>
+        <button
+          onClick={() => (window.location.href = "/pricing")}
+          className="bg-blue-600 text-white px-6 py-2 rounded"
+        >
+          Upgrade Now
+        </button>
+      </div>
+    </div>
+  );
+}
+
   return (
 
    <div className="p-8 space-y-10 bg-gray-50 min-h-screen">
@@ -317,6 +347,19 @@ Live
 </span>
 
 </h1>
+
+{!expired && (
+  <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-2 rounded mb-4">
+    {daysLeft > 0
+      ? `⏳ ${daysLeft} days left in your plan`
+      : "⚠️ Plan expiring today"}
+  </div>
+)}
+{daysLeft > 0 && daysLeft <= 2 && !expired && (
+  <div className="bg-yellow-50 border border-yellow-300 text-yellow-800 px-4 py-2 rounded mb-4">
+    ⚠️ Your plan is expiring soon. Upgrade now.
+  </div>
+)}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
 

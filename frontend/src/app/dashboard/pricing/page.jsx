@@ -8,6 +8,8 @@ export default function PricingPage() {
   const [plans, setPlans] = useState([]);
   const [currentPlan, setCurrentPlan] = useState(null);
   const [token, setToken] = useState(null);
+  const [daysLeft, setDaysLeft] = useState(0);
+const [expired, setExpired] = useState(false);
 
   // Load token
   useEffect(() => {
@@ -31,6 +33,8 @@ export default function PricingPage() {
       console.log("SUBSCRIPTION API:", res.data);
 
       setCurrentPlan(res?.data?.plan || null);
+      setDaysLeft(res?.data?.days_left || 0);
+      setExpired(res?.data?.expired || false);
     } catch (err) {
       console.log("Subscription error:", err);
       setCurrentPlan(null);
@@ -74,11 +78,27 @@ export default function PricingPage() {
         Choose Your Plan
       </h1>
 
+      {daysLeft > 0 && daysLeft <= 2 && !expired && (
+  <div className="bg-yellow-50 border border-yellow-300 text-yellow-800 px-4 py-2 rounded mb-4 text-center">
+    ⚠️ Your plan is expiring soon
+  </div>
+)}
+
+      {expired ? (
+  <div className="bg-red-50 border border-red-300 text-red-700 px-4 py-2 rounded mb-6 text-center">
+    🚫 Your plan has expired. Please upgrade to continue.
+  </div>
+) : (
+  <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-2 rounded mb-6 text-center">
+    ⏳ {daysLeft > 0 ? `${daysLeft} days left` : "Plan expiring today"}
+  </div>
+)}
+
       <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
         {Array.isArray(plans) &&
           plans.map((p) => {
             const planName = p?.name || "";
-            const userPlan = currentPlan || "";
+            const userPlan = String(currentPlan?.name || "").toLowerCase();
 
             const isCurrent =
               planName.toLowerCase() === userPlan.toLowerCase();
@@ -130,7 +150,7 @@ export default function PricingPage() {
                 </div>
 
                 <button
-                  disabled={isCurrent}
+                  disabled={isCurrent && !expired}
                   onClick={() => {
                     const link = checkoutLinks[planName];
                     if (link) {
@@ -148,7 +168,11 @@ export default function PricingPage() {
                         : "bg-gray-900 text-white hover:bg-black"
                     }`}
                 >
-                  {isCurrent ? "Current Plan" : "Choose Plan"}
+                  {isCurrent && !expired
+  ? "Current Plan"
+  : expired && isCurrent
+  ? "Renew Plan"
+  : "Choose Plan"}
                 </button>
               </div>
             );

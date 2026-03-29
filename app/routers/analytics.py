@@ -10,9 +10,32 @@ from sqlalchemy import func
 from app.models.click_log import ClickLog
 from sqlalchemy import func, text
 from app.models.conversion import Conversion
+from app.models.subscription import Subscription
+from datetime import datetime
+from fastapi import HTTPException
 
 
 router = APIRouter(prefix="/api/analytics", tags=["Analytics"])
+
+
+def check_active_subscription(db, user_id):
+    sub = (
+        db.query(Subscription)
+        .filter(
+            Subscription.user_id == user_id,
+            Subscription.status == "active",
+        )
+        .first()
+    )
+
+    if not sub:
+        raise HTTPException(status_code=403, detail="Subscription expired")
+
+    # 🔥 ADD THIS (CRITICAL)
+    if sub.expire_date and sub.expire_date < datetime.utcnow():
+        sub.status = "expired"
+        db.commit()
+        raise HTTPException(status_code=403, detail="Subscription expired")
 
 
 # ================================
@@ -31,7 +54,7 @@ def get_recent_clicks(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-
+    check_active_subscription(db, current_user.id)
     offset = (page - 1) * limit
 
     query = (
@@ -118,7 +141,7 @@ def analytics_overview(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-
+    check_active_subscription(db, current_user.id)
     total = (
         db.query(func.count(ClickLog.id))
         .filter(ClickLog.user_id == current_user.id)
@@ -189,7 +212,7 @@ def analytics_overview(
 def analytics_countries(
     db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
 ):
-
+    check_active_subscription(db, current_user.id)
     rows = (
         db.query(ClickLog.country, func.count(ClickLog.id))
         .filter(
@@ -214,7 +237,7 @@ def analytics_countries(
 def analytics_devices(
     db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
 ):
-
+    check_active_subscription(db, current_user.id)
     rows = (
         db.query(ClickLog.device_type, func.count(ClickLog.id))
         .filter(
@@ -237,7 +260,7 @@ def analytics_devices(
 def analytics_browsers(
     db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
 ):
-
+    check_active_subscription(db, current_user.id)
     rows = (
         db.query(ClickLog.browser, func.count(ClickLog.id))
         .filter(
@@ -260,7 +283,7 @@ def analytics_browsers(
 def analytics_offers(
     db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
 ):
-
+    check_active_subscription(db, current_user.id)
     rows = (
         db.query(ClickLog.offer_id, func.count(ClickLog.id))
         .filter(
@@ -284,7 +307,7 @@ def analytics_offers(
 def analytics_campaigns(
     db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
 ):
-
+    check_active_subscription(db, current_user.id)
     rows = (
         db.query(ClickLog.campaign_id, func.count(ClickLog.id))
         .filter(
@@ -310,7 +333,7 @@ def traffic_sources(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-
+    check_active_subscription(db, current_user.id)
     query = db.query(ClickLog.traffic_source, func.count(ClickLog.id)).filter(
         ClickLog.user_id == current_user.id
     )

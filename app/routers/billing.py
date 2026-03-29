@@ -50,18 +50,36 @@ def my_subscription(
     )
 
     if not sub:
-        return {"subscription": None}
+        return {
+            "subscription": None,
+            "plan": None,
+            "days_left": 0,
+            "expired": True,
+        }
 
     if sub.expire_date and sub.expire_date < datetime.utcnow():
         sub.status = "expired"
         db.commit()
-        return {"subscription": None}
+
+        return {
+            "subscription": None,
+            "plan": None,
+            "days_left": 0,
+            "expired": True,
+        }
+
+    days_left = 0
+
+    if sub.expire_date:
+        days_left = max(0, (sub.expire_date - datetime.utcnow()).days)
 
     return {
         "id": sub.id,
         "status": sub.status,
         "start_date": sub.start_date,
         "expire_date": sub.expire_date,
+        "days_left": days_left,
+        "expired": False,
         "plan": {
             "name": sub.plan.name,
             "price": sub.plan.price,

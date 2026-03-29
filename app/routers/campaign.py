@@ -16,9 +16,31 @@ from sqlalchemy import func
 from app.models.click_log import ClickLog
 from sqlalchemy import func
 from app.services.plan_limits import get_final_campaign_limit
+from app.models.subscription import Subscription
+from datetime import datetime
 
 
 router = APIRouter(tags=["Campaigns"])
+
+
+def check_active_subscription(db, user_id):
+    sub = (
+        db.query(Subscription)
+        .filter(
+            Subscription.user_id == user_id,
+            Subscription.status == "active",
+        )
+        .first()
+    )
+
+    if not sub:
+        raise HTTPException(status_code=403, detail="Subscription expired")
+
+    # 🔥 ADD THIS (CRITICAL)
+    if sub.expire_date and sub.expire_date < datetime.utcnow():
+        sub.status = "expired"
+        db.commit()
+        raise HTTPException(status_code=403, detail="Subscription expired")
 
 
 # ==========================
@@ -62,6 +84,8 @@ def create_campaign(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    check_active_subscription(db, current_user.id)
+
     try:
 
         # ✅ NEW (DB BASED LIMIT)
@@ -237,7 +261,7 @@ def toggle_campaign_status(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-
+    check_active_subscription(db, current_user.id)
     campaign = (
         db.query(Campaign)
         .filter(
@@ -301,7 +325,7 @@ def delete_campaign(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-
+    check_active_subscription(db, current_user.id)
     campaign = (
         db.query(Campaign)
         .filter(
@@ -413,6 +437,7 @@ def update_campaign(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    check_active_subscription(db, current_user.id)
     campaign = (
         db.query(Campaign)
         .filter(
