@@ -1,5 +1,6 @@
-node_modules
-.next
+node_modules/
+.next/
 .env
-__pycache__
+__pycache__/
 *.pyc
+app/services/email_service.py
