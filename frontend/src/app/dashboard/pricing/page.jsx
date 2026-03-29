@@ -21,15 +21,20 @@ useEffect(() => {
   loadCurrentPlan();
 }, [token]);
 
-  const loadCurrentPlan = async () => {
+ const loadCurrentPlan = async () => {
   try {
     const res = await api.get("/billing/my-subscription");
-    setCurrentPlan(res.data?.plan?.name || null);
+
+    console.log("SUBSCRIPTION API:", res.data); // 👈 debug
+
+    setCurrentPlan(res.data?.plan || null);
+
   } catch {
     setCurrentPlan(null);
   }
 };
-
+const isCurrent =
+  currentPlan?.toLowerCase() === p.name?.toLowerCase();
 const checkoutLinks = {
   Basic: "https://traffic-intelligence.lemonsqueezy.com/checkout/buy/2e53426d-cf76-4ce2-9ea7-e794f4604cff",
   Pro: "https://traffic-intelligence.lemonsqueezy.com/checkout/buy/43392cb4-bd85-4b66-b4a3-aa0452b03da2",
