@@ -8,7 +8,7 @@ import toast from "react-hot-toast";
 export default function VerifyOTPPage() {
 
   const router = useRouter();
-
+  const [cooldown, setCooldown] = useState(0);
   const [email, setEmail] = useState(""); // ✅ FIX
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
@@ -25,6 +25,27 @@ export default function VerifyOTPPage() {
       setEmail(emailParam);
     }
   }, []);
+
+useEffect(() => {
+  if (cooldown <= 0) return;
+
+  const timer = setInterval(() => {
+    setCooldown((prev) => prev - 1);
+  }, 1000);
+
+  return () => clearInterval(timer);
+}, [cooldown]);
+
+useEffect(() => {
+  const saved = localStorage.getItem("otp_timer");
+
+  if (saved) {
+    const diff = Math.floor((Date.now() - parseInt(saved)) / 1000);
+    if (diff < 60) setCooldown(60 - diff);
+  }
+}, []);
+
+
 
   const verify = async () => {
 
@@ -79,34 +100,60 @@ export default function VerifyOTPPage() {
         </p>
 
         <input
-          className="border p-3 w-full mb-4 rounded-lg text-center text-lg tracking-widest focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          placeholder="------"
-          maxLength={6}
-          value={otp}
-          onChange={(e) => setOtp(e.target.value)}
-        />
+  type="text"
+  inputMode="numeric"
+  pattern="[0-9]*"
+  className="border p-3 w-full mb-4 rounded-lg text-center text-lg tracking-widest focus:outline-none focus:ring-2 focus:ring-indigo-500"
+  placeholder="••••••"
+  maxLength={6}
+  value={otp}
+  onChange={(e) => {
+    const val = e.target.value.replace(/\D/g, ""); // only numbers
+    setOtp(val);
+  }}
+/>
 
         <button
-          onClick={verify}
-          disabled={loading}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white w-full py-3 rounded-lg font-semibold transition"
-        >
-          {loading ? "Verifying..." : "Verify OTP"}
-        </button>
+  onClick={verify}
+  disabled={loading || otp.length !== 6}
+  className={`w-full py-3 rounded-lg font-semibold transition
+    ${
+      loading || otp.length !== 6
+        ? "bg-gray-400 cursor-not-allowed"
+        : "bg-indigo-600 hover:bg-indigo-700 text-white"
+    }`}
+>
+  {loading ? "Verifying..." : "Verify OTP"}
+</button>
 
-        <button
-          onClick={async () => {
-            try {
-              await api.post("/auth/resend-otp", { email });
-              toast.success("OTP resent 📩");
-            } catch {
-              toast.error("Failed to resend");
-            }
-          }}
-          className="mt-3 text-sm text-indigo-600 hover:underline"
-        >
-          Resend OTP
-        </button>
+       <button
+  onClick={async () => {
+    if (cooldown > 0) return;
+
+    try {
+      await api.post("/auth/resend-otp", { email });
+
+      toast.success("OTP resent 📩");
+
+      localStorage.setItem("otp_timer", Date.now());
+      setCooldown(60);
+
+    } catch {
+      toast.error("Failed to resend");
+    }
+  }}
+  disabled={cooldown > 0}
+  className={`mt-3 text-sm font-medium transition 
+    ${
+      cooldown > 0
+        ? "text-gray-400 cursor-not-allowed"
+        : "text-indigo-600 hover:underline"
+    }`}
+>
+  {cooldown > 0
+    ? `Resend in ${cooldown}s`
+    : "Resend OTP"}
+</button>
 
       </div>
 
