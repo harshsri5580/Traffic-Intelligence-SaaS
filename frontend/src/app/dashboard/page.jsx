@@ -56,10 +56,6 @@ useEffect(() => {
     return;
   }
 
-  if (expired) {
-  window.location.href = "/pricing";
-  return;
-}
 
   loadDashboard();
 
@@ -113,6 +109,14 @@ useEffect(() => {
 
 }, []);
 
+
+useEffect(() => {
+  if (expired) {
+    document.body.style.overflow = "hidden";
+  } else {
+    document.body.style.overflow = "auto";
+  }
+}, [expired]);
 
 useEffect(() => {
   if (
@@ -309,26 +313,6 @@ recent.forEach((log) => {
     );
   }
 
-  if (expired) {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded shadow text-center">
-        <h2 className="text-2xl font-bold mb-4">
-          Your plan has expired 🚫
-        </h2>
-        <p className="mb-6 text-gray-600">
-          Upgrade your plan to continue using the platform.
-        </p>
-        <button
-          onClick={() => (window.location.href = "/pricing")}
-          className="bg-blue-600 text-white px-6 py-2 rounded"
-        >
-          Upgrade Now
-        </button>
-      </div>
-    </div>
-  );
-}
 
   return (
 
