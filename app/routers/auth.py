@@ -16,6 +16,7 @@ from app.models.email_otp import EmailOTP
 from app.services.security import generate_otp
 from app.models.subscription import Subscription
 from app.models.plan import Plan
+from app.core.config import FREE_TRIAL_ENABLED
 
 # 🚫 TEMP EMAIL BLOCK LIST
 TEMP_EMAIL_DOMAINS = {
@@ -133,23 +134,26 @@ def register(data: RegisterRequest, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_user)
 
-    # 🚀 AUTO TRIAL (7 DAYS BASIC PLAN)
+    # 🔥 FREE TRIAL CONTROL (PRODUCTION SAFE)
 
-    free_plan = db.query(Plan).filter(Plan.name == "Basic").first()
+    if FREE_TRIAL_ENABLED:
+        free_plan = db.query(Plan).filter(Plan.name == "Basic").first()
 
-    if free_plan:
-        trial = Subscription(
-            user_id=new_user.id,
-            plan_id=free_plan.id,
-            start_date=datetime.utcnow(),
-            expire_date=datetime.utcnow() + timedelta(days=7),
-            status="active",
-        )
+        if free_plan:
+            trial = Subscription(
+                user_id=new_user.id,
+                plan_id=free_plan.id,
+                start_date=datetime.utcnow(),
+                expire_date=datetime.utcnow() + timedelta(days=7),
+                status="active",
+            )
 
-        db.add(trial)
-        db.commit()
+            db.add(trial)
+            db.commit()
 
-        print(f"🎁 Trial activated for {new_user.email}")
+            print(f"🎁 Trial activated for {new_user.email}")
+    else:
+        print("🚫 Free trial disabled")
 
     db.add(otp_entry)
     db.commit()

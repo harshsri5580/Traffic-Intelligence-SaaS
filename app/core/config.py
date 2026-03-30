@@ -9,3 +9,5 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 
 ENABLE_CHALLENGE = os.getenv("ENABLE_CHALLENGE", "false").lower() == "true"
 BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:8000")
+# 🔥 NEW (FREE TRIAL CONTROL)
+FREE_TRIAL_ENABLED = os.getenv("FREE_TRIAL_ENABLED", "true").lower() == "true"

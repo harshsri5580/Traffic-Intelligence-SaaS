@@ -71,17 +71,19 @@ export default function PricingPage() {
       {/* 🔥 STATUS BANNER */}
       <div className="max-w-3xl mx-auto mb-10">
         {/* 🔥 SMART PLAN STATUS */}
-{!expired && daysLeft > 3 && (
-  <div className="bg-blue-50 border border-blue-200 text-blue-700 px-6 py-3 rounded text-center font-medium">
-    ⏳ {daysLeft} days left in your plan
-  </div>
-)}
+        {/* ⚠️ Expiring soon */}
+        {!expired && daysLeft > 0 && daysLeft <= 3 && (
+          <div className="bg-yellow-50 border border-yellow-300 text-yellow-800 px-6 py-3 rounded text-center font-medium">
+            ⚠️ Your plan is expiring in {daysLeft} days. Upgrade now.
+          </div>
+        )}
 
-{!expired && daysLeft <= 3 && (
-  <div className="bg-yellow-50 border border-yellow-300 text-yellow-800 px-6 py-3 rounded text-center font-medium">
-    ⚠️ Your plan is expiring in {daysLeft} days. Upgrade now.
-  </div>
-)}
+        {/* 🔴 Expired today */}
+        {!expired && daysLeft === 0 && (
+          <div className="bg-red-50 border border-red-300 text-red-800 px-6 py-3 rounded text-center font-medium">
+            🚫 Your plan has expired. Upgrade now.
+          </div>
+        )}
       </div>
 
       <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
@@ -99,11 +101,10 @@ export default function PricingPage() {
             <div
               key={p.id}
               className={`relative p-8 rounded-2xl border shadow-lg transition
-              ${
-                isPopular
+              ${isPopular
                   ? "border-indigo-600 bg-white scale-105"
                   : "bg-white border-gray-200"
-              }`}
+                }`}
             >
 
               {isPopular && (
@@ -140,10 +141,9 @@ export default function PricingPage() {
                   }
                 }}
                 className={`mt-8 w-full py-3 rounded-lg font-semibold transition
-                  ${
-                    isCurrent && !expired
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : isPopular
+                  ${isCurrent && !expired
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : isPopular
                       ? "bg-indigo-600 text-white hover:bg-indigo-700"
                       : "bg-gray-900 text-white hover:bg-black"
                   }`}
@@ -151,8 +151,8 @@ export default function PricingPage() {
                 {isCurrent && !expired
                   ? "Current Plan"
                   : expired && isCurrent
-                  ? "Renew Plan"
-                  : "Choose Plan"}
+                    ? "Renew Plan"
+                    : "Choose Plan"}
               </button>
 
             </div>

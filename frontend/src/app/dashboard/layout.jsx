@@ -10,6 +10,7 @@ export default function DashboardLayout({ children }) {
   const [loading, setLoading] = useState(true);
   const [expired, setExpired] = useState(false);
   const [showResume, setShowResume] = useState(false);
+  const [noPlan, setNoPlan] = useState(false);
 
   const pathname = usePathname(); // ✅ FIX
   const isPricingPage = pathname.includes("/pricing"); // ✅ FIX
@@ -29,15 +30,35 @@ export default function DashboardLayout({ children }) {
     try {
       const res = await api.get("/billing/my-subscription");
 
-      if (!res.data || res.data.expired) {
-  setExpired(true);
-  setShowResume(false);
-} else {
-  setExpired(false);
-  setShowResume(true); // 👈 upgrade ke baad resume dikhega
-}
-    } catch {
+      const hasSubscription = res.data?.has_subscription;
+
+      if (!hasSubscription) {
+        // 🆕 NEW USER (NO PLAN)
+        setExpired(false);
+        setNoPlan(true);
+        setShowResume(false);
+
+      } else if (res.data.expired) {
+        // 🔴 EXPIRED USER
+        setExpired(true);
+        setNoPlan(false);
+        setShowResume(false);
+
+      } else {
+        // ✅ ACTIVE USER
+        setExpired(false);
+        setNoPlan(false);
+        setShowResume(true);
+      }
+
+    } catch (err) {
+      console.error("Plan check error:", err);
+
+      // fallback → treat as expired (safe)
       setExpired(true);
+      setNoPlan(false);
+      setShowResume(false);
+
     } finally {
       setLoading(false);
     }
@@ -45,13 +66,13 @@ export default function DashboardLayout({ children }) {
 
 
   const resumeCampaigns = async () => {
-  try {
-    await api.post("/campaigns/resume-all");
-    window.location.reload(); // safest refresh
-  } catch {
-    alert("Failed to resume campaigns");
-  }
-};
+    try {
+      await api.post("/campaigns/resume-all");
+      window.location.reload(); // safest refresh
+    } catch {
+      alert("Failed to resume campaigns");
+    }
+  };
 
   // ✅ Loading screen
   if (loading) {
@@ -67,8 +88,8 @@ export default function DashboardLayout({ children }) {
 
       {/* ✅ Sidebar hide only when expired AND not pricing */}
       <div className={`${expired ? "opacity-50" : ""}`}>
-  <Sidebar />
-</div>
+        <Sidebar />
+      </div>
 
       <div className="flex flex-1 flex-col">
 
@@ -77,36 +98,37 @@ export default function DashboardLayout({ children }) {
             Traffic Intelligence SaaS
           </h1>
 
-        
+
         </header>
 
         <main className="flex-1 overflow-y-auto p-8">
 
           {/* ✅ MAIN CONTENT */}
           <div
-            className={`${
-              expired && !isPricingPage
-                ? "blur-md opacity-60 pointer-events-none select-none"
-                : ""
-            }`}
+            className={`${(expired || noPlan) && !isPricingPage
+              ? "blur-md opacity-60 pointer-events-none select-none"
+              : ""
+              }`}
           >
             {children}
           </div>
 
           {/* 🔴 LOCK SCREEN (ONLY NON-PRICING) */}
-          {expired && !isPricingPage && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          {(expired || noPlan) && !isPricingPage && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
 
               <div className="bg-white p-10 rounded-xl shadow-xl text-center max-w-md w-full">
 
                 <div className="text-5xl mb-4">🚫</div>
 
                 <h2 className="text-2xl font-bold mb-2">
-                  Your plan has expired
+                  {noPlan ? "No active plan found" : "Your plan has expired"}
                 </h2>
 
                 <p className="text-gray-600 mb-6">
-                  Upgrade your plan to continue using campaigns, analytics and tracking.
+                  {noPlan
+                    ? "Choose a plan to start using campaigns, analytics and tracking."
+                    : "Upgrade your plan to continue using campaigns, analytics and tracking."}
                 </p>
 
                 <div className="flex gap-3 justify-center flex-wrap">
@@ -130,13 +152,13 @@ export default function DashboardLayout({ children }) {
 
 
                   {showResume && (
-  <button
-    onClick={resumeCampaigns}
-    className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg"
-  >
-    Resume Campaigns
-  </button>
-)}
+                    <button
+                      onClick={resumeCampaigns}
+                      className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg"
+                    >
+                      Resume Campaigns
+                    </button>
+                  )}
 
                 </div>
 
