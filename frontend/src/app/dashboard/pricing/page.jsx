@@ -85,10 +85,10 @@ export default function PricingPage() {
         {plans.map((p) => {
 
           const planName = p?.name || "";
-          const userPlan = String(currentPlan || "").toLowerCase();
+          const userPlan = currentPlan?.name?.toLowerCase() || "";
 
           const isCurrent =
-            planName.toLowerCase() === userPlan;
+            planName.toLowerCase().trim() === userPlan.trim();
 
           const isPopular = planName.toLowerCase().includes("pro");
 
