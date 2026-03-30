@@ -36,10 +36,22 @@ def check_active_subscription(db, user_id):
     if not sub:
         raise HTTPException(status_code=403, detail="Subscription expired")
 
-    # 🔥 ADD THIS (CRITICAL)
+    # 🔥 expiry check
     if sub.expire_date and sub.expire_date < datetime.utcnow():
         sub.status = "expired"
+
+        # 🔥 ADD THIS (IMPORTANT)
+        campaigns = (
+            db.query(Campaign)
+            .filter(Campaign.user_id == user_id, Campaign.is_active == True)
+            .all()
+        )
+
+        for c in campaigns:
+            c.is_active = False
+
         db.commit()
+
         raise HTTPException(status_code=403, detail="Subscription expired")
 
 

@@ -332,16 +332,16 @@ Live
 
 </h1>
 
-{!expired && (
-  <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-2 rounded mb-4">
-    {daysLeft > 0
-      ? `⏳ ${daysLeft} days left in your plan`
-      : "⚠️ Plan expiring today"}
+{/* 🔥 SMART PLAN STATUS */}
+{!expired && daysLeft > 3 && (
+  <div className="bg-blue-50 border border-blue-200 text-blue-700 px-6 py-3 rounded text-center font-medium">
+    ⏳ {daysLeft} days left in your plan
   </div>
 )}
-{daysLeft > 0 && daysLeft <= 2 && !expired && (
-  <div className="bg-yellow-50 border border-yellow-300 text-yellow-800 px-4 py-2 rounded mb-4">
-    ⚠️ Your plan is expiring soon. Upgrade now.
+
+{!expired && daysLeft <= 3 && (
+  <div className="bg-yellow-50 border border-yellow-300 text-yellow-800 px-6 py-3 rounded text-center font-medium">
+    ⚠️ Your plan is expiring in {daysLeft} days. Upgrade now.
   </div>
 )}
 

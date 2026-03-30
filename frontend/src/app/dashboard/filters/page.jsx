@@ -101,7 +101,7 @@ Add
 
 <tr>
 
-<th className="p-2 border">ID</th>
+{/* <th className="p-2 border">ID</th> */}
 <th className="p-2 border">Category</th>
 <th className="p-2 border">Value</th>
 <th className="p-2 border">Status</th>
@@ -117,7 +117,7 @@ Add
 
 <tr key={f.id} className="text-center hover:bg-gray-50">
 
-<td className="p-2 border">{f.id}</td>
+{/* <td className="p-2 border">{f.id}</td> */}
 
 <td className="p-2 border uppercase">
 {f.category}

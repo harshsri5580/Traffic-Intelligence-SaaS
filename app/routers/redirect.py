@@ -15,7 +15,7 @@ from app.models.blocked_ip import BlockedIP
 from app.models.click_log import ClickLog
 from app.models.raw_hit_log import RawHitLog
 from app.services.bot_classifier import BotClassifier
-
+from app.models.subscription import Subscription
 from app.routers.challenge import get_real_ip
 from app.services.visitor_context import VisitorContext
 from app.services.rule_engine import RuleEngine
@@ -156,6 +156,28 @@ async def redirect_campaign(
 
     if not campaign:
         return RedirectResponse("/decoy")
+
+    # 🔥 SUBSCRIPTION CHECK (FINAL FIX)
+
+    sub = (
+        db.query(Subscription).filter(Subscription.user_id == campaign.user_id).first()
+    )
+
+    if sub:
+
+        if sub.expire_date and sub.expire_date < datetime.utcnow():
+
+            sub.status = "expired"
+            db.commit()
+
+            # pause campaign
+            campaign.is_active = False
+            db.commit()
+
+            if campaign.fallback_url:
+                return RedirectResponse(campaign.fallback_url)
+
+            return RedirectResponse("/decoy")
 
     # ---------------------------------
     # SUBID TRACKING PARAMS

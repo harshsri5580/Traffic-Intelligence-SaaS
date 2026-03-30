@@ -70,15 +70,18 @@ export default function PricingPage() {
 
       {/* 🔥 STATUS BANNER */}
       <div className="max-w-3xl mx-auto mb-10">
-        {expired ? (
-          <div className="bg-red-50 border border-red-300 text-red-700 px-6 py-3 rounded text-center font-medium">
-            🚫 Your plan has expired. Upgrade to continue.
-          </div>
-        ) : (
-          <div className="bg-blue-50 border border-blue-200 text-blue-700 px-6 py-3 rounded text-center font-medium">
-            ⏳ {daysLeft > 0 ? `${daysLeft} days left in your plan` : "Plan expiring today"}
-          </div>
-        )}
+        {/* 🔥 SMART PLAN STATUS */}
+{!expired && daysLeft > 3 && (
+  <div className="bg-blue-50 border border-blue-200 text-blue-700 px-6 py-3 rounded text-center font-medium">
+    ⏳ {daysLeft} days left in your plan
+  </div>
+)}
+
+{!expired && daysLeft <= 3 && (
+  <div className="bg-yellow-50 border border-yellow-300 text-yellow-800 px-6 py-3 rounded text-center font-medium">
+    ⚠️ Your plan is expiring in {daysLeft} days. Upgrade now.
+  </div>
+)}
       </div>
 
       <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">

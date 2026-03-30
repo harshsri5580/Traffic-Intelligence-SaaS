@@ -9,6 +9,7 @@ import api from "../../services/api";
 export default function DashboardLayout({ children }) {
   const [loading, setLoading] = useState(true);
   const [expired, setExpired] = useState(false);
+  const [showResume, setShowResume] = useState(false);
 
   const pathname = usePathname(); // ✅ FIX
   const isPricingPage = pathname.includes("/pricing"); // ✅ FIX
@@ -29,14 +30,28 @@ export default function DashboardLayout({ children }) {
       const res = await api.get("/billing/my-subscription");
 
       if (!res.data || res.data.expired) {
-        setExpired(true);
-      }
+  setExpired(true);
+  setShowResume(false);
+} else {
+  setExpired(false);
+  setShowResume(true); // 👈 upgrade ke baad resume dikhega
+}
     } catch {
       setExpired(true);
     } finally {
       setLoading(false);
     }
   };
+
+
+  const resumeCampaigns = async () => {
+  try {
+    await api.post("/campaigns/resume-all");
+    window.location.reload(); // safest refresh
+  } catch {
+    alert("Failed to resume campaigns");
+  }
+};
 
   // ✅ Loading screen
   if (loading) {
@@ -62,16 +77,7 @@ export default function DashboardLayout({ children }) {
             Traffic Intelligence SaaS
           </h1>
 
-          {/* ✅ Logout always available */}
-          <button
-            onClick={() => {
-              localStorage.removeItem("token");
-              window.location.href = "/login";
-            }}
-            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded text-sm"
-          >
-            Logout
-          </button>
+        
         </header>
 
         <main className="flex-1 overflow-y-auto p-8">
@@ -103,7 +109,7 @@ export default function DashboardLayout({ children }) {
                   Upgrade your plan to continue using campaigns, analytics and tracking.
                 </p>
 
-                <div className="flex gap-3 justify-center">
+                <div className="flex gap-3 justify-center flex-wrap">
 
                   <button
                     onClick={() => (window.location.href = "/dashboard/pricing")}
@@ -121,6 +127,16 @@ export default function DashboardLayout({ children }) {
                   >
                     Logout
                   </button>
+
+
+                  {showResume && (
+  <button
+    onClick={resumeCampaigns}
+    className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg"
+  >
+    Resume Campaigns
+  </button>
+)}
 
                 </div>
 
