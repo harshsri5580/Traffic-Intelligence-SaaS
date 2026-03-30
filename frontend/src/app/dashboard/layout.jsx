@@ -30,22 +30,32 @@ export default function DashboardLayout({ children }) {
     try {
       const res = await api.get("/billing/my-subscription");
 
-      const hasSubscription = res.data?.has_subscription;
+      console.log("API RESPONSE 👉", res.data);
 
+      const data = res.data; // ✅ single source
+
+      // ✅ HAS PLAN (subscription exist karta hai ya nahi)
+      const hasSubscription = !!data?.id;
+
+      // ✅ BACKEND SE DIRECT VALUES
+      const isExpired = data?.expired ?? false;
+      const days = data?.days_left ?? 0;
+
+      // ✅ FINAL STATE LOGIC
       if (!hasSubscription) {
-        // 🆕 NEW USER (NO PLAN)
+        // 🆕 NO PLAN USER
         setExpired(false);
         setNoPlan(true);
         setShowResume(false);
 
-      } else if (res.data.expired) {
+      } else if (isExpired || days <= 0) {
         // 🔴 EXPIRED USER
         setExpired(true);
         setNoPlan(false);
         setShowResume(false);
 
       } else {
-        // ✅ ACTIVE USER
+        // ✅ ACTIVE USER (TRIAL / PAID)
         setExpired(false);
         setNoPlan(false);
         setShowResume(true);
@@ -54,9 +64,9 @@ export default function DashboardLayout({ children }) {
     } catch (err) {
       console.error("Plan check error:", err);
 
-      // fallback → treat as expired (safe)
-      setExpired(true);
-      setNoPlan(false);
+      // ❌ SAFE FALLBACK → NO PLAN (not expired)
+      setExpired(false);
+      setNoPlan(true);
       setShowResume(false);
 
     } finally {

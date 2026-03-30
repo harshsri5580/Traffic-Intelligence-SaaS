@@ -139,9 +139,26 @@ export default function Dashboard() {
       const data = planRes.data || {};
 
       setPlan(data);
-      setDaysLeft(data?.days_left ?? 0);
-      setExpired(data?.expired ?? false);
-      setHasSubscription(data?.has_subscription ?? false);  // 🔥 FIX
+
+      // ✅ HAS SUBSCRIPTION
+      const hasSub = !!data?.id;
+      setHasSubscription(hasSub);
+
+      // ✅ DAYS LEFT CALC
+      let days = 0;
+
+      if (data?.expire_date) {
+        const expiry = new Date(data.expire_date);
+        const now = new Date();
+
+        const diff = expiry - now;
+        days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+      }
+
+      setDaysLeft(days);
+
+      // ✅ EXPIRED
+      setExpired(days <= 0);
 
       await loadRecent();
       await loadSources(range);
@@ -336,8 +353,14 @@ export default function Dashboard() {
 
       </h1>
 
+      {/* 🟢 FREE TRIAL ACTIVE */}
+      {hasSubscription && !expired && (
+        <div className="bg-green-50 border border-green-300 text-green-800 px-6 py-3 rounded text-center font-medium">
+          🎉 Free Trial Active — {daysLeft} day{daysLeft > 1 ? "s" : ""} remaining
+        </div>
+      )}
       {/* 🔴 Expired */}
-      {hasSubscription && daysLeft === 0 && (
+      {hasSubscription && daysLeft <= 0 && (
         <div className="bg-red-50 border border-red-300 text-red-800 px-6 py-3 rounded text-center font-medium">
           🚫 Your plan has expired. Upgrade now.
         </div>
