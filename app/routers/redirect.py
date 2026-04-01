@@ -167,7 +167,10 @@ async def redirect_campaign(
 
     if blocked:
         print("🚫 BLOCKED IP HIT:", ip)
-        return RedirectResponse(campaign.safe_page_url or "/decoy")
+        decision = "blocked"
+        reason = "blocked_ip"
+        redirect_url = campaign.safe_page_url or "/decoy"
+        destination_url = redirect_url
 
     campaign = (
         db.query(Campaign)
@@ -199,7 +202,10 @@ async def redirect_campaign(
             db.commit()
 
             if campaign.fallback_url:
-                return RedirectResponse(campaign.fallback_url)
+                decision = "blocked"
+                reason = "subscription_expired"
+                redirect_url = campaign.fallback_url
+                destination_url = redirect_url
 
             redirect_url = "/decoy"
             destination_url = redirect_url
@@ -268,7 +274,10 @@ async def redirect_campaign(
                 db.rollback()
 
             # 🔥 REDIRECT TO CHALLENGE
-            return RedirectResponse(f"/challenge/{slug}")
+            redirect_url = f"/challenge/{slug}"
+            destination_url = redirect_url
+            decision = "blocked"
+            reason = "challenge_redirect"
 
     query = request.query_params
 
@@ -311,8 +320,10 @@ async def redirect_campaign(
         print("BLOCKED:", blocked_zone)
 
         if blocked_zone:
-            print("🚫 BLOCKED ZONE HIT:", sub1)
-            return RedirectResponse(campaign.safe_page_url or "/decoy")
+            decision = "blocked"
+            reason = "zone_block"
+            redirect_url = campaign.safe_page_url or "/decoy"
+            destination_url = redirect_url
 
     sub4 = query.get("sub4")
     sub5 = query.get("sub5")
@@ -552,7 +563,10 @@ async def redirect_campaign(
             if visitor.device_type in blocked_devices:
                 decision = set_decision(decision, "blocked")
                 reason = "Blocked device"
-                return RedirectResponse(campaign.safe_page_url or "/decoy")
+                decision = "blocked"
+                reason = "zone_block"
+                redirect_url = campaign.safe_page_url or "/decoy"
+                destination_url = redirect_url
 
     except Exception:
         pass
@@ -713,7 +727,7 @@ async def redirect_campaign(
             redirect_url = campaign.safe_page_url or "/decoy"
             destination_url = redirect_url
 
-            return RedirectResponse(redirect_url)
+    # ❌ REMOVE RETURN
 
     except Exception:
         pass
@@ -763,16 +777,19 @@ async def redirect_campaign(
 
         # 🔥 challenge trigger
         elif decision_type == "challenge":
+
             try:
                 challenge_pass = redis_client.get(f"challenge_pass:{ip}")
             except Exception:
                 challenge_pass = None
 
             if ENABLE_CHALLENGE and not challenge_pass and campaign.is_active:
-                if campaign.is_active:
-                    return RedirectResponse(f"/challenge/{slug}")
-                else:
-                    return RedirectResponse(campaign.safe_page_url or "/decoy")
+
+                decision = "challenge"
+                reason = "decision_engine_challenge"
+
+                redirect_url = f"/challenge/{slug}"
+                destination_url = redirect_url
 
     except Exception:
         pass
