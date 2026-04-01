@@ -18,7 +18,7 @@ const behaviorScript = `
 
   setInterval(()=>{
     try{
-      fetch("${process.env.NEXT_PUBLIC_API_URL}/api/behavior/track",{
+      fetch("${process.env.NEXT_PUBLIC_API_URL}/behavior/track",{
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body:JSON.stringify({
