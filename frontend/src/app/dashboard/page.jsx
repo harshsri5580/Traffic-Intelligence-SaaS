@@ -356,7 +356,7 @@ export default function Dashboard() {
       {/* 🟢 FREE TRIAL ACTIVE */}
       {hasSubscription && !expired && (
         <div className="bg-green-50 border border-green-300 text-green-800 px-6 py-3 rounded text-center font-medium">
-          🎉 Free Trial Active — {daysLeft} day{daysLeft > 1 ? "s" : ""} remaining
+          Active — {daysLeft} day{daysLeft > 1 ? "s" : ""} remaining
         </div>
       )}
       {/* 🔴 Expired */}

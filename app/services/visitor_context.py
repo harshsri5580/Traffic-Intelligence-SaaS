@@ -2,6 +2,8 @@ import hashlib
 from fastapi import Request
 from user_agents import parse
 from urllib.parse import parse_qs
+import json
+from app.services.redis_client import redis_client
 
 from app.services.geo import get_geo_data, get_asn_data
 
@@ -358,13 +360,41 @@ class VisitorContext:
             self.bot_score += 40
 
         # ================================
-        # CANVAS FINGERPRINT
+        # ADVANCED FINGERPRINT (ADSPECT+)
         # ================================
 
         self.canvas_fingerprint = self.request.headers.get("x-canvas-fp")
+        self.webgl_fingerprint = self.request.headers.get("x-webgl-fp")
+        self.audio_fingerprint = self.request.headers.get("x-audio-fp")
+        self.font_fingerprint = self.request.headers.get("x-fonts-fp")
 
-        if self.canvas_fingerprint:
-            self.bot_score -= 5
+        # 🔥 COMBINED FINGERPRINT
+        try:
+            fp_raw = f"{self.canvas_fingerprint}|{self.webgl_fingerprint}|{self.audio_fingerprint}|{self.font_fingerprint}"
+            self.full_fingerprint = hashlib.sha256(fp_raw.encode()).hexdigest()
+        except Exception:
+            self.full_fingerprint = None
+
+        # 🔥 STORE IN REDIS (SAFE)
+        try:
+            if self.ip and self.full_fingerprint:
+                redis_client.hset(
+                    f"fingerprint:{self.ip}",
+                    mapping={
+                        "canvas": self.canvas_fingerprint or "",
+                        "webgl": self.webgl_fingerprint or "",
+                        "audio": self.audio_fingerprint or "",
+                        "fonts": self.font_fingerprint or "",
+                        "hash": self.full_fingerprint,
+                    },
+                )
+                redis_client.expire(f"fingerprint:{self.ip}", 3600)
+        except Exception:
+            pass
+
+        # 🔥 BOT SIGNAL (missing fingerprint = suspicious)
+        if not self.canvas_fingerprint:
+            self.bot_score += 10
 
         # ================================
         # FINAL BOT SCORE
@@ -394,6 +424,23 @@ class VisitorContext:
 
         else:
             self.traffic_quality = "clean"
+
+        # ================================
+        # FINGERPRINT REUSE DETECTION 🔥
+        # ================================
+
+        try:
+            if self.full_fingerprint:
+                key = f"fp_hits:{self.full_fingerprint}"
+                hits = redis_client.incr(key)
+
+                if hits == 1:
+                    redis_client.expire(key, 300)
+
+                if hits > 15:
+                    self.bot_score += 40
+        except Exception:
+            pass
 
         # ================================
         # SESSION FINGERPRINT

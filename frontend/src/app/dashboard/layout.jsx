@@ -18,6 +18,78 @@ export default function DashboardLayout({ children }) {
   useEffect(() => {
     const token = localStorage.getItem("token");
 
+
+    // ===============================
+    // 🔥 FINGERPRINT TRACKING (SAFE)
+    // ===============================
+    const sendFingerprint = async () => {
+      try {
+        // Canvas
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        ctx.textBaseline = "top";
+        ctx.font = "14px Arial";
+        ctx.fillText("fingerprint", 2, 2);
+        const canvasHash = canvas.toDataURL();
+
+        // WebGL
+        let webgl = "";
+        try {
+          const gl = canvas.getContext("webgl");
+          webgl = gl ? gl.getParameter(gl.RENDERER) : "";
+        } catch { }
+
+        // Audio fingerprint
+        let audioHash = "";
+        try {
+          const audioCtx = new OfflineAudioContext(1, 44100, 44100);
+          const oscillator = audioCtx.createOscillator();
+          oscillator.type = "triangle";
+          oscillator.connect(audioCtx.destination);
+          oscillator.start(0);
+          const buffer = await audioCtx.startRendering();
+          audioHash = buffer.getChannelData(0)[0].toString();
+        } catch { }
+
+        // Fonts (basic)
+        const fonts = [
+          "Arial",
+          "Verdana",
+          "Times New Roman",
+          "Courier New",
+        ];
+
+        const fontCheck = fonts.map((f) => {
+          const span = document.createElement("span");
+          span.style.fontFamily = f;
+          span.innerText = "test";
+          document.body.appendChild(span);
+          const width = span.offsetWidth;
+          document.body.removeChild(span);
+          return `${f}:${width}`;
+        });
+
+        // Send to backend
+        fetch("/api/fingerprint", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            canvas: canvasHash,
+            webgl,
+            audio: audioHash,
+            fonts: fontCheck.join(","),
+          }),
+        });
+      } catch (e) {
+        // silent fail
+      }
+    };
+
+    // run once
+    sendFingerprint();
+
     if (!token) {
       window.location.href = "/login";
       return;

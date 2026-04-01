@@ -3,68 +3,40 @@ import random
 import hashlib
 
 from sqlalchemy.orm import Session
-
 from app.services.smart_rotation import select_best_offer
 
 
 class RoutingEngine:
 
     def __init__(self, visitor, campaign, db: Optional[Session] = None):
-
         self.visitor = visitor
         self.campaign = campaign
         self.db = db
 
     # =====================================================
-    # MAIN ROUTING ENTRY
+    # MAIN ROUTING ENTRY (SMART PRIORITY)
     # =====================================================
 
     def evaluate(self) -> Optional[str]:
 
-        print("ROUTING ENGINE START")
-        print("Visitor Device:", self.visitor.device_type)
-        print("Visitor Country:", self.visitor.country_code)
+        # 🔥 Priority-based routing (Adspect style)
 
-        # 1 device routing
-        url = self.device_routing()
-        if url:
-            print("DEVICE ROUTE:", url)
-            print("COUNTRY ROUTE:", url)
-            return url
+        for method in [
+            self.device_routing,
+            self.country_routing,
+            self.timezone_routing,
+            self.referrer_routing,
+            self.returning_visitor_routing,
+            self.smart_offer_routing,
+            self.traffic_split_routing,
+        ]:
+            try:
+                url = method()
+                if url:
+                    return self.safe_url(url)
+            except Exception:
+                continue
 
-        # 2 country routing
-        url = self.country_routing()
-        if url:
-            print("DEVICE ROUTE:", url)
-            print("COUNTRY ROUTE:", url)
-            return url
-
-        # 3 timezone routing
-        url = self.timezone_routing()
-        if url:
-            return url
-
-        # 4 referrer routing
-        url = self.referrer_routing()
-        if url:
-            return url
-
-        # 5 returning visitor routing
-        url = self.returning_visitor_routing()
-        if url:
-            return url
-
-        # 6 smart offer rotation
-        url = self.smart_offer_routing()
-        if url:
-            return url
-
-        # 7 traffic split routing
-        url = self.traffic_split_routing()
-        if url:
-            return url
-
-        # fallback
         return None
 
     # =====================================================
@@ -78,14 +50,12 @@ class RoutingEngine:
         if not device:
             return None
 
-        device = str(device).lower()
-
         device_map = getattr(self.campaign, "device_routes", None)
 
-        if not device_map:
+        if not isinstance(device_map, dict):
             return None
 
-        return device_map.get(device)
+        return device_map.get(str(device).lower())
 
     # =====================================================
     # COUNTRY ROUTING
@@ -98,14 +68,12 @@ class RoutingEngine:
         if not country:
             return None
 
-        country = str(country).upper()
-
         routes = getattr(self.campaign, "country_routes", None)
 
-        if not routes:
+        if not isinstance(routes, dict):
             return None
 
-        return routes.get(country)
+        return routes.get(str(country).upper())
 
     # =====================================================
     # TIMEZONE ROUTING
@@ -115,12 +83,9 @@ class RoutingEngine:
 
         timezone = getattr(self.visitor, "ip_timezone", None)
 
-        if not timezone:
-            return None
-
         routes = getattr(self.campaign, "timezone_routes", None)
 
-        if not routes:
+        if not timezone or not isinstance(routes, dict):
             return None
 
         return routes.get(timezone)
@@ -133,33 +98,26 @@ class RoutingEngine:
 
         source = getattr(self.visitor, "traffic_source", None)
 
-        if not source:
-            return None
-
-        source = str(source).lower()
-
         routes = getattr(self.campaign, "referrer_routes", None)
 
-        if not routes:
+        if not source or not isinstance(routes, dict):
             return None
 
-        return routes.get(source)
+        return routes.get(str(source).lower())
 
     # =====================================================
-    # RETURNING VISITOR ROUTING
+    # RETURNING VISITOR
     # =====================================================
 
     def returning_visitor_routing(self) -> Optional[str]:
 
-        is_returning = getattr(self.visitor, "is_returning", False)
+        if getattr(self.visitor, "is_returning", False):
+            return getattr(self.campaign, "returning_visitor_url", None)
 
-        if not is_returning:
-            return None
-
-        return getattr(self.campaign, "returning_visitor_url", None)
+        return None
 
     # =====================================================
-    # SMART OFFER ROTATION
+    # SMART OFFER ROTATION (AI-like)
     # =====================================================
 
     def smart_offer_routing(self) -> Optional[str]:
@@ -167,61 +125,81 @@ class RoutingEngine:
         if not self.db:
             return None
 
-        smart_enabled = getattr(self.campaign, "smart_rotation", False)
-
-        if not smart_enabled:
+        if not getattr(self.campaign, "smart_rotation", False):
             return None
 
-        offer = select_best_offer(self.db, self.campaign.id)
-
-        if not offer:
+        try:
+            offer = select_best_offer(self.db, self.campaign.id)
+            return getattr(offer, "url", None) if offer else None
+        except Exception:
             return None
-
-        return getattr(offer, "url", None)
 
     # =====================================================
-    # TRAFFIC SPLIT ROUTING
+    # TRAFFIC SPLIT (CONSISTENT + SAFE)
     # =====================================================
 
     def traffic_split_routing(self) -> Optional[str]:
 
         splits = getattr(self.campaign, "traffic_splits", None)
 
-        if not splits:
+        if not isinstance(splits, list) or not splits:
             return None
 
         urls = []
         weights = []
 
         for item in splits:
+            if not isinstance(item, dict):
+                continue
 
             url = item.get("url")
             weight = item.get("weight", 1)
 
             if url:
                 urls.append(url)
-                weights.append(weight)
+                weights.append(max(weight, 1))
 
         if not urls:
             return None
 
-        visitor_id = getattr(self.visitor, "ip", None)
-
-        if not visitor_id:
-            visitor_id = str(random.random())
+        visitor_id = getattr(self.visitor, "ip", None) or str(random.random())
 
         seed = self.hash_seed(visitor_id)
 
-        random.seed(seed)
+        # ✅ Local random instance (NO global pollution)
+        rnd = random.Random(seed)
 
-        return random.choices(urls, weights=weights, k=1)[0]
+        return rnd.choices(urls, weights=weights, k=1)[0]
 
     # =====================================================
-    # HASH SEED (CONSISTENT USER ROUTING)
+    # STEALTH SAFE URL (ADVANCED 🔥)
+    # =====================================================
+
+    def safe_url(self, url: str) -> Optional[str]:
+
+        if not url:
+            return None
+
+        # optional cloaking param (harder detection)
+        try:
+            if "?" in url:
+                return f"{url}&_r={self.random_token()}"
+            else:
+                return f"{url}?_r={self.random_token()}"
+        except Exception:
+            return url
+
+    # =====================================================
+    # HASH SEED (CONSISTENT USER)
     # =====================================================
 
     def hash_seed(self, value: str) -> int:
-
         h = hashlib.md5(value.encode()).hexdigest()
-
         return int(h[:8], 16)
+
+    # =====================================================
+    # RANDOM TOKEN (ANTI-DETECTION)
+    # =====================================================
+
+    def random_token(self) -> str:
+        return hashlib.md5(str(random.random()).encode()).hexdigest()[:8]
