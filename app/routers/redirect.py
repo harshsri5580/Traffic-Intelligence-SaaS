@@ -152,7 +152,6 @@ async def redirect_campaign(
     visitor = VisitorContext(request)
     ip = visitor.ip
     print("FINAL IP:", ip)
-    is_duplicate = False
 
     # ✅ PEHLE campaign load karo
     campaign = (
@@ -168,9 +167,7 @@ async def redirect_campaign(
 
     if blocked:
         print("🚫 BLOCKED IP HIT:", ip)
-        decision = "blocked"
-        reason = "blocked_ip"
-        redirect_url = campaign.safe_page_url or "/decoy"
+        return RedirectResponse(campaign.safe_page_url or "/decoy")
 
     campaign = (
         db.query(Campaign)
@@ -182,9 +179,7 @@ async def redirect_campaign(
     )
 
     if not campaign:
-        decision = "blocked"
-        reason = "campaign_not_found"
-        redirect_url = "/decoy"
+        return RedirectResponse("/decoy")
 
     # 🔥 SUBSCRIPTION CHECK (FINAL FIX)
 
@@ -204,12 +199,9 @@ async def redirect_campaign(
             db.commit()
 
             if campaign.fallback_url:
-                decision = "fallback"
-                reason = "subscription_expired"
-                redirect_url = campaign.fallback_url or "/decoy"
+                return RedirectResponse(campaign.fallback_url)
 
-            redirect_url = "/decoy"
-            destination_url = redirect_url
+            return RedirectResponse("/decoy")
 
     # ---------------------------------
     # SUBID TRACKING PARAMS
@@ -224,12 +216,7 @@ async def redirect_campaign(
     except Exception:
         challenge_pass = None
     print("IP:", ip)
-    try:
-        val = redis_client.get(f"challenge_pass:{ip}")
-        print("CHALLENGE KEY:", val)
-    except Exception as e:
-        print("REDIS ERROR:", e)
-        val = None
+    # print("CHALLENGE KEY:", redis_client.get(f"challenge_pass:{ip}"))
 
     if ENABLE_CHALLENGE and not challenge_pass:
 
@@ -268,16 +255,10 @@ async def redirect_campaign(
                     destination="/challenge",
                 )
 
-                try:
-                    db.add(click)
-                    db.commit()
-                except Exception as e:
-                    print("CHALLENGE LOG ERROR:", e)
-                    print("❌ CLICK LOG ERROR:", str(e))
-                    db.rollback()
+                db.add(click)
+                db.commit()
 
-            except Exception as e:
-                print("❌ CLICK LOG ERROR:", str(e))
+            except Exception:
                 db.rollback()
 
             # 🔥 REDIRECT TO CHALLENGE
@@ -325,9 +306,7 @@ async def redirect_campaign(
 
         if blocked_zone:
             print("🚫 BLOCKED ZONE HIT:", sub1)
-            decision = "blocked"
-            reason = "zone_block"
-            redirect_url = campaign.safe_page_url or "/decoy"
+            return RedirectResponse(campaign.safe_page_url or "/decoy")
 
     sub4 = query.get("sub4")
     sub5 = query.get("sub5")
@@ -487,14 +466,15 @@ async def redirect_campaign(
     if not campaign.is_active:
 
         if campaign.fallback_url:
-            redirect_url = campaign.fallback_url or "/decoy"
-            destination_url = redirect_url
+            return RedirectResponse(campaign.fallback_url)
 
         if campaign.safe_page_url:
             decision = set_decision(decision, "blocked")
             reason = "google_bot_safe"
             redirect_url = campaign.safe_page_url or "/decoy"
             destination_url = redirect_url
+
+        return RedirectResponse("https://google.com")
 
     # -------------------------------------------------
     # BOT FILTER
@@ -566,8 +546,7 @@ async def redirect_campaign(
             if visitor.device_type in blocked_devices:
                 decision = set_decision(decision, "blocked")
                 reason = "Blocked device"
-                decision = "blocked"
-                redirect_url = campaign.safe_page_url or "/decoy"
+                return RedirectResponse(campaign.safe_page_url or "/decoy")
 
     except Exception:
         pass
@@ -585,8 +564,7 @@ async def redirect_campaign(
             if visitor.country_code not in allowed:
                 decision = set_decision(decision, "blocked")
                 reason = f"country_block({visitor.country})"
-                redirect_url = campaign.safe_page_url or "/decoy"
-                destination_url = redirect_url
+                return RedirectResponse(campaign.safe_page_url or "/decoy")
 
         if campaign.blocked_countries:
 
@@ -595,8 +573,7 @@ async def redirect_campaign(
             if visitor.country_code in blocked_countries:
                 decision = set_decision(decision, "blocked")
                 reason = f"country_block({visitor.country_code})"
-                decision = "blocked"
-                redirect_url = campaign.safe_page_url or "/decoy"
+                return RedirectResponse(campaign.safe_page_url or "/decoy")
 
     except Exception:
         pass
@@ -727,6 +704,8 @@ async def redirect_campaign(
 
             redirect_url = campaign.safe_page_url or "/decoy"
             destination_url = redirect_url
+
+            return RedirectResponse(redirect_url)
 
     except Exception:
         pass
@@ -933,17 +912,14 @@ async def redirect_campaign(
     # 🔥 FINAL DEDUPE (FIXED ✅)
 
     dedupe_key = f"click:{ip}:{campaign.id}"
-    is_duplicate = False
 
     try:
         if redis_client.get(dedupe_key):
-            print("⚠️ DEDUPE HIT")
-            is_duplicate = True
-        else:
-            redis_client.setex(dedupe_key, 5, "1")
-    except Exception as e:
-        print("REDIS ERROR:", e)
-        is_duplicate = False
+            return RedirectResponse(redirect_url or campaign.fallback_url or "/decoy")
+
+        redis_client.setex(dedupe_key, 5, "1")
+    except Exception:
+        pass
     # -------------------------------------------------
     # CLICK LOGGING
 
@@ -952,87 +928,82 @@ async def redirect_campaign(
         # print("DECISION:", decision)
         # print("REASON:", reason)
         # print("DESTINATION:", destination_url)
-        # 🔥 ONLY LOG MAIN REDIRECT
-        # 🔥 ONLY LOG MAIN REDIRECT
 
-        should_log = "/r/" in request.url.path
-        if should_log and not is_duplicate:
-            print("🔥 LOGGING RUNNING", decision, reason)
-            click = ClickLog(
-                campaign_id=campaign.id,
-                user_id=campaign.user_id,
-                traffic_source=visitor.traffic_source,
-                traffic_medium=visitor.traffic_medium,
-                rule_id=matched_rule.id if matched_rule else None,
-                offer_id=selected_offer.id if selected_offer else None,
-                ip_address=ip,
-                country=visitor.country,
-                click_id=click_id,
-                sub1=sub1,
-                sub2=sub2,
-                sub3=sub3,
-                sub4=sub4,
-                sub5=sub5,
-                cost=cost,
-                payout=0,
-                region=visitor.region,
-                city=visitor.city,
-                user_agent=visitor.user_agent_string,
-                browser=visitor.browser,
-                os=visitor.os,
-                device_type=visitor.device_type,
-                language=visitor.language,
-                ip_timezone=visitor.ip_timezone,
-                asn=visitor.asn,
-                isp=visitor.isp,
-                org=visitor.org,
-                connection_type=visitor.connection_type,
-                bot_score=visitor.bot_score,
-                is_bot=visitor.is_bot,
-                risk_score=risk_score,
-                fingerprint=fingerprint,
-                referrer=visitor.referrer,
-                query_string=visitor.query_string,
-                status=decision,
-                reason=reason,
-                destination=destination_url or redirect_url,
+        click = ClickLog(
+            campaign_id=campaign.id,
+            user_id=campaign.user_id,
+            traffic_source=visitor.traffic_source,
+            traffic_medium=visitor.traffic_medium,
+            rule_id=matched_rule.id if matched_rule else None,
+            offer_id=selected_offer.id if selected_offer else None,
+            ip_address=ip,
+            country=visitor.country,
+            click_id=click_id,
+            sub1=sub1,
+            sub2=sub2,
+            sub3=sub3,
+            sub4=sub4,
+            sub5=sub5,
+            cost=cost,
+            payout=0,
+            region=visitor.region,
+            city=visitor.city,
+            user_agent=visitor.user_agent_string,
+            browser=visitor.browser,
+            os=visitor.os,
+            device_type=visitor.device_type,
+            language=visitor.language,
+            ip_timezone=visitor.ip_timezone,
+            asn=visitor.asn,
+            isp=visitor.isp,
+            org=visitor.org,
+            connection_type=visitor.connection_type,
+            bot_score=visitor.bot_score,
+            is_bot=visitor.is_bot,
+            risk_score=risk_score,
+            fingerprint=fingerprint,
+            referrer=visitor.referrer,
+            query_string=visitor.query_string,
+            status=decision,
+            reason=reason,
+            destination=destination_url or redirect_url,
+        )
+
+        db.add(click)
+
+        update_daily_stats(
+            db=db,
+            campaign=campaign,
+            rule=matched_rule,
+            offer=selected_offer,
+            decision=decision,
+            visitor=visitor,
+        )
+
+        db.commit()
+
+        # ---------------------------------
+        # AI LEARNING ENGINE
+        # ---------------------------------
+        try:
+            update_campaign_learning(campaign.id, decision)
+            update_source_learning(visitor.traffic_source, decision)
+        except Exception:
+            pass
+
+        try:
+            await broadcast(
+                {
+                    "campaign": campaign.name,
+                    "country": visitor.country,
+                    "device": visitor.device_type,
+                    "ip": visitor.ip,
+                    "status": decision,
+                    "time": datetime.utcnow().isoformat(),
+                }
             )
-
-            db.add(click)
-
-            update_daily_stats(
-                db=db,
-                campaign=campaign,
-                rule=matched_rule,
-                offer=selected_offer,
-                decision=decision,
-                visitor=visitor,
-            )
-
-            db.commit()
-
-            # ---------------------------------
-            # AI LEARNING ENGINE
-            # ---------------------------------
-            try:
-                update_campaign_learning(campaign.id, decision)
-                update_source_learning(visitor.traffic_source, decision)
-            except Exception:
-                pass
-
-            try:
-                await broadcast(
-                    {
-                        "campaign": campaign.name,
-                        "country": visitor.country,
-                        "device": visitor.device_type,
-                        "ip": visitor.ip,
-                        "status": decision,
-                        "time": datetime.utcnow().isoformat(),
-                    }
-                )
-            except Exception:
-                pass
+        except Exception:
+            pass
 
     except Exception:
         db.rollback()
