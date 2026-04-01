@@ -208,7 +208,8 @@ async def redirect_campaign(
                 reason = "subscription_expired"
                 redirect_url = campaign.fallback_url or "/decoy"
 
-            return RedirectResponse("/decoy")
+            redirect_url = "/decoy"
+            destination_url = redirect_url
 
     # ---------------------------------
     # SUBID TRACKING PARAMS
@@ -481,15 +482,14 @@ async def redirect_campaign(
     if not campaign.is_active:
 
         if campaign.fallback_url:
-            return RedirectResponse(campaign.fallback_url)
+            redirect_url = campaign.fallback_url or "/decoy"
+            destination_url = redirect_url
 
         if campaign.safe_page_url:
             decision = set_decision(decision, "blocked")
             reason = "google_bot_safe"
             redirect_url = campaign.safe_page_url or "/decoy"
             destination_url = redirect_url
-
-        return RedirectResponse("https://google.com")
 
     # -------------------------------------------------
     # BOT FILTER
@@ -580,7 +580,8 @@ async def redirect_campaign(
             if visitor.country_code not in allowed:
                 decision = set_decision(decision, "blocked")
                 reason = f"country_block({visitor.country})"
-                return RedirectResponse(campaign.safe_page_url or "/decoy")
+                redirect_url = campaign.safe_page_url or "/decoy"
+                destination_url = redirect_url
 
         if campaign.blocked_countries:
 
@@ -948,8 +949,10 @@ async def redirect_campaign(
         # print("DESTINATION:", destination_url)
         # 🔥 ONLY LOG MAIN REDIRECT
         # 🔥 ONLY LOG MAIN REDIRECT
+
         should_log = "/r/" in request.url.path
         if should_log and not is_duplicate:
+            print("🔥 LOGGING RUNNING", decision, reason)
             click = ClickLog(
                 campaign_id=campaign.id,
                 user_id=campaign.user_id,
