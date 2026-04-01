@@ -224,7 +224,12 @@ async def redirect_campaign(
     except Exception:
         challenge_pass = None
     print("IP:", ip)
-    print("CHALLENGE KEY:", redis_client.get(f"challenge_pass:{ip}"))
+    try:
+        val = redis_client.get(f"challenge_pass:{ip}")
+        print("CHALLENGE KEY:", val)
+    except Exception as e:
+        print("REDIS ERROR:", e)
+        val = None
 
     if ENABLE_CHALLENGE and not challenge_pass:
 
