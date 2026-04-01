@@ -1,17 +1,22 @@
-# backend/app/routers/tools.py
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.campaign import Campaign
-from app.schemas import campaign
 
 router = APIRouter(prefix="/tools", tags=["Tools"])
 
 
 @router.get("/script/{slug}")
-def generate_script(slug: str, db: Session = Depends(get_db)):
+def generate_script(slug: str, request: Request, db: Session = Depends(get_db)):
 
-    domain = "http://127.0.0.1:8000"
+    domain = (
+        request.headers.get("x-forwarded-host")
+        or request.headers.get("host")
+        or "traffic-intelligence-saas.onrender.com"
+    )
+
+    domain = f"https://{domain}"
+
     campaign = db.query(Campaign).filter(Campaign.slug == slug).first()
 
     source = (
