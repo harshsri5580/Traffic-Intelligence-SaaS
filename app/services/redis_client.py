@@ -1,36 +1,26 @@
 import os
 import redis
 
-
 # ======================================
-# REDIS CONFIG
-# ======================================
-
-REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
-REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
-REDIS_DB = int(os.getenv("REDIS_DB", 0))
-REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
-
-
-# ======================================
-# CONNECTION POOL
+# REDIS CONFIG (RENDER READY)
 # ======================================
 
-pool = redis.ConnectionPool(
-    host=REDIS_HOST,
-    port=REDIS_PORT,
-    db=REDIS_DB,
-    password=REDIS_PASSWORD,
-    decode_responses=True,
-    max_connections=50,
-)
+redis_url = os.getenv("REDIS_URL")
 
-
-# ======================================
-# REDIS CLIENT
-# ======================================
-
-redis_client = redis.Redis(connection_pool=pool)
+if redis_url:
+    try:
+        redis_client = redis.from_url(
+            redis_url,
+            decode_responses=True,
+            max_connections=50,
+        )
+        print("✅ Redis connected")
+    except Exception as e:
+        print("❌ Redis connection failed:", e)
+        redis_client = None
+else:
+    print("⚠️ REDIS_URL not found")
+    redis_client = None
 
 
 # ======================================
@@ -39,9 +29,10 @@ redis_client = redis.Redis(connection_pool=pool)
 
 
 def redis_health_check():
-
     try:
-        redis_client.ping()
-        return True
+        if redis_client:
+            redis_client.ping()
+            return True
+        return False
     except Exception:
         return False
