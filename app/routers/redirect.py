@@ -152,6 +152,7 @@ async def redirect_campaign(
     visitor = VisitorContext(request)
     ip = visitor.ip
     print("FINAL IP:", ip)
+    is_duplicate = False
 
     # ✅ PEHLE campaign load karo
     campaign = (
@@ -261,11 +262,16 @@ async def redirect_campaign(
                     destination="/challenge",
                 )
 
-                if not is_duplicate:
+                try:
                     db.add(click)
                     db.commit()
+                except Exception as e:
+                    print("CHALLENGE LOG ERROR:", e)
+                    print("❌ CLICK LOG ERROR:", str(e))
+                    db.rollback()
 
-            except Exception:
+            except Exception as e:
+                print("❌ CLICK LOG ERROR:", str(e))
                 db.rollback()
 
             # 🔥 REDIRECT TO CHALLENGE
@@ -942,7 +948,7 @@ async def redirect_campaign(
         # print("DESTINATION:", destination_url)
         # 🔥 ONLY LOG MAIN REDIRECT
         # 🔥 ONLY LOG MAIN REDIRECT
-        should_log = request.url.path.startswith("/r/")
+        should_log = "/r/" in request.url.path
         if should_log and not is_duplicate:
             click = ClickLog(
                 campaign_id=campaign.id,
