@@ -261,8 +261,9 @@ async def redirect_campaign(
                     destination="/challenge",
                 )
 
-                db.add(click)
-                db.commit()
+                if not is_duplicate:
+                    db.add(click)
+                    db.commit()
 
             except Exception:
                 db.rollback()
@@ -920,15 +921,17 @@ async def redirect_campaign(
     # 🔥 FINAL DEDUPE (FIXED ✅)
 
     dedupe_key = f"click:{ip}:{campaign.id}"
+    is_duplicate = False
 
     try:
         if redis_client.get(dedupe_key):
             print("⚠️ DEDUPE HIT")
-            return RedirectResponse(redirect_url)
-
-        redis_client.setex(dedupe_key, 5, "1")
-    except Exception:
-        pass
+            is_duplicate = True
+        else:
+            redis_client.setex(dedupe_key, 5, "1")
+    except Exception as e:
+        print("REDIS ERROR:", e)
+        is_duplicate = False
     # -------------------------------------------------
     # CLICK LOGGING
 
@@ -937,82 +940,85 @@ async def redirect_campaign(
         # print("DECISION:", decision)
         # print("REASON:", reason)
         # print("DESTINATION:", destination_url)
-
-        click = ClickLog(
-            campaign_id=campaign.id,
-            user_id=campaign.user_id,
-            traffic_source=visitor.traffic_source,
-            traffic_medium=visitor.traffic_medium,
-            rule_id=matched_rule.id if matched_rule else None,
-            offer_id=selected_offer.id if selected_offer else None,
-            ip_address=ip,
-            country=visitor.country,
-            click_id=click_id,
-            sub1=sub1,
-            sub2=sub2,
-            sub3=sub3,
-            sub4=sub4,
-            sub5=sub5,
-            cost=cost,
-            payout=0,
-            region=visitor.region,
-            city=visitor.city,
-            user_agent=visitor.user_agent_string,
-            browser=visitor.browser,
-            os=visitor.os,
-            device_type=visitor.device_type,
-            language=visitor.language,
-            ip_timezone=visitor.ip_timezone,
-            asn=visitor.asn,
-            isp=visitor.isp,
-            org=visitor.org,
-            connection_type=visitor.connection_type,
-            bot_score=visitor.bot_score,
-            is_bot=visitor.is_bot,
-            risk_score=risk_score,
-            fingerprint=fingerprint,
-            referrer=visitor.referrer,
-            query_string=visitor.query_string,
-            status=decision,
-            reason=reason,
-            destination=destination_url or redirect_url,
-        )
-
-        db.add(click)
-
-        update_daily_stats(
-            db=db,
-            campaign=campaign,
-            rule=matched_rule,
-            offer=selected_offer,
-            decision=decision,
-            visitor=visitor,
-        )
-
-        db.commit()
-
-        # ---------------------------------
-        # AI LEARNING ENGINE
-        # ---------------------------------
-        try:
-            update_campaign_learning(campaign.id, decision)
-            update_source_learning(visitor.traffic_source, decision)
-        except Exception:
-            pass
-
-        try:
-            await broadcast(
-                {
-                    "campaign": campaign.name,
-                    "country": visitor.country,
-                    "device": visitor.device_type,
-                    "ip": visitor.ip,
-                    "status": decision,
-                    "time": datetime.utcnow().isoformat(),
-                }
+        # 🔥 ONLY LOG MAIN REDIRECT
+        # 🔥 ONLY LOG MAIN REDIRECT
+        should_log = request.url.path.startswith("/r/")
+        if should_log and not is_duplicate:
+            click = ClickLog(
+                campaign_id=campaign.id,
+                user_id=campaign.user_id,
+                traffic_source=visitor.traffic_source,
+                traffic_medium=visitor.traffic_medium,
+                rule_id=matched_rule.id if matched_rule else None,
+                offer_id=selected_offer.id if selected_offer else None,
+                ip_address=ip,
+                country=visitor.country,
+                click_id=click_id,
+                sub1=sub1,
+                sub2=sub2,
+                sub3=sub3,
+                sub4=sub4,
+                sub5=sub5,
+                cost=cost,
+                payout=0,
+                region=visitor.region,
+                city=visitor.city,
+                user_agent=visitor.user_agent_string,
+                browser=visitor.browser,
+                os=visitor.os,
+                device_type=visitor.device_type,
+                language=visitor.language,
+                ip_timezone=visitor.ip_timezone,
+                asn=visitor.asn,
+                isp=visitor.isp,
+                org=visitor.org,
+                connection_type=visitor.connection_type,
+                bot_score=visitor.bot_score,
+                is_bot=visitor.is_bot,
+                risk_score=risk_score,
+                fingerprint=fingerprint,
+                referrer=visitor.referrer,
+                query_string=visitor.query_string,
+                status=decision,
+                reason=reason,
+                destination=destination_url or redirect_url,
             )
-        except Exception:
-            pass
+
+            db.add(click)
+
+            update_daily_stats(
+                db=db,
+                campaign=campaign,
+                rule=matched_rule,
+                offer=selected_offer,
+                decision=decision,
+                visitor=visitor,
+            )
+
+            db.commit()
+
+            # ---------------------------------
+            # AI LEARNING ENGINE
+            # ---------------------------------
+            try:
+                update_campaign_learning(campaign.id, decision)
+                update_source_learning(visitor.traffic_source, decision)
+            except Exception:
+                pass
+
+            try:
+                await broadcast(
+                    {
+                        "campaign": campaign.name,
+                        "country": visitor.country,
+                        "device": visitor.device_type,
+                        "ip": visitor.ip,
+                        "status": decision,
+                        "time": datetime.utcnow().isoformat(),
+                    }
+                )
+            except Exception:
+                pass
 
     except Exception:
         db.rollback()
