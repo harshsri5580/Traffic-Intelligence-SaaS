@@ -167,7 +167,9 @@ async def redirect_campaign(
 
     if blocked:
         print("🚫 BLOCKED IP HIT:", ip)
-        return RedirectResponse(campaign.safe_page_url or "/decoy")
+        decision = "blocked"
+        reason = "blocked_ip"
+        redirect_url = campaign.safe_page_url or "/decoy"
 
     campaign = (
         db.query(Campaign)
@@ -179,7 +181,9 @@ async def redirect_campaign(
     )
 
     if not campaign:
-        return RedirectResponse("/decoy")
+        decision = "blocked"
+        reason = "campaign_not_found"
+        redirect_url = "/decoy"
 
     # 🔥 SUBSCRIPTION CHECK (FINAL FIX)
 
@@ -199,7 +203,9 @@ async def redirect_campaign(
             db.commit()
 
             if campaign.fallback_url:
-                return RedirectResponse(campaign.fallback_url)
+                decision = "fallback"
+                reason = "subscription_expired"
+                redirect_url = campaign.fallback_url or "/decoy"
 
             return RedirectResponse("/decoy")
 
@@ -306,7 +312,9 @@ async def redirect_campaign(
 
         if blocked_zone:
             print("🚫 BLOCKED ZONE HIT:", sub1)
-            return RedirectResponse(campaign.safe_page_url or "/decoy")
+            decision = "blocked"
+            reason = "zone_block"
+            redirect_url = campaign.safe_page_url or "/decoy"
 
     sub4 = query.get("sub4")
     sub5 = query.get("sub5")
@@ -546,7 +554,8 @@ async def redirect_campaign(
             if visitor.device_type in blocked_devices:
                 decision = set_decision(decision, "blocked")
                 reason = "Blocked device"
-                return RedirectResponse(campaign.safe_page_url or "/decoy")
+                decision = "blocked"
+                redirect_url = campaign.safe_page_url or "/decoy"
 
     except Exception:
         pass
@@ -573,7 +582,8 @@ async def redirect_campaign(
             if visitor.country_code in blocked_countries:
                 decision = set_decision(decision, "blocked")
                 reason = f"country_block({visitor.country_code})"
-                return RedirectResponse(campaign.safe_page_url or "/decoy")
+                decision = "blocked"
+                redirect_url = campaign.safe_page_url or "/decoy"
 
     except Exception:
         pass
@@ -704,8 +714,6 @@ async def redirect_campaign(
 
             redirect_url = campaign.safe_page_url or "/decoy"
             destination_url = redirect_url
-
-            return RedirectResponse(redirect_url)
 
     except Exception:
         pass
@@ -915,7 +923,8 @@ async def redirect_campaign(
 
     try:
         if redis_client.get(dedupe_key):
-            return RedirectResponse(redirect_url or campaign.fallback_url or "/decoy")
+            print("⚠️ DEDUPE HIT")
+            return RedirectResponse(redirect_url)
 
         redis_client.setex(dedupe_key, 5, "1")
     except Exception:
