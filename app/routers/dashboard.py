@@ -11,6 +11,7 @@ from app.models.offer import Offer
 from app.models.offer_daily_stats import OfferDailyStats
 from app.models.click_log import ClickLog
 from app.models.rule import Rule
+from app.models.conversion import Conversion
 from app.models.rule_daily_stats import RuleDailyStats
 from app.dependencies.auth import get_current_user
 from fastapi import WebSocket, WebSocketDisconnect
@@ -144,6 +145,45 @@ def get_dashboard_stats(
     # RESPONSE
     # =====================
 
+    # =====================
+    # PROFIT CALCULATION 🔥
+    # =====================
+
+    total_cost = 0
+    total_revenue = 0
+
+    clicks = (
+        db.query(ClickLog)
+        .join(Campaign, Campaign.id == ClickLog.campaign_id)
+        .filter(Campaign.user_id == current_user.id)
+        .all()
+    )
+
+    for c in clicks:
+        try:
+            total_cost += float(c.sub2 or 0)
+        except:
+            pass
+
+    conversions = db.query(Conversion).all()
+
+    for conv in conversions:
+        click = (
+            db.query(ClickLog)
+            .join(Campaign, Campaign.id == ClickLog.campaign_id)
+            .filter(
+                ClickLog.click_id == conv.click_id,
+                Campaign.user_id == current_user.id,
+            )
+            .first()
+        )
+
+        if click:
+            total_revenue += float(conv.payout or 0)
+
+    profit = total_revenue - total_cost
+    roi = (profit / total_cost * 100) if total_cost > 0 else 0
+
     return {
         "total_clicks": total_clicks,
         "today_clicks": today_clicks,
@@ -155,6 +195,9 @@ def get_dashboard_stats(
         "inactive_campaigns": inactive_campaigns,
         "device_stats": device_stats,
         "country_stats": country_stats,
+        # ✅ ADD THIS
+        "total_profit": round(profit, 2),
+        "roi": round(roi, 2),
     }
 
 

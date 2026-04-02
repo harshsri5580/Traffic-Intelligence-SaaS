@@ -296,36 +296,6 @@ export default function Dashboard() {
     return roi < 0;
   });
 
-  const campaignSummary = {};
-
-  recent.forEach((log) => {
-
-    const isValidCampaign = campaigns.some(
-      (c) => c.name === log.campaign_name
-    );
-
-    if (!isValidCampaign) return; // ❌ skip deleted
-
-    const name = log.campaign_name || "Unknown";
-
-    if (!campaignSummary[name]) {
-      campaignSummary[name] = {
-        total: 0,
-        pass: 0,
-        blocked: 0
-      };
-    }
-
-    campaignSummary[name].total++;
-
-    if (log.status === "offer" || log.status === "pass") {
-      campaignSummary[name].pass++;
-    } else {
-      campaignSummary[name].blocked++;
-    }
-
-  });
-
   if (loading) {
     return (
       <div className="p-8 text-gray-500">
@@ -380,6 +350,15 @@ export default function Dashboard() {
         <StatCard title="Unique Visitors" value={stats.unique_ips} />
         <StatCard title="Passed Traffic" value={stats.passed} />
         <StatCard title="Blocked Traffic" value={stats.blocked} />
+        <StatCard
+          title="Total Profit"
+          value={`$${Number(stats.total_profit || 0).toFixed(2)}`}
+        />
+
+        <StatCard
+          title="ROI"
+          value={`${Number(stats.roi || 0).toFixed(2)}%`}
+        />
 
       </div>
 
@@ -579,10 +558,10 @@ export default function Dashboard() {
       </div>
 
 
-      <div className="bg-white shadow rounded p-6">
+      <div className="bg-white shadow-xl rounded-xl p-6">
 
-        <h2 className="text-xl font-semibold mb-4">
-          💰 Profit Tracking (Per Click)
+        <h2 className="text-xl font-semibold mb-6">
+          Campaign Profit Summary
         </h2>
 
         <div className="overflow-x-auto">
@@ -591,48 +570,78 @@ export default function Dashboard() {
 
             <thead className="bg-gray-100">
               <tr>
-                <th className="p-3 border">Click ID</th>
                 <th className="p-3 border">Campaign</th>
+                <th className="p-3 border">Clicks</th>
                 <th className="p-3 border">Cost</th>
                 <th className="p-3 border">Revenue</th>
+                <th className="p-3 border">Profit</th>
                 <th className="p-3 border">ROI</th>
-                <th className="p-3 border">Status</th>
               </tr>
             </thead>
 
             <tbody>
 
-              {recent.slice(0, 10).map((log, i) => {
+              {Object.values((() => {
 
-                const isProfit = log.roi > 0;
+                // ✅ campaign clicks map
+                const campaignMap = {};
+
+                campaigns.forEach(c => {
+                  campaignMap[c.name] = (c.pass_count || 0) + (c.block_count || 0);
+                });
+
+                // ✅ zones se cost + revenue
+                const result = {};
+
+                zones.forEach((z) => {
+
+                  const name = z.campaign_name || "Unknown";
+
+                  if (!result[name]) {
+                    result[name] = {
+                      campaign: name,
+                      clicks: campaignMap[name] || 0, // ✅ FIXED
+                      cost: 0,
+                      revenue: 0
+                    };
+                  }
+
+                  result[name].cost += z.cost || 0;
+                  result[name].revenue += z.revenue || 0;
+
+                });
+
+                return result;
+
+              })()).map((c, i) => {
+
+                const profit = c.revenue - c.cost;
+                const roi = c.cost > 0 ? ((profit / c.cost) * 100).toFixed(2) : 0;
 
                 return (
                   <tr key={i} className="text-center hover:bg-gray-50">
 
-                    <td className="p-2 border">{log.click_id}</td>
-                    <td className="p-2 border">{log.campaign_name}</td>
+                    <td className="p-2 border">{c.campaign}</td>
+                    <td className="p-2 border">{c.clicks}</td>
 
                     <td className="p-2 border text-red-500">
-                      {log.cost || 0}
+                      ${c.cost.toFixed(2)}
                     </td>
 
                     <td className="p-2 border text-green-600">
-                      {log.revenue || 0}
+                      ${c.revenue.toFixed(2)}
                     </td>
 
-                    <td className="p-2 border">
-                      <span className={isProfit ? "text-green-600" : "text-red-600"}>
-                        {log.roi || 0}%
-                      </span>
+                    <td className={`p-2 border font-semibold ${profit >= 0 ? "text-green-600" : "text-red-600"}`}>
+                      ${profit.toFixed(2)}
                     </td>
 
-                    <td className="p-2 border">
-                      {isProfit ? "🔥 Profit" : "💀 Loss"}
+                    <td className={`p-2 border font-semibold ${roi >= 0 ? "text-green-600" : "text-red-600"}`}>
+                      {roi}%
                     </td>
 
                   </tr>
                 );
-
               })}
 
             </tbody>
@@ -663,16 +672,29 @@ export default function Dashboard() {
 
           <tbody>
 
-            {Object.entries(campaignSummary).map(([name, data], i) => (
-              <tr key={i} className="text-center">
+            {campaigns.map((c, i) => {
 
-                <td className="p-2 border">{name}</td>
-                <td className="p-2 border">{data.total}</td>
-                <td className="p-2 border text-green-600">{data.pass}</td>
-                <td className="p-2 border text-red-600">{data.blocked}</td>
+              const total = (c.pass_count || 0) + (c.block_count || 0);
 
-              </tr>
-            ))}
+              return (
+                <tr key={i} className="text-center">
+
+                  <td className="p-2 border">{c.name}</td>
+
+                  <td className="p-2 border">{total}</td>
+
+                  <td className="p-2 border text-green-600">
+                    {c.pass_count || 0}
+                  </td>
+
+                  <td className="p-2 border text-red-600">
+                    {c.block_count || 0}
+                  </td>
+
+                </tr>
+              );
+
+            })}
 
           </tbody>
 
@@ -813,94 +835,81 @@ export default function Dashboard() {
 
         </div>
 
-        <div className="bg-white shadow rounded p-6 max-h-[300px] overflow-y-auto">
+        <div className="bg-white shadow-xl rounded-xl p-6">
 
-          <h2 className="text-xl font-semibold mb-4">
-            Zone Performance (ROI)
+          <h2 className="text-xl font-semibold mb-6">
+            Top Zone Performance
           </h2>
 
-          {/* 🔥 PROFIT ZONES */}
-          <h3 className="text-green-600 font-semibold mb-2">🔥 Profit Zones</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-          {profitZones
-            .sort((a, b) => (b.revenue - b.cost) - (a.revenue - a.cost))
-            .slice(0, 3)
-            .map((z, i) => {
+            {/*  PROFIT */}
+            <div>
 
-              const roiRaw = z.cost > 0 ? ((z.revenue - z.cost) / z.cost) * 100 : 0;
-              const roi = roiRaw.toFixed(2);
-              const isProfit = roiRaw > 0;
+              <h3 className="text-green-600 font-semibold mb-3">
+                Best Zones
+              </h3>
 
-              return (
-                <div key={i} className="mb-4 border-b pb-3">
+              {profitZones
+                .sort((a, b) => (b.revenue - b.cost) - (a.revenue - a.cost))
+                .slice(0, 2) // ✅ top 2 only
+                .map((z, i) => {
 
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="font-medium">Zone {z.zone_id}</span>
+                  const profit = z.revenue - z.cost;
+                  const roi = z.cost > 0 ? ((profit / z.cost) * 100).toFixed(1) : 0;
 
-                    <div className="text-right">
-                      <div className="text-green-600 font-semibold">
-                        {roi}% ROI
+                  return (
+                    <div key={i} className="mb-3 p-3 rounded bg-green-50">
+
+                      <div className="flex justify-between">
+                        <span>
+                          {z.campaign_name} • Zone {z.zone_id}
+                        </span>
+                        <span className="text-green-600 font-semibold">
+                          +{roi}%
+                        </span>
                       </div>
-                      <div className="text-xs text-gray-500">🔥 Scale</div>
+
                     </div>
-                  </div>
+                  );
+                })}
 
-                  <div className="text-xs text-gray-500 flex justify-between">
-                    <span>Cost: {z.cost}</span>
-                    <span>Revenue: {z.revenue}</span>
-                  </div>
+            </div>
 
-                  <div className="w-full bg-gray-200 h-2 rounded mt-2">
-                    <div
-                      className="bg-green-500 h-2 rounded"
-                      style={{ width: `${Math.min(Math.abs(roi), 100)}%` }}
-                    />
-                  </div>
+            {/*  LOSS */}
+            <div>
 
-                </div>
-              );
-            })}
+              <h3 className="text-red-600 font-semibold mb-3">
+                Worst Zones
+              </h3>
 
-          {/* 🔥 LOSS ZONES */}
-          <h3 className="text-red-600 font-semibold mt-6 mb-2">💀 Loss Zones</h3>
+              {lossZones
+                .sort((a, b) => (a.revenue - a.cost) - (b.revenue - a.cost))
+                .slice(0, 2) // ✅ top 2 only
+                .map((z, i) => {
 
-          {lossZones
-            .sort((a, b) => (a.revenue - a.cost) - (b.revenue - b.cost))
-            .slice(0, 3)
-            .map((z, i) => {
+                  const profit = z.revenue - z.cost;
+                  const roi = z.cost > 0 ? ((profit / z.cost) * 100).toFixed(1) : 0;
 
-              const roiRaw = z.cost > 0 ? ((z.revenue - z.cost) / z.cost) * 100 : 0;
-              const roi = roiRaw.toFixed(2);
+                  return (
+                    <div key={i} className="mb-3 p-3 rounded bg-red-50">
 
-              return (
-                <div key={i} className="mb-4 border-b pb-3">
-
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="font-medium">Zone {z.zone_id}</span>
-
-                    <div className="text-right">
-                      <div className="text-red-600 font-semibold">
-                        {roi}% ROI
+                      <div className="flex justify-between">
+                        <span>
+                          {z.campaign_name} • Zone {z.zone_id}
+                        </span>
+                        <span className="text-red-600 font-semibold">
+                          {roi}%
+                        </span>
                       </div>
-                      <div className="text-xs text-gray-500">💀 Kill</div>
+
                     </div>
-                  </div>
+                  );
+                })}
 
-                  <div className="text-xs text-gray-500 flex justify-between">
-                    <span>Cost: {z.cost}</span>
-                    <span>Revenue: {z.revenue}</span>
-                  </div>
+            </div>
 
-                  <div className="w-full bg-gray-200 h-2 rounded mt-2">
-                    <div
-                      className="bg-red-500 h-2 rounded"
-                      style={{ width: `${Math.min(Math.abs(roi), 100)}%` }}
-                    />
-                  </div>
-
-                </div>
-              );
-            })}
+          </div>
 
         </div>
 

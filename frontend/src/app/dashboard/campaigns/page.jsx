@@ -11,6 +11,8 @@ export default function Campaigns() {
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedCampaign, setSelectedCampaign] = useState(null);
 
   const router = useRouter();
 
@@ -130,35 +132,36 @@ export default function Campaigns() {
 
   };
 
-  const deleteCampaign = async (id) => {
+  const deleteCampaign = async () => {
 
-    const campaign = campaigns.find(c => c.id === id);
+    if (!selectedCampaign) return;
+
+    const campaign = campaigns.find(c => c.id === selectedCampaign);
 
     if (!campaign) return;
 
     if (campaign.is_active) {
-      alert("Pause campaign before deleting");
+      toast("Pause campaign before deleting");
       return;
     }
 
     if (Number(campaign.offer_count) > 0 || Number(campaign.rule_count) > 0) {
-      alert("Delete offers and rules first");
+      toast("Delete offers and rules first");
       return;
     }
 
-    if (!confirm("Delete campaign?")) return;
-
     try {
+      await api.delete(`/campaigns/${selectedCampaign}`);
+      toast.success("Campaign deleted 🗑️");
 
-      await api.delete(`/campaigns/${id}`);
+      setShowDeleteModal(false);
+      setSelectedCampaign(null);
 
       loadCampaigns();
 
     } catch (err) {
-
       console.error(err);
-      alert("Delete failed");
-
+      toast.error("Delete failed");
     }
 
   };
@@ -480,7 +483,10 @@ ${c.traffic_source === "facebook" ? "bg-blue-100 text-blue-700" :
                 <td className="p-3 border">
 
                   <button
-                    onClick={() => router.push(`/dashboard/logs?campaign=${c.id}`)}
+                    onClick={() => {
+                      localStorage.setItem("campaign_id", c.id);
+                      router.push("/dashboard/logs");
+                    }}
                     className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 transition"
                   >
                     Logs
@@ -531,7 +537,10 @@ ${c.traffic_source === "facebook" ? "bg-blue-100 text-blue-700" :
                     Number(c.offer_count) === 0 &&
                     Number(c.rule_count) === 0 && (
                       <button
-                        onClick={() => deleteCampaign(c.id)}
+                        onClick={() => {
+                          setSelectedCampaign(c.id);
+                          setShowDeleteModal(true);
+                        }}
                         className="px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 transition"
                       >
                         Delete
@@ -547,6 +556,42 @@ ${c.traffic_source === "facebook" ? "bg-blue-100 text-blue-700" :
           </tbody>
 
         </table>
+
+        {showDeleteModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+
+            <div className="bg-white rounded-xl p-6 w-96 shadow-xl">
+
+              <h2 className="text-lg font-semibold mb-2">
+                Delete Campaign
+              </h2>
+
+              <p className="text-gray-600 mb-4">
+                Are you sure you want to delete this campaign?
+              </p>
+
+              <div className="flex justify-end gap-3">
+
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  onClick={deleteCampaign}
+                  className="px-4 py-2 rounded bg-red-500 text-white hover:bg-red-600"
+                >
+                  Delete
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+        )}
 
       </div>
 

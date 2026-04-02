@@ -49,6 +49,7 @@ def campaign_stats(
 
 @router.get("/logs")
 def traffic_logs(
+    campaign_id: int | None = None,
     country: str | None = None,
     device: str | None = None,
     status: str | None = None,
@@ -63,6 +64,9 @@ def traffic_logs(
         .outerjoin(Rule, Rule.id == ClickLog.rule_id)
         .filter(Campaign.user_id == current_user.id)
     )
+    # ✅ ADD THIS
+    if campaign_id:
+        query = query.filter(ClickLog.campaign_id == campaign_id)
 
     if country:
         query = query.filter(ClickLog.country.ilike(f"%{country}%"))
@@ -88,6 +92,7 @@ def traffic_logs(
                 "device_type": log.device_type,
                 "browser": log.browser,
                 "os": log.os,
+                "campaign_id": campaign.id if campaign else None,
                 "campaign": campaign.name if campaign else None,
                 "offer": offer.url if offer else None,
                 "destination": log.destination,

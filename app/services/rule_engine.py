@@ -102,26 +102,36 @@ class RuleEngine:
             return getattr(self.visitor, "bot_score", 0)
 
     # =========================================
-    # GROUPED CONDITION LOGIC
+    # GROUPED CONDITION LOGIC (FIXED ✅)
     # =========================================
 
     def _match_rule(self, rule):
 
         grouped_conditions = {}
 
+        # 🔹 Group conditions
         for condition in rule.conditions:
             group_key = condition.condition_group or 1
             grouped_conditions.setdefault(group_key, []).append(condition)
 
         group_results = []
 
+        # 🔹 Process each group
         for conditions in grouped_conditions.values():
 
-            field_results = {}
+            results = []
 
             for condition in conditions:
 
+                if not condition.value:
+                    continue
+
                 visitor_value = self._get_visitor_value(condition.field)
+
+                # 🔥 DEBUG (optional)
+                print("FIELD:", condition.field)
+                print("VISITOR VALUE:", visitor_value)
+                print("RULE VALUE:", condition.value)
 
                 result = self.evaluate_condition(
                     visitor_value,
@@ -129,20 +139,21 @@ class RuleEngine:
                     condition.value,
                 )
 
-                field_results.setdefault(condition.field, []).append(result)
+                results.append(result)
 
-            # 🔥 SAME FIELD = OR (unchanged)
-            group_match = True
+            # 🔥 GROUP LOGIC = AND (fixed)
+            match_type = getattr(rule, "match_type", "AND")
 
-            for field, results in field_results.items():
-                if not any(results):
-                    group_match = False
-                    break
+            if match_type == "AND":
+                group_match = all(results)
+
+            elif match_type == "OR":
+                group_match = any(results)
 
             group_results.append(group_match)
 
         # =========================================
-        # 🔥 NEW: RULE LEVEL LOGIC (AND / OR)
+        # 🔥 FINAL RULE LOGIC (ONLY HERE AND/OR)
         # =========================================
 
         match_type = getattr(rule, "match_type", "AND")
@@ -247,6 +258,16 @@ class RuleEngine:
         # STRING
         field_value = str(field_value).strip().lower()
         condition_value = str(condition_value).strip().lower()
+
+        # 🔥 ISP MATCH (CORRECT)
+        if operator == "isp_match":
+            rule_isps = [v.strip().lower() for v in condition_value.split(",")]
+            return any(isp in field_value for isp in rule_isps)
+
+        # 🔥 ASN MATCH (CORRECT)
+        if operator == "asn_match":
+            rule_asn = [int(v.strip()) for v in condition_value.split(",")]
+            return int(field_value) in rule_asn
 
         if operator == "equals":
             return field_value == condition_value

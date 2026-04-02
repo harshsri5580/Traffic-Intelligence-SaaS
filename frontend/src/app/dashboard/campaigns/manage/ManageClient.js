@@ -283,7 +283,7 @@ Offers
 <thead className="bg-gray-50 text-gray-600 text-xs uppercase tracking-wide">
 
 <tr>
-<th className="p-3 border">ID</th>
+{/* <th className="p-3 border">ID</th> */}
 <th className="p-3 border text-left max-w-[50px] truncate">URL</th>
 <th className="p-3 border">Weight</th>
 <th className="p-3 border">Mode</th>
@@ -306,7 +306,7 @@ offers.map(o=>(
 
 <tr key={o.id} className="text-center hover:bg-gray-50 transition">
 
-<td className="p-3 border">{o.id}</td>
+{/* <td className="p-3 border">{o.id}</td> */}
 
 <td className="p-3 border text-left max-w-[130px] truncate">
 {o.url}
@@ -382,7 +382,7 @@ Rules
 <thead className="bg-gray-50 text-gray-600 text-xs uppercase tracking-wide">
 
 <tr>
-<th className="p-3 border">ID</th>
+{/* <th className="p-3 border">ID</th> */}
 <th className="p-3 border">Name</th>
 <th className="p-3 border">Country</th>
 <th className="p-3 border">Action</th>
@@ -405,7 +405,7 @@ rules.map(r=>(
 
 <tr key={r.id} className="text-center">
 
-<td className="p-3 border">{r.id}</td>
+{/* <td className="p-3 border">{r.id}</td> */}
 
 <td className="p-3 border">{r.name}</td>
 <td className="p-3 border">

@@ -785,7 +785,9 @@ async def redirect_campaign(
         risk_score = visitor.bot_score
 
     # 🔥 HIGH RISK BLOCK
-    if risk_score >= 80 and not is_bot_traffic:
+    if risk_score >= 80 and (
+        visitor.bot_score < 40 or visitor.is_proxy or visitor.is_datacenter
+    ):
         decision = set_decision(decision, "blocked")
         reason = "fraud_traffic"
 

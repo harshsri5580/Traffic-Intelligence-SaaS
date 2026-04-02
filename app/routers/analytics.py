@@ -442,9 +442,22 @@ def zone_analytics(
     for c in clicks:
         zone = c.sub1 or "unknown"
 
-        if zone not in result:
-            result[zone] = {"zone_id": zone, "cost": 0, "revenue": 0}
+        # ✅ campaign fetch
+        campaign = db.query(Campaign).filter(Campaign.id == c.campaign_id).first()
 
+        if zone not in result:
+            result[zone] = {
+                "zone_id": zone,
+                "cost": 0,
+                "revenue": 0,
+                "clicks": 0,
+                "campaign_name": campaign.name if campaign else "Unknown",
+            }
+
+        # ✅ clicks count
+        result[zone]["clicks"] += 1
+
+        # ✅ cost
         try:
             cost = float(c.sub2) if c.sub2 else 0
         except:
@@ -469,9 +482,19 @@ def zone_analytics(
 
         zone = click.sub1 or "unknown"
 
-        if zone not in result:
-            result[zone] = {"zone_id": zone, "cost": 0, "revenue": 0}
+        # ✅ campaign fetch
+        campaign = db.query(Campaign).filter(Campaign.id == click.campaign_id).first()
 
+        if zone not in result:
+            result[zone] = {
+                "zone_id": zone,
+                "cost": 0,
+                "revenue": 0,
+                "clicks": 0,
+                "campaign_name": campaign.name if campaign else "Unknown",
+            }
+
+        # ✅ revenue
         result[zone]["revenue"] += float(conv.payout or 0)
 
     return list(result.values())

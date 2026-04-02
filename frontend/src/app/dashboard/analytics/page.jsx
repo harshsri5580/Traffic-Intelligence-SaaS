@@ -20,9 +20,9 @@ import {
 
 export default function AnalyticsPage() {
 
- const [logs, setLogs] = useState([]);
-const [page, setPage] = useState(1);
-const [totalPages, setTotalPages] = useState(1);
+  const [logs, setLogs] = useState([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [overview, setOverview] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
 
@@ -33,12 +33,12 @@ const [totalPages, setTotalPages] = useState(1);
   const [countryData, setCountryData] = useState([]);
   const [deviceData, setDeviceData] = useState([]);
   const [rowsPerPage, setRowsPerPage] = useState(50);
-  const [search,setSearch] = useState("");
+  const [search, setSearch] = useState("");
   const [botStats, setBotStats] = useState({
-  human: 0,
-  bot: 0,
-  suspicious: 0
-});
+    human: 0,
+    bot: 0,
+    suspicious: 0
+  });
 
   const loadData = async () => {
 
@@ -51,12 +51,12 @@ const [totalPages, setTotalPages] = useState(1);
         api.get("/analytics/overview")
       ]);
       // ✅ ADD THIS AT END
-try {
-  const botRes = await api.get("/analytics/bot-stats");
-  setBotStats(botRes.data);
-} catch (err) {
-  console.error(err);
-}
+      try {
+        const botRes = await api.get("/analytics/bot-stats");
+        setBotStats(botRes.data);
+      } catch (err) {
+        console.error(err);
+      }
 
       const logsData = logsRes.data.logs || [];
       setTotalPages(logsRes.data.total_pages || 1);
@@ -64,9 +64,9 @@ try {
       setLogs(logsData);
       setOverview(overviewRes.data || null);
 
-      if(page === 1){
-  buildCharts(logsData);
-}
+      if (page === 1) {
+        buildCharts(logsData);
+      }
 
     } catch (err) {
 
@@ -77,25 +77,25 @@ try {
       setLoading(false);
 
     }
-    
+
 
   };
 
- useEffect(() => {
-  loadData();
-}, [page]);
+  useEffect(() => {
+    loadData();
+  }, [page]);
 
-useEffect(()=>{
+  useEffect(() => {
 
-const interval = setInterval(()=>{
+    const interval = setInterval(() => {
 
-loadData()
+      loadData()
 
-},10000)
+    }, 10000)
 
-return ()=>clearInterval(interval)
+    return () => clearInterval(interval)
 
-},[])
+  }, [])
 
   const refresh = async () => {
 
@@ -105,101 +105,137 @@ return ()=>clearInterval(interval)
 
   };
 
- 
+
 
   const getCountryName = (code) => {
-  const c = countries.find((x) => x.value === code);
-  return c ? c.label : code;
-};
-
- const buildCharts = (logs) => {
-
-  const trafficByHour = {};
-  const countryMap = {};
-  const deviceMap = {};
-  const fraudMap = {
-    vpn:0,
-    datacenter:0,
-    residential:0
+    const c = countries.find((x) => x.value === code);
+    return c ? c.label : code;
   };
 
-  logs.forEach((log)=>{
+  const buildCharts = (logs) => {
 
-    if(!log.created_at) return;
+    const trafficByHour = {};
 
-    const hour = new Date(log.created_at).getHours();
+    logs.forEach((log) => {
 
-    trafficByHour[hour] = (trafficByHour[hour] || 0) + 1;
+      if (!log.created_at) return;
 
-    if(log.country){
-      countryMap[log.country] = (countryMap[log.country] || 0) + 1;
+      const hour = new Date(log.created_at).getHours();
+
+      if (!trafficByHour[hour]) {
+        trafficByHour[hour] = {
+          passed: 0,
+          blocked: 0,
+          bot: 0
+        };
+      }
+
+      // ✅ passed
+      if (["offer", "passed"].includes(log.status)) {
+        trafficByHour[hour].passed++;
+      }
+
+      // ✅ blocked
+      if (log.status === "blocked") {
+        trafficByHour[hour].blocked++;
+      }
+
+      // ✅ bot
+      if (log.bot_score >= 70) {
+        trafficByHour[hour].bot++;
+      }
+
+    });
+    const countryMap = {};
+    const deviceMap = {};
+    const fraudMap = {
+      vpn: 0,
+      datacenter: 0,
+      residential: 0
+    };
+
+    logs.forEach((log) => {
+
+      if (!log.created_at) return;
+
+      const hour = new Date(log.created_at).getHours();
+
+      // ❌ NO overwrite here
+
+      if (log.country) {
+        countryMap[log.country] = (countryMap[log.country] || 0) + 1;
+      }
+
+      if (log.device_type) {
+        deviceMap[log.device_type] = (deviceMap[log.device_type] || 0) + 1;
+      }
+
+      if (log.connection_type === "vpn") fraudMap.vpn++
+      else if (log.connection_type === "datacenter") fraudMap.datacenter++
+      else fraudMap.residential++
+
+    });
+
+    const hours = Array.from({ length: 24 }, (_, i) => i);
+
+    setChartData(
+      hours.map(h => ({
+        hour: `${h}:00`,
+        passed: trafficByHour[h]?.passed || 0,
+        blocked: trafficByHour[h]?.blocked || 0,
+        bot: trafficByHour[h]?.bot || 0
+      }))
+    );
+
+    setCountryData(
+      Object.entries(countryMap)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([c, v]) => ({
+          name: getCountryName(c),
+          value: v
+        }))
+    );
+
+    setDeviceData(
+      Object.entries(deviceMap).map(([d, v]) => ({
+        name: d,
+        value: v
+      }))
+    );
+
+  };
+
+  const filteredLogs = logs.filter((log) => {
+
+    if (statusFilter !== "all" && log.status !== statusFilter) return false;
+
+    if (search) {
+      const q = search.toLowerCase();
+      return (
+        log.ip_address?.toLowerCase().includes(q) ||
+        log.campaign_name?.toLowerCase().includes(q)
+      );
     }
 
-    if(log.device_type){
-      deviceMap[log.device_type] = (deviceMap[log.device_type] || 0) + 1;
-    }
-
-    if(log.connection_type === "vpn") fraudMap.vpn++
-    else if(log.connection_type === "datacenter") fraudMap.datacenter++
-    else fraudMap.residential++
+    return true;
 
   });
 
-  const hours = Array.from({length:24},(_,i)=>i);
-
-  setChartData(
-    hours.map(h=>({
-      hour:`${h}:00`,
-      clicks:trafficByHour[h] || 0
-    }))
-  );
-
-  setCountryData(
-    Object.entries(countryMap)
-      .sort((a,b)=>b[1]-a[1])
-      .slice(0,5)
-      .map(([c,v])=>({
-        name:getCountryName(c),
-        value:v
-      }))
-  );
-
-  setDeviceData(
-    Object.entries(deviceMap).map(([d,v])=>({
-      name:d,
-      value:v
-    }))
-  );
-
-};
-
- const filteredLogs = logs.filter((log) => {
-
-  if (statusFilter !== "all" && log.status !== statusFilter) return false;
-
-  if(search){
-    const q = search.toLowerCase();
-    return (
-      log.ip_address?.toLowerCase().includes(q) ||
-      log.campaign_name?.toLowerCase().includes(q)
-    );
+  function statusColor(status) {
+    switch (status) {
+      case "offer":
+        return "bg-green-500/20 text-green-400";
+      case "blocked":
+        return "bg-red-500/20 text-red-400";
+      case "fallback":
+        return "bg-yellow-500/20 text-yellow-400";
+      case "rule":
+        return "bg-purple-500/20 text-purple-400";
+      default:
+        return "bg-gray-500/20 text-gray-400";
+    }
   }
-
-  return true;
-
-});
-
-  const statusColor = (status) => {
-
-   if (status === "blocked") return "bg-red-500";
-if (status === "passed") return "bg-green-600";
-if (status === "offer") return "bg-green-500";
-if (status === "rule") return "bg-blue-500";
-if (status === "fallback") return "bg-yellow-500";
-
-    return "bg-gray-400";
-
-  };
 
   return (
 
@@ -211,60 +247,42 @@ if (status === "fallback") return "bg-yellow-500";
 
       {overview && (
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-10">
 
           <StatCard title="Total Clicks" value={overview.total_clicks} />
-          <StatCard title="Real Traffic" value={overview.real_traffic} />
+          <StatCard title="Passed" value={overview.real_traffic} />
           <StatCard title="Blocked" value={overview.blocked} />
-
         </div>
 
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
 
- <StatCard title="VPN Traffic" value={overview?.vpn || 0}/>
-<StatCard title="Datacenter Traffic" value={overview?.datacenter || 0}/>
-<StatCard title="Residential Traffic" value={overview?.residential || 0}/>
+        <StatCard title="Human" value={botStats.human} color="green" />
+        <StatCard title="Suspicious" value={botStats.suspicious} color="yellow" />
+        <StatCard title="Bot" value={botStats.bot} color="red" />
 
-</div>
-
-<div className="bg-white shadow rounded p-6 mb-10">
-
-  <h2 className="text-xl font-semibold mb-4">
-    Bot vs Human Analysis
-  </h2>
-
-  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-    <div className="p-4 rounded-lg bg-green-50 border">
-      <div className="text-sm text-gray-500">Human</div>
-      <div className="text-2xl font-bold text-green-600">
-        {botStats.human}
       </div>
-    </div>
 
-    <div className="p-4 rounded-lg bg-yellow-50 border">
-      <div className="text-sm text-gray-500">Suspicious</div>
-      <div className="text-2xl font-bold text-yellow-600">
-        {botStats.suspicious}
+      <div className="bg-gradient-to-br from-gray-900 to-black border border-gray-800 shadow-xl rounded-2xl p-6 mb-10">
+
+        <h2 className="text-lg font-semibold mb-6 text-white">
+          Traffic Quality
+        </h2>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+
+          <StatMini title="VPN Traffic" value={overview?.vpn || 0} />
+          <StatMini title="Datacenter Traffic" value={overview?.datacenter || 0} />
+          <StatMini title="Residential Traffic" value={overview?.residential || 0} />
+
+        </div>
+
       </div>
-    </div>
 
-    <div className="p-4 rounded-lg bg-red-50 border">
-      <div className="text-sm text-gray-500">Bots</div>
-      <div className="text-2xl font-bold text-red-600">
-        {botStats.bot}
-      </div>
-    </div>
+      <div className="bg-gradient-to-br from-gray-900 to-black border border-gray-800 shadow-xl rounded-2xl p-6 mb-10">
 
-  </div>
-
-</div>
-
-      <div className="bg-white p-6 shadow rounded mb-10">
-
-        <h2 className="text-lg font-semibold mb-4">
+        <h2 className="text-lg font-semibold mb-4 text-white">
           Traffic By Hour
         </h2>
 
@@ -272,15 +290,42 @@ if (status === "fallback") return "bg-yellow-500";
 
           <LineChart data={chartData}>
 
-            <CartesianGrid strokeDasharray="3 3" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
 
-            <XAxis dataKey="hour" />
+            <XAxis dataKey="hour" stroke="#9ca3af" />
+            <YAxis stroke="#9ca3af" />
 
-            <YAxis />
+            <Tooltip
+              contentStyle={{ backgroundColor: "#111827", border: "1px solid #374151" }}
+              labelStyle={{ color: "#fff" }}
+            />
 
-            <Tooltip />
+            {/* 🔥 Passed */}
+            <Line
+              type="monotone"
+              dataKey="passed"
+              stroke="#22c55e"
+              strokeWidth={3}
+              name="Passed"
+            />
 
-            <Line type="monotone" dataKey="clicks" stroke="#6366f1" strokeWidth={3} />
+            {/* 🔥 Blocked */}
+            <Line
+              type="monotone"
+              dataKey="blocked"
+              stroke="#ef4444"
+              strokeWidth={3}
+              name="Blocked"
+            />
+
+            {/* 🔥 Bots */}
+            <Line
+              type="monotone"
+              dataKey="bot"
+              stroke="#f59e0b"
+              strokeWidth={3}
+              name="Bot"
+            />
 
           </LineChart>
 
@@ -295,166 +340,193 @@ if (status === "fallback") return "bg-yellow-500";
 
       </div>
 
-      <div className="flex gap-3 mb-6">
+      <div className="flex flex-wrap items-center gap-4 mb-6 bg-gradient-to-r from-gray-900 to-black border border-gray-800 rounded-2xl p-4 shadow-lg">
 
+        {/* 🔽 STATUS */}
         <select
-          className="border px-3 py-2 rounded"
+          className="bg-gray-800 text-white border border-gray-700 px-4 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
           value={statusFilter}
-          onChange={(e)=>setStatusFilter(e.target.value)}
+          onChange={(e) => setStatusFilter(e.target.value)}
         >
-
-          <option value="all">All</option>
-<option value="offer">Passed</option>
-<option value="blocked">Blocked</option>
-<option value="fallback">Safe</option>
-<option value="rule">Rule Redirect</option>
-
+          <option value="all">All Status</option>
+          <option value="offer">Passed</option>
+          <option value="blocked">Blocked</option>
+          <option value="fallback">Safe</option>
+          <option value="rule">Rule Redirect</option>
         </select>
 
+        {/* 🔽 ROWS */}
         <select
-  className="border px-3 py-2 rounded"
-  value={rowsPerPage}
-  onChange={(e)=>{
-    setRowsPerPage(Number(e.target.value));
-    setPage(1);
-  }}
->
-  <option value="25">25 rows</option>
-  <option value="50">50 rows</option>
-  <option value="100">100 rows</option>
-</select>
+          className="bg-gray-800 text-white border border-gray-700 px-4 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          value={rowsPerPage}
+          onChange={(e) => {
+            setRowsPerPage(Number(e.target.value));
+            setPage(1);
+          }}
+        >
+          <option value="25">25 rows</option>
+          <option value="50">50 rows</option>
+          <option value="100">100 rows</option>
+        </select>
 
+        {/* 🔄 REFRESH */}
         <button
           onClick={refresh}
-          className="bg-gray-800 text-white px-4 py-2 rounded"
+          className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl transition font-medium shadow-md"
         >
           {refreshing ? "Refreshing..." : "Refresh"}
         </button>
 
       </div>
 
-      <div className="bg-white shadow rounded overflow-x-auto max-h-[600px]">
+      <div className="bg-gradient-to-br from-gray-900 to-black border border-gray-800 shadow-xl rounded-2xl overflow-hidden mb-10">
 
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto max-h-[600px]">
 
-          <thead className="bg-gray-100 sticky top-0">
+          <table className="w-full text-sm text-gray-300">
 
-            <tr>
+            {/* 🔥 HEADER */}
+            <thead className="sticky top-0 bg-gray-900 border-b border-gray-700 text-gray-400 text-xs uppercase tracking-wider">
 
-               <th className="p-3">ClickID</th>
-              <th className="p-3">IP</th>
-              <th className="p-3">Country</th>
-              <th className="p-3">Device</th>
-              <th className="p-3">Browser</th>
-              <th className="p-3">ISP</th>
-              <th className="p-3">Campaign</th>
-              <th className="p-3">Offer</th>
-              <th className="p-3">Bot</th>
-              <th className="p-3">Status</th>
-              <th className="p-3">Time</th>
-              <th className="p-3">Revenue</th>
-              <th className="p-3">EPC</th>
-              <th className="p-3">ROI</th>
-
-            </tr>
-
-          </thead>
-
-          <tbody>
-
-            {filteredLogs.length === 0 && (
-<tr>
-<td colSpan="11" className="p-6 text-center text-gray-500">
-No analytics data found
-</td>
-</tr>
-)}
-
-            {filteredLogs.map((log, i)=> (
-
-               <tr key={`${log.click_id}-${i}`} className="border-t hover:bg-gray-50 text-center">
-
-                <td className="p-3 font-mono text-xs">
-  {log.click_id || "-"}
-</td>
-                <td className="p-3">{log.ip_address || "-"}</td>
-                <td className="p-3">{getCountryName(log.country)}</td>
-                <td className="p-3">{log.device_type}</td>
-                <td className="p-3">{log.browser}</td>
-                <td className="p-3">{log.isp}</td>
-                <td className="p-3">{log.campaign_name || "-"}</td>
-                <td className="p-3">{log.offer_name || "-"}</td>
-                <td className="p-3">
-<span className={`px-2 py-1 rounded text-xs
-${log.bot_score >= 70 ? "bg-red-100 text-red-700":
-log.bot_score >= 40 ? "bg-yellow-100 text-yellow-700":
-"bg-green-100 text-green-700"}`}>
-{log.bot_score}
-</span>
-</td>
-
-                <td className="p-3">
-
-                  <span className={`text-white text-xs px-2 py-1 rounded ${statusColor(log.status)}`}>
-                    {log.status}
-                  </span>
-
-                </td>
-
-                <td className="p-3">
-                  {log.created_at ? new Date(log.created_at).toLocaleString() : "-"}
-                </td>
-
-
-                <td className="p-3 text-green-600 font-semibold">
-  ${log.revenue || 0}
-</td>
-
-<td className="p-3 text-blue-600 font-semibold">
-  {log.epc || 0}
-</td>
-
-<td className={`p-3 font-semibold ${
-  log.roi > 0 ? "text-green-600" : "text-red-600"
-}`}>
-  {log.roi || 0}%
-</td>
-
+              <tr>
+                <th className="p-3">ClickID</th>
+                <th className="p-3">IP</th>
+                <th className="p-3">Country</th>
+                <th className="p-3">Device</th>
+                <th className="p-3">Browser</th>
+                <th className="p-3">ISP</th>
+                <th className="p-3">Campaign</th>
+                <th className="p-3">Offer</th>
+                <th className="p-3">Bot</th>
+                <th className="p-3">Status</th>
+                <th className="p-3">Time</th>
+                <th className="p-3">Revenue</th>
+                <th className="p-3">EPC</th>
+                <th className="p-3">ROI</th>
               </tr>
 
-            ))}
+            </thead>
 
-          </tbody>
+            {/* 🔥 BODY */}
+            <tbody>
 
-        </table>
+              {filteredLogs.length === 0 && (
+                <tr>
+                  <td colSpan="14" className="p-6 text-center text-gray-500">
+                    No analytics data found
+                  </td>
+                </tr>
+              )}
 
+              {filteredLogs.map((log, i) => (
+
+                <tr
+                  key={`${log.click_id}-${i}`}
+                  className="border-t border-gray-800 hover:bg-gray-800/40 transition text-center"
+                >
+
+                  <td className="p-3 font-mono text-xs text-gray-400">
+                    {log.click_id || "-"}
+                  </td>
+
+                  <td className="p-3">{log.ip_address || "-"}</td>
+
+                  <td className="p-3">{getCountryName(log.country)}</td>
+
+                  <td className="p-3">{log.device_type}</td>
+
+                  <td className="p-3">{log.browser}</td>
+
+                  <td className="p-3">{log.isp}</td>
+
+                  <td className="p-3 font-medium text-white">
+                    {log.campaign_name || "-"}
+                  </td>
+
+                  <td className="p-3">{log.offer_name || "-"}</td>
+
+                  {/* 🔥 BOT SCORE */}
+                  <td className="p-3">
+                    <span className={`px-2 py-1 rounded text-xs font-semibold
+                ${log.bot_score >= 70 ? "bg-red-500/20 text-red-400" :
+                        log.bot_score >= 40 ? "bg-yellow-500/20 text-yellow-400" :
+                          "bg-green-500/20 text-green-400"}`}>
+                      {log.bot_score}
+                    </span>
+                  </td>
+
+                  {/* 🔥 STATUS */}
+                  <td className="p-3">
+                    <span className={`px-2 py-1 text-xs rounded font-medium ${statusColor(log.status)}`}>
+                      {log.status}
+                    </span>
+                  </td>
+
+                  <td className="p-3 text-gray-400">
+                    {log.created_at ? new Date(log.created_at).toLocaleString() : "-"}
+                  </td>
+
+                  {/* 🔥 REVENUE */}
+                  <td className="p-3 text-green-400 font-semibold">
+                    ${log.revenue || 0}
+                  </td>
+
+                  {/* 🔥 EPC */}
+                  <td className="p-3 text-blue-400 font-semibold">
+                    {log.epc || 0}
+                  </td>
+
+                  {/* 🔥 ROI */}
+                  <td className={`p-3 font-semibold ${log.roi > 0 ? "text-green-400" : "text-red-400"}`}>
+                    {log.roi || 0}%
+                  </td>
+
+                </tr>
+
+              ))}
+
+            </tbody>
+
+          </table>
+
+        </div>
 
       </div>
 
-      
-        <div className="flex justify-between items-center p-4">
 
-  <button
-    disabled={page === 1}
-    onClick={()=>setPage(page-1)}
-    className="px-3 py-1 bg-gray-200 rounded"
-  >
-    Previous
-  </button>
+      <div className="flex justify-between items-center p-4 bg-gradient-to-r from-gray-900 to-black border border-gray-800 rounded-2xl shadow-lg mt-6">
 
-  <span>
-    Page {page} / {totalPages}
-  </span>
+        {/* 🔙 PREVIOUS */}
+        <button
+          disabled={page === 1}
+          onClick={() => setPage(page - 1)}
+          className={`px-4 py-2 rounded-xl text-sm font-medium transition
+      ${page === 1
+              ? "bg-gray-800 text-gray-500 cursor-not-allowed"
+              : "bg-gray-800 text-white hover:bg-gray-700"}`}
+        >
+          ← Previous
+        </button>
 
-  <button
-    disabled={page === totalPages}
-    onClick={()=>setPage(page+1)}
-    className="px-3 py-1 bg-gray-200 rounded"
-  >
-    Next
-  </button>
+        {/* 📄 PAGE INFO */}
+        <span className="text-gray-300 text-sm">
+          Page <span className="text-white font-semibold">{page}</span> of{" "}
+          <span className="text-white font-semibold">{totalPages}</span>
+        </span>
 
-</div>
+        {/* 🔜 NEXT */}
+        <button
+          disabled={page === totalPages}
+          onClick={() => setPage(page + 1)}
+          className={`px-4 py-2 rounded-xl text-sm font-medium transition
+      ${page === totalPages
+              ? "bg-gray-800 text-gray-500 cursor-not-allowed"
+              : "bg-indigo-600 text-white hover:bg-indigo-700 shadow"}`}
+        >
+          Next →
+        </button>
+
+      </div>
 
     </div>
 
@@ -463,38 +535,41 @@ log.bot_score >= 40 ? "bg-yellow-100 text-yellow-700":
 }
 
 function StatCard({ title, value }) {
-
   return (
+    <div className="bg-gradient-to-br from-gray-800 via-gray-900 to-black text-white p-6 rounded-2xl shadow-lg hover:shadow-2xl hover:scale-[1.03] transition-all duration-300 border border-gray-700">
 
-    <div className="bg-white shadow p-6 rounded">
-
-      <div className="text-gray-500 text-sm mb-1">
+      <div className="text-sm text-gray-400 mb-2">
         {title}
       </div>
 
-      <div className="text-2xl font-bold">
+      <div className="text-3xl font-bold tracking-wide">
         {value || 0}
       </div>
 
     </div>
-
   );
-
 }
 
 function ChartCard({ title, data }) {
 
-  const colors = ["#6366f1","#10b981","#f59e0b","#ef4444"];
+  const colors = ["#6366f1", "#22c55e", "#f59e0b", "#ef4444", "#8b5cf6"];
 
   return (
 
-    <div className="bg-white p-6 shadow rounded">
+    <div className="bg-gradient-to-br from-gray-900 to-black border border-gray-800 rounded-2xl p-6 shadow-xl">
 
-      <h2 className="text-lg font-semibold mb-4">
-        {title}
-      </h2>
+      {/* 🔥 Header */}
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg font-semibold text-white">
+          {title}
+        </h2>
+        <span className="text-xs text-gray-400">
+          Top 5
+        </span>
+      </div>
 
-      <ResponsiveContainer width="100%" height={250}>
+      {/* 🔥 Chart */}
+      <ResponsiveContainer width="100%" height={260}>
 
         <PieChart>
 
@@ -502,23 +577,73 @@ function ChartCard({ title, data }) {
             data={data}
             dataKey="value"
             nameKey="name"
-            outerRadius={100}
+            outerRadius={90}
+            innerRadius={55} // 🔥 donut style
+            paddingAngle={3}
           >
 
             {data.map((entry, index) => (
-              <Cell key={index} fill={colors[index % colors.length]} />
+              <Cell
+                key={index}
+                fill={colors[index % colors.length]}
+                className="hover:opacity-80 transition"
+              />
             ))}
 
           </Pie>
 
-          <Tooltip />
+          <Tooltip
+            contentStyle={{
+              backgroundColor: "#111827",
+              border: "1px solid #374151",
+              color: "#fff"
+            }}
+          />
 
         </PieChart>
 
       </ResponsiveContainer>
 
+      {/* 🔥 Legend (important upgrade) */}
+      <div className="mt-4 space-y-2">
+
+        {data.map((item, i) => (
+          <div key={i} className="flex justify-between text-sm">
+
+            <div className="flex items-center gap-2 text-gray-300">
+              <div
+                className="w-2 h-2 rounded-full"
+                style={{ backgroundColor: colors[i % colors.length] }}
+              />
+              {item.name}
+            </div>
+
+            <div className="text-white font-semibold">
+              {item.value}
+            </div>
+
+          </div>
+        ))}
+
+      </div>
+
     </div>
 
   );
+}
 
+function StatMini({ title, value }) {
+  return (
+    <div className="p-5 rounded-2xl border border-gray-700 bg-gradient-to-br from-gray-800 to-black text-white shadow hover:scale-[1.02] transition">
+
+      <div className="text-sm text-gray-400 mb-1">
+        {title}
+      </div>
+
+      <div className="text-3xl font-bold text-white">
+        {value || 0}
+      </div>
+
+    </div>
+  );
 }
