@@ -32,7 +32,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
 
-      {/* 🔥 NAVBAR */}
+      {/* NAVBAR */}
       <div className="flex justify-between items-center px-8 py-4 bg-white shadow-sm">
         <h1 className="text-xl font-bold">Traffic Intelligence</h1>
 
@@ -49,14 +49,14 @@ export default function Home() {
         </div>
       </div>
 
-      {/* 🔥 HERO */}
+      {/* HERO */}
       <div className="text-center py-20 px-6">
         <h1 className="text-5xl font-extrabold mb-6">
-          Stop Fake Traffic. Grow Real Revenue 🚀
+          Analyze Traffic. Prevent Fraud. Grow Smarter 🚀
         </h1>
 
         <p className="text-gray-600 max-w-2xl mx-auto mb-8">
-          Detect bots, filter bad traffic, and optimize campaigns with real-time intelligence.
+          Monitor traffic quality, detect invalid clicks, and improve campaign performance with real-time analytics.
         </p>
 
         <Link
@@ -67,16 +67,16 @@ export default function Home() {
         </Link>
       </div>
 
-      {/* 🔥 FEATURES */}
+      {/* FEATURES */}
       <div className="grid md:grid-cols-3 gap-6 px-10 pb-20">
 
         {[
-          "Real-time Traffic Tracking",
-          "Advanced Bot Detection",
-          "Smart Campaign Analytics",
-          "IP Reputation & Filtering",
-          "Proxy & VPN Detection",
-          "Cloaking & Routing Engine",
+          "Real-time Traffic Analytics",
+          "Invalid Click Detection",
+          "Campaign Performance Insights",
+          "IP Reputation Monitoring",
+          "VPN & Proxy Detection",
+          "Traffic Quality Scoring",
         ].map((f, i) => (
           <div key={i} className="bg-white p-6 rounded-xl shadow text-center">
             <h3 className="font-semibold text-lg">{f}</h3>
@@ -85,7 +85,7 @@ export default function Home() {
 
       </div>
 
-      {/* 🔥 FULL PRICING (REAL) */}
+      {/* PRICING */}
       <div className="bg-white py-20">
 
         <h2 className="text-3xl font-bold text-center mb-12">
@@ -122,10 +122,10 @@ export default function Home() {
 
                 <div className="space-y-3 text-gray-600 text-sm">
                   <p>✔ {p.max_campaigns} Campaigns</p>
-                  <p>✔ {p.max_monthly_clicks || "Unlimited"} Clicks</p>
-                  <p>✔ Real-time Tracking</p>
-                  <p>✔ Bot Filtering</p>
-                  <p>✔ Analytics Dashboard</p>
+                  <p>✔ {p.max_monthly_clicks || "Unlimited"} Events</p>
+                  <p>✔ Real-time Analytics</p>
+                  <p>✔ Fraud Detection</p>
+                  <p>✔ Dashboard Insights</p>
                 </div>
 
                 <Link
@@ -142,9 +142,9 @@ export default function Home() {
         </div>
       </div>
 
-      {/* 🔥 FOOTER */}
+      {/* FOOTER */}
       <div className="text-center text-sm text-gray-500 py-6">
-        © 2026 Traffic Intelligence SaaS
+        © 2026 Traffic Intelligence Platform
       </div>
 
     </div>

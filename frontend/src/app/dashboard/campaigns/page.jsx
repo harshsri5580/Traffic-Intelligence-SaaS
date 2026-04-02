@@ -170,10 +170,10 @@ export default function Campaigns() {
       return;
     }
 
-    if (!form.traffic_source) {
-      toast.error("Select traffic source");
-      return;
-    }
+    // if (!form.traffic_source) {
+    //   toast.error("Select traffic source");
+    //   return;
+    // }
 
     setCreating(true);
 
@@ -194,7 +194,7 @@ export default function Campaigns() {
 
       const res = await api.post("/campaigns/", payload);
 
-      if (res.data?.campaign && !res.data.campaign.is_active) {
+      if (res.data?.limit_reached) {
         toast("Limit reached ⚠️ Campaign created as inactive", {
           icon: "⚠️",
         });
@@ -202,13 +202,12 @@ export default function Campaigns() {
         toast.success("Campaign Created 🚀");
       }
 
-      toast.success("Campaign Created 🚀");
-
       setForm({
         name: "",
         fallback_url: "",
         safe_page_url: "",
         bot_url: "",
+        traffic_source: "direct"  // ✅ ADD THIS
 
       });
       setAutoOptimize(false)
@@ -279,8 +278,7 @@ export default function Campaigns() {
           />
 
           <select
-            className="border p-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={form.traffic_source}
+            value={form.traffic_source || "direct"}  // ✅ ensure
             onChange={(e) => setForm({ ...form, traffic_source: e.target.value })}
           >
             <option value="">Select Source</option>
