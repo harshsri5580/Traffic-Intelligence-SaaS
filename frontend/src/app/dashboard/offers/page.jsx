@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import api from "../../../services/api";
+import toast from "react-hot-toast";
 
 export default function OffersPage() {
 
@@ -57,7 +58,7 @@ export default function OffersPage() {
   const loadOffers = async () => {
 
     if (!selectedCampaign) {
-      alert("Select campaign");
+      toast.error("Please select a campaign");
       return;
     }
 
@@ -79,7 +80,7 @@ export default function OffersPage() {
   const saveOffer = async () => {
 
     if (!formData.campaign_id || !formData.url || !formData.name) {
-      alert("Fill all fields");
+      toast.error("Fill all required fields");
       return;
     }
 
@@ -125,13 +126,14 @@ export default function OffersPage() {
     } catch (err) {
 
       console.error(err);
-      alert("Save offer failed");
+      toast.error("Failed to save offer");
 
     } finally {
 
       setCreating(false);
 
     }
+    toast.success("Offer saved successfully 🚀");
 
   };
 
@@ -153,7 +155,8 @@ export default function OffersPage() {
 
   const deleteOffer = async (id) => {
 
-    if (!confirm("Delete offer?")) return;
+    const confirmDelete = window.confirm("Delete offer?");
+    if (!confirmDelete) return;
 
     try {
 

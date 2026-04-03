@@ -239,7 +239,7 @@ export default function AnalyticsPage() {
 
   return (
 
-    <div className="p-8 max-w-[1200px] mx-auto">
+    <div className="p-8 space-y-10 bg-gray-50 min-h-screen w-full overflow-x-hidden">
 
       <h1 className="text-3xl font-bold mb-8">
         Traffic Analytics
@@ -247,7 +247,7 @@ export default function AnalyticsPage() {
 
       {overview && (
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full min-w-0">
 
           <StatCard title="Total Clicks" value={overview.total_clicks} />
           <StatCard title="Passed" value={overview.real_traffic} />
@@ -256,7 +256,7 @@ export default function AnalyticsPage() {
 
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full min-w-0">
 
         <StatCard title="Human" value={botStats.human} color="green" />
         <StatCard title="Suspicious" value={botStats.suspicious} color="yellow" />
@@ -264,13 +264,13 @@ export default function AnalyticsPage() {
 
       </div>
 
-      <div className="bg-gradient-to-br from-gray-900 to-black border border-gray-800 shadow-xl rounded-2xl p-6 mb-10">
+      <div className="w-full min-w-0 bg-gradient-to-br from-gray-900 to-gray-700 text-white shadow-xl rounded-xl p-6">
 
         <h2 className="text-lg font-semibold mb-6 text-white">
           Traffic Quality
         </h2>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 w-full gap-6">
 
           <StatMini title="VPN Traffic" value={overview?.vpn || 0} />
           <StatMini title="Datacenter Traffic" value={overview?.datacenter || 0} />
@@ -280,7 +280,7 @@ export default function AnalyticsPage() {
 
       </div>
 
-      <div className="bg-gradient-to-br from-gray-900 to-black border border-gray-800 shadow-xl rounded-2xl p-6 mb-10">
+      <div className="w-full min-w-0 bg-gradient-to-br from-gray-900 to-gray-700 text-white shadow-xl rounded-xl p-6">
 
         <h2 className="text-lg font-semibold mb-4 text-white">
           Traffic By Hour
@@ -379,7 +379,7 @@ export default function AnalyticsPage() {
 
       </div>
 
-      <div className="bg-gradient-to-br from-gray-900 to-black border border-gray-800 shadow-xl rounded-2xl overflow-hidden mb-10">
+      <div className="w-full min-w-0 bg-gradient-to-br from-gray-900 to-gray-700 text-white shadow-xl rounded-xl p-6">
 
         <div className="overflow-x-auto max-h-[600px]">
 
@@ -536,7 +536,7 @@ export default function AnalyticsPage() {
 
 function StatCard({ title, value }) {
   return (
-    <div className="bg-gradient-to-br from-gray-800 via-gray-900 to-black text-white p-6 rounded-2xl shadow-lg hover:shadow-2xl hover:scale-[1.03] transition-all duration-300 border border-gray-700">
+    <div className="w-full min-w-0 bg-gradient-to-br from-gray-900 to-gray-700 text-white shadow-xl rounded-xl p-6">
 
       <div className="text-sm text-gray-400 mb-2">
         {title}
@@ -556,7 +556,7 @@ function ChartCard({ title, data }) {
 
   return (
 
-    <div className="bg-gradient-to-br from-gray-900 to-black border border-gray-800 rounded-2xl p-6 shadow-xl">
+    <div className="w-full min-w-0 bg-gradient-to-br from-gray-900 to-gray-700 text-white shadow-xl rounded-xl p-6">
 
       {/* 🔥 Header */}
       <div className="flex justify-between items-center mb-4">
@@ -634,7 +634,7 @@ function ChartCard({ title, data }) {
 
 function StatMini({ title, value }) {
   return (
-    <div className="p-5 rounded-2xl border border-gray-700 bg-gradient-to-br from-gray-800 to-black text-white shadow hover:scale-[1.02] transition">
+    <div className="w-full min-w-0 bg-gradient-to-br from-gray-900 to-gray-700 text-white shadow-xl rounded-xl p-6">
 
       <div className="text-sm text-gray-400 mb-1">
         {title}

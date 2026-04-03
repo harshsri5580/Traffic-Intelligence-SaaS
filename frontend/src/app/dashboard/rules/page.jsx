@@ -5,7 +5,7 @@ import api from "../../../services/api";
 import { countries } from "../../../data/countries";
 import Select from "react-select";
 import CreatableSelect from "react-select/creatable";
-
+import toast from "react-hot-toast";
 const SUSPICIOUS_ISPS = [
   "Amazon AWS",
   "Amazon Technologies",
@@ -128,7 +128,7 @@ export default function RulesPage() {
   const fetchRules = async () => {
 
     if (!formData.campaign_id) {
-      alert("Select campaign");
+      toast.error("Select campaign");
       return;
     }
 
@@ -201,19 +201,19 @@ export default function RulesPage() {
     );
 
     if (duplicate) {
-      alert("This priority already used in this campaign");
+      toast.error("Priority already used");
       return;
     }
 
     try {
 
       if (!formData.name || !formData.campaign_id) {
-        alert("Fill required fields");
+        toast.error("Fill required fields");
         return;
       }
 
       if (formData.selected_offers.length === 0) {
-        alert("Select at least one offer");
+        toast.error("Select at least one offer");
         return;
       }
 
@@ -315,6 +315,7 @@ export default function RulesPage() {
     } catch (err) {
       console.error(err);
     }
+    toast.success("Rule saved successfully 🚀");
 
   };
 
