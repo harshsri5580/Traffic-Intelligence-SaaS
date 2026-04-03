@@ -54,13 +54,7 @@ def set_decision(current, new):
 
 
 def append_click_id(url, click_id):
-    try:
-        if "click_id=" in url:
-            return url
-        separator = "&" if "?" in url else "?"
-        return f"{url}{separator}click_id={click_id}"
-    except:
-        return url
+    return url  # 🔥 DISABLED (NO URL TRACKING)
 
 
 def compute_final_decision(visitor, risk_score):
@@ -955,20 +949,6 @@ async def redirect_campaign(
         destination_url = redirect_url
         reason = "fallback"
     redirect_url = append_click_id(redirect_url, click_id)
-
-    # =========================================
-    # 🔥 STEALTH PARAM (ANTI DETECT)
-    # =========================================
-    try:
-        if redirect_url:
-            rnd = hashlib.md5(str(random.random()).encode()).hexdigest()[:6]
-
-            if "?" in redirect_url:
-                redirect_url = f"{redirect_url}&_r={rnd}"
-            else:
-                redirect_url = f"{redirect_url}?_r={rnd}"
-    except Exception:
-        pass
 
     # 🔥 FINAL DEDUPE (FIXED ✅)
 

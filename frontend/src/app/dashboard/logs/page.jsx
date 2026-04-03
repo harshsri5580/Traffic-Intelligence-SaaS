@@ -268,6 +268,7 @@ export default function LogsPage() {
               <th className="p-3 border w-[150px]">Flags</th>
               <th className="p-3 border w-[180px]">Fingerprint</th>
               <th className="p-3 border w-[170px]">Time</th>
+              <th className="p-3 border w-[200px]">Sub Data</th>
               <th className="p-3 border w-[100px]">Action</th>
 
             </tr>
@@ -416,6 +417,25 @@ ${log.risk_score >= 70 ? "bg-red-100 text-red-700" :
                   {new Date(log.created_at).toLocaleString()}
                 </td>
 
+                {/* ✅ NEW COLUMN START */}
+                <td className="px-3 py-2 border text-xs">
+                  <div className="flex flex-wrap gap-1 justify-center">
+
+                    {log.sub1 && (
+                      <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                        sub1: {log.sub1}
+                      </span>
+                    )}
+
+                    {log.sub2 && (
+                      <span className="bg-green-100 text-green-700 px-2 py-1 rounded">
+                        sub2: {log.sub2}
+                      </span>
+                    )}
+
+                  </div>
+                </td>
+                {/* ✅ NEW COLUMN END */}
                 <td className="p-2 border max-w-[200px] truncate">
 
                   {blockedIPs.includes(log.ip_address) ? (

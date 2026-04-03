@@ -111,24 +111,25 @@ class RuleEngine:
 
         # 🔹 Group conditions
         for condition in rule.conditions:
-            group_key = condition.condition_group or 1
+            # 🔥 GROUP SAME FIELD CONDITIONS TOGETHER
+            group_key = (
+                f"{condition.field}"  # or condition.group_id if you have groupings
+            )
             grouped_conditions.setdefault(group_key, []).append(condition)
 
         group_results = []
 
         # 🔹 Process each group
-        for conditions in grouped_conditions.values():
+        for field, conditions in grouped_conditions.items():
 
             results = []
 
             for condition in conditions:
-
                 if not condition.value:
                     continue
 
                 visitor_value = self._get_visitor_value(condition.field)
 
-                # 🔥 DEBUG (optional)
                 print("FIELD:", condition.field)
                 print("VISITOR VALUE:", visitor_value)
                 print("RULE VALUE:", condition.value)
@@ -141,14 +142,13 @@ class RuleEngine:
 
                 results.append(result)
 
-            # 🔥 GROUP LOGIC = AND (fixed)
-            match_type = getattr(rule, "match_type", "AND")
+            # 🔥 FIX: EMPTY FIELD SKIP
+            if not results:
+                continue  # ❗ पूरा field ignore
 
-            if match_type == "AND":
-                group_match = all(results)
+            group_match = any(results)
 
-            elif match_type == "OR":
-                group_match = any(results)
+            print(f"GROUP RESULT ({field}):", group_match)
 
             group_results.append(group_match)
 
