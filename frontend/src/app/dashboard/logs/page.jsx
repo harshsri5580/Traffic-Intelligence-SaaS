@@ -18,6 +18,28 @@ export default function LogsPage() {
     date: ""
   });
 
+  const [visibleColumns, setVisibleColumns] = useState({
+    ip: true,
+    country: true,
+    device: true,
+    asn: true,
+    isp: true,
+    connection: true,
+    campaign: true,
+    destination: true,
+    os: true,
+    bot: true,
+    status: true,
+    browser: true,
+    risk: true,
+    reason: true,
+    flags: true,
+    fingerprint: true,
+    time: true,
+    referrer: true,
+    subdata: true,
+    action: true,
+  });
   useEffect(() => {
 
     const token = localStorage.getItem("token");
@@ -241,234 +263,243 @@ export default function LogsPage() {
 
       </div>
 
+      <div className="flex flex-wrap gap-2 mb-4">
+
+        {Object.keys(visibleColumns).map((col) => (
+          <button
+            key={col}
+            onClick={() =>
+              setVisibleColumns((prev) => ({
+                ...prev,
+                [col]: !prev[col],
+              }))
+            }
+            className={`px-3 py-1 rounded text-xs capitalize transition
+      ${visibleColumns[col]
+                ? "bg-indigo-600 text-white"
+                : "bg-gray-200 text-gray-600"
+              }`}
+          >
+            {col}
+          </button>
+        ))}
+
+      </div>
+
       {/* TABLE */}
 
       <div className="bg-white shadow rounded-lg overflow-x-auto w-full p-4">
+        <div className="overflow-x-auto">
 
-        <table className="w-full text-sm table-fixed">
+          <table className="min-w-[1260px] text-sm">
 
-          <thead className="bg-gray-50 text-gray-600 uppercase text-xs sticky top-0 z-10">
+            <thead className="bg-gray-50 text-gray-600 uppercase text-xs sticky top-0 z-10">
 
-            <tr>
-
-              <th className="p-3 border w-[130px]">IP</th>
-              <th className="p-3 border w-[220px]">Country</th>
-              <th className="p-3 border w-[100px]">Device</th>
-              <th className="p-3 border w-[90px]">ASN</th>
-              <th className="p-3 border w-[250px]">ISP</th>
-              <th className="p-3 border w-[120px]">Connection</th>
-              <th className="p-3 border w-[120px]">Campaign</th>
-              <th className="p-3 border w-[200px]">Destination</th>
-              <th className="p-3 border w-[90px]">OS</th>
-              <th className="p-3 border w-[70px]">Bot</th>
-              <th className="p-3 border w-[150px]">Status</th>
-              <th className="p-3 border w-[110px]">Browser</th>
-              <th className="p-3 border w-[80px]">Risk</th>
-              <th className="p-3 border w-[140px]">Reason</th>
-              <th className="p-3 border w-[150px]">Flags</th>
-              <th className="p-3 border w-[180px]">Fingerprint</th>
-              <th className="p-3 border w-[170px]">Time</th>
-              <th className="p-3 border w-[200px]">Sub Data</th>
-              <th className="p-3 border w-[100px]">Action</th>
-
-            </tr>
-
-          </thead>
-
-          <tbody>
-
-            {filteredLogs.length === 0 && (
               <tr>
-                <td colSpan="13" className="p-6 text-center text-gray-500">
-                  No logs found
-                </td>
+
+                {visibleColumns.ip && <th className="p-3 border w-[130px]">IP</th>}
+                {visibleColumns.country && <th className="p-3 border w-[220px]">Country</th>}
+                {visibleColumns.device && <th className="p-3 border w-[100px]">Device</th>}
+                {visibleColumns.asn && <th className="p-3 border w-[90px]">ASN</th>}
+                {visibleColumns.isp && <th className="p-3 border w-[250px]">ISP</th>}
+                {visibleColumns.connection && <th className="p-3 border w-[120px]">Connection</th>}
+                {visibleColumns.campaign && <th className="p-3 border w-[120px]">Campaign</th>}
+                {visibleColumns.destination && <th className="p-3 border w-[200px]">Destination</th>}
+                {visibleColumns.os && <th className="p-3 border w-[90px]">OS</th>}
+                {visibleColumns.bot && <th className="p-3 border w-[70px]">Bot</th>}
+                {visibleColumns.status && <th className="p-3 border w-[150px]">Status</th>}
+                {visibleColumns.browser && <th className="p-3 border w-[110px]">Browser</th>}
+                {visibleColumns.risk && <th className="p-3 border w-[80px]">Risk</th>}
+                {visibleColumns.reason && <th className="p-3 border w-[140px]">Reason</th>}
+                {visibleColumns.flags && <th className="p-3 border w-[150px]">Flags</th>}
+                {visibleColumns.fingerprint && <th className="p-3 border w-[180px]">Fingerprint</th>}
+                {visibleColumns.time && <th className="p-3 border w-[170px]">Time</th>}
+                {visibleColumns.referrer && <th className="p-3 border w-[200px]">Referrer</th>}
+                {visibleColumns.subdata && <th className="p-3 border w-[200px]">Sub Data</th>}
+                {visibleColumns.action && <th className="p-3 border w-[100px]">Action</th>}
+
               </tr>
-            )}
 
-            {currentLogs.map((log, i) => (
+            </thead>
 
-              <tr key={i} className="text-center hover:bg-gray-50 transition duration-150">
+            <tbody>
 
-                <td className="p-2 border font-mono text-xs">
-                  {log.ip_address}
-                </td>
+              {filteredLogs.length === 0 && (
+                <tr>
+                  <td colSpan="13" className="p-6 text-center text-gray-500">
+                    No logs found
+                  </td>
+                </tr>
+              )}
 
-                <td className="px-3 py-2 border">
-                  {log.country} {log.region && `(${log.region})`} {log.city && `- ${log.city}`}
-                </td>
+              {currentLogs.map((log, i) => (
 
-                <td className="px-3 py-2 border">
-                  {log.device_type || "Unknown"}
-                </td>
+                <tr key={i} className="text-center hover:bg-indigo-50 transition duration-150">
 
-                <td className="px-3 py-2 border">
-                  {log.asn || "-"}
-                </td>
-
-                <td className="px-3 py-2 border">
-                  {log.isp || "-"}
-                </td>
-                <td className="px-3 py-2 border">
-
-                  <span className={`px-2 py-1 rounded text-xs
-${log.connection_type === "datacenter" ? "bg-red-100 text-red-700" :
-                      log.connection_type === "vpn" ? "bg-yellow-100 text-yellow-700" :
-                        log.connection_type === "tor" ? "bg-purple-100 text-purple-700" :
-                          "bg-green-100 text-green-700"}`}>
-
-                    {log.connection_type || "Residential"}
-
-                  </span>
-
-                </td>
-                <td className="p-2 border font-semibold text-indigo-600">
-                  {log.campaign}
-                </td>
-
-                <td>
-                  <span
-                    className={`px-2 py-1 rounded text-xs ${log.status?.toLowerCase() === "blocked"
-                      ? "bg-red-100 text-red-700"
-                      : "bg-green-100 text-green-700"
-                      }`}
-                  >
-                    {log.destination}
-                  </span>
-                </td>
-
-                <td className="px-3 py-2 border">
-                  {log.os || "-"}
-                </td>
-
-                <td className="px-3 py-2 border">
-
-                  <span className={`px-2 py-1 rounded text-xs font-semibold
-${log.bot_score >= 70 ? "bg-red-100 text-red-700" :
-                      log.bot_score >= 40 ? "bg-yellow-100 text-yellow-700" :
-                        "bg-green-100 text-green-700"}`}>
-
-                    {log.bot_score ?? 0}
-
-                  </span>
-
-                </td>
-
-                <td className="px-3 py-2 border">
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold
-${log.status === "offer" ? "bg-green-100 text-green-700" :
-                      log.status === "safe" ? "bg-yellow-100 text-yellow-700" :
-                        "bg-red-100 text-red-700"}
-`}>
-                    {log.status === "offer" ? "PASS" :
-                      log.status === "safe" ? "SAFE" :
-                        "BLOCK"}
-                  </span>
-                </td>
-                <td className="px-3 py-2 border">
-                  {log.browser || "-"}
-                </td>
-
-                <td className="px-3 py-2 border">
-
-                  <span className={`px-2 py-1 rounded text-xs font-semibold
-${log.risk_score >= 70 ? "bg-red-100 text-red-700" :
-                      log.risk_score >= 40 ? "bg-yellow-100 text-yellow-700" :
-                        "bg-green-100 text-green-700"}`}>
-
-                    {log.risk_score ?? 0}
-
-                  </span>
-
-                </td>
-
-                <td className="px-3 py-2 border text-xs">
-                  {log.reason || "-"}
-                </td>
-
-                <td className="px-3 py-2 border text-xs">
-
-                  <div className="flex flex-wrap gap-1 justify-center">
-
-                    {log.connection_type === "vpn" && (
-                      <span className="bg-yellow-100 text-yellow-700 px-2 py-1 rounded">VPN</span>
-                    )}
-
-                    {log.connection_type === "datacenter" && (
-                      <span className="bg-red-100 text-red-700 px-2 py-1 rounded">DC</span>
-                    )}
-
-                    {log.connection_type === "tor" && (
-                      <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded">TOR</span>
-                    )}
-
-                    {log.bot_score >= 70 && (
-                      <span className="bg-red-100 text-red-700 px-2 py-1 rounded">BOT</span>
-                    )}
-
-                  </div>
-
-                </td>
-
-                <td className="px-3 py-2 border text-xs font-mono">
-                  {log.fingerprint || "-"}
-                </td>
-
-                <td className="p-2 border text-xs whitespace-nowrap">
-                  {new Date(log.created_at).toLocaleString()}
-                </td>
-
-                {/* ✅ NEW COLUMN START */}
-                <td className="px-3 py-2 border text-xs">
-                  <div className="flex flex-wrap gap-1 justify-center">
-
-                    {log.sub1 && (
-                      <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded">
-                        sub1: {log.sub1}
-                      </span>
-                    )}
-
-                    {log.sub2 && (
-                      <span className="bg-green-100 text-green-700 px-2 py-1 rounded">
-                        sub2: {log.sub2}
-                      </span>
-                    )}
-
-                  </div>
-                </td>
-                {/* ✅ NEW COLUMN END */}
-                <td className="p-2 border max-w-[200px] truncate">
-
-                  {blockedIPs.includes(log.ip_address) ? (
-
-                    <button
-                      onClick={() => unblockIP(log.ip_address)}
-                      className="text-green-600 font-semibold"
-                    >
-                      Unblock
-                    </button>
-
-                  ) : (
-
-                    <button
-                      onClick={() => blockIP(log.ip_address)}
-                      className="text-red-600 font-semibold"
-                    >
-                      Block
-                    </button>
-
+                  {visibleColumns.ip && (
+                    <td className="p-2 border font-mono text-xs">{log.ip_address}</td>
                   )}
 
-                </td>
+                  {visibleColumns.country && (
+                    <td className="px-3 py-2 border truncate max-w-[180px]">
+                      {log.country} {log.region && `(${log.region})`} {log.city && `- ${log.city}`}
+                    </td>
+                  )}
 
-              </tr>
+                  {visibleColumns.device && (
+                    <td className="px-3 py-2 border truncate max-w-[180px]">
+                      {log.device_type || "Unknown"}
+                    </td>
+                  )}
 
-            ))}
+                  {visibleColumns.asn && (
+                    <td className="px-3 py-2 border truncate max-w-[180px]">
+                      {log.asn || "-"}
+                    </td>
+                  )}
 
-          </tbody>
+                  {visibleColumns.isp && (
+                    <td className="px-3 py-2 border truncate max-w-[180px]">
+                      {log.isp || "-"}
+                    </td>
+                  )}
 
-        </table>
+                  {visibleColumns.connection && (
+                    <td className="px-3 py-2 border">
+                      <span className={`px-2 py-1 rounded text-xs
+${log.connection_type === "datacenter" ? "bg-red-100 text-red-700" :
+                          log.connection_type === "vpn" ? "bg-yellow-100 text-yellow-700" :
+                            log.connection_type === "tor" ? "bg-purple-100 text-purple-700" :
+                              "bg-green-100 text-green-700"}`}>
+                        {log.connection_type || "Residential"}
+                      </span>
+                    </td>
+                  )}
 
+                  {visibleColumns.campaign && (
+                    <td className="p-2 border font-semibold text-indigo-600">
+                      {log.campaign}
+                    </td>
+                  )}
 
+                  {visibleColumns.destination && (
+                    <td>
+                      <span className={`px-2 py-1 rounded text-xs ${log.status?.toLowerCase() === "blocked"
+                        ? "bg-red-100 text-red-700"
+                        : "bg-green-100 text-green-700"
+                        }`}>
+                        {log.destination}
+                      </span>
+                    </td>
+                  )}
+
+                  {visibleColumns.os && (
+                    <td className="px-3 py-2 border">{log.os || "-"}</td>
+                  )}
+
+                  {visibleColumns.bot && (
+                    <td className="px-3 py-2 border">
+                      <span className={`px-2 py-1 rounded text-xs font-semibold
+${log.bot_score >= 70 ? "bg-red-100 text-red-700" :
+                          log.bot_score >= 40 ? "bg-yellow-100 text-yellow-700" :
+                            "bg-green-100 text-green-700"}`}>
+                        {log.bot_score ?? 0}
+                      </span>
+                    </td>
+                  )}
+
+                  {visibleColumns.status && (
+                    <td className="px-3 py-2 border">
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold
+${log.status === "offer" ? "bg-green-100 text-green-700" :
+                          log.status === "safe" ? "bg-yellow-100 text-yellow-700" :
+                            "bg-red-100 text-red-700"}`}>
+                        {log.status === "offer" ? "PASS" :
+                          log.status === "safe" ? "SAFE" : "BLOCK"}
+                      </span>
+                    </td>
+                  )}
+
+                  {visibleColumns.browser && (
+                    <td className="px-3 py-2 border">{log.browser || "-"}</td>
+                  )}
+
+                  {visibleColumns.risk && (
+                    <td className="px-3 py-2 border">
+                      <span className={`px-2 py-1 rounded text-xs font-semibold
+${log.risk_score >= 70 ? "bg-red-100 text-red-700" :
+                          log.risk_score >= 40 ? "bg-yellow-100 text-yellow-700" :
+                            "bg-green-100 text-green-700"}`}>
+                        {log.risk_score ?? 0}
+                      </span>
+                    </td>
+                  )}
+
+                  {visibleColumns.reason && (
+                    <td className="px-3 py-2 border text-xs">{log.reason || "-"}</td>
+                  )}
+
+                  {visibleColumns.flags && (
+                    <td className="px-3 py-2 border text-xs">
+                      <div className="flex flex-wrap gap-1 justify-center">
+                        {log.connection_type === "vpn" && <span className="bg-yellow-100 text-yellow-700 px-2 py-1 rounded">VPN</span>}
+                        {log.connection_type === "datacenter" && <span className="bg-red-100 text-red-700 px-2 py-1 rounded">DC</span>}
+                        {log.connection_type === "tor" && <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded">TOR</span>}
+                        {log.bot_score >= 70 && <span className="bg-red-100 text-red-700 px-2 py-1 rounded">BOT</span>}
+                      </div>
+                    </td>
+                  )}
+
+                  {visibleColumns.fingerprint && (
+                    <td className="px-3 py-2 border text-xs font-mono">
+                      {log.fingerprint || "-"}
+                    </td>
+                  )}
+
+                  {visibleColumns.time && (
+                    <td className="p-2 border text-xs whitespace-nowrap">
+                      {new Date(log.created_at).toLocaleString()}
+                    </td>
+                  )}
+
+                  {visibleColumns.referrer && (
+                    <td className="px-3 py-2 border text-xs truncate max-w-[200px]">
+                      {log.referrer || "-"}
+                    </td>
+                  )}
+
+                  {visibleColumns.subdata && (
+                    <td className="px-3 py-2 border text-xs">
+                      <div className="flex flex-wrap gap-1 justify-center">
+                        {log.sub1 && <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded">sub1: {log.sub1}</span>}
+                        {log.sub2 && <span className="bg-green-100 text-green-700 px-2 py-1 rounded">sub2: {log.sub2}</span>}
+                      </div>
+                    </td>
+                  )}
+
+                  {visibleColumns.action && (
+                    <td className="p-2 border">
+                      {blockedIPs.includes(log.ip_address) ? (
+                        <button onClick={() => unblockIP(log.ip_address)} className="text-green-600 font-semibold">
+                          Unblock
+                        </button>
+                      ) : (
+                        <button onClick={() => blockIP(log.ip_address)} className="text-red-600 font-semibold hover:underline">
+                          Block
+                        </button>
+                      )}
+                    </td>
+                  )}
+
+                </tr>
+
+              ))}
+
+            </tbody>
+
+          </table>
+
+        </div>
 
       </div>
 
