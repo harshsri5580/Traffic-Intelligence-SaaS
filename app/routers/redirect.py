@@ -196,7 +196,7 @@ async def redirect_campaign(
             db.commit()
 
             # pause campaign
-            campaign.is_active = False
+            # campaign.is_active = False
             db.commit()
 
             if campaign.fallback_url:
