@@ -872,6 +872,8 @@ async def redirect_campaign(
                         reason = "offer"
 
                         redirect_url = selected_offer.url
+                        print("🔥 FINAL DECISION:", decision)
+                        print("🔥 USING URL:", redirect_url)
                         redirect_url = append_click_id(redirect_url, click_id)
 
                         # MACRO REPLACE
