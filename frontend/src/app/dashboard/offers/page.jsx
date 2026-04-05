@@ -311,8 +311,8 @@ export default function OffersPage() {
 
               <option value="direct">Direct</option>
               <option value="token">Token</option>
-              <option value="proxy">Proxy</option>
-              <option value="full_proxy">Full Proxy</option>
+              {/* <option value="proxy">Proxy</option>
+              <option value="full_proxy">Full Proxy</option> */}
 
             </select>
 

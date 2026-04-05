@@ -1091,72 +1091,72 @@ async def redirect_campaign(
         # -----------------------------
         # PROXY MODE
         # -----------------------------
-        if mode == "proxy":
+        # if mode == "proxy":
 
-            try:
+        #     try:
 
-                async with httpx.AsyncClient(
-                    timeout=15, follow_redirects=True
-                ) as client:
-                    proxy_response = await client.get(redirect_url)
+        #         async with httpx.AsyncClient(
+        #             timeout=15, follow_redirects=True
+        #         ) as client:
+        #             proxy_response = await client.get(redirect_url)
 
-                content_type = proxy_response.headers.get("content-type", "text/html")
+        #         content_type = proxy_response.headers.get("content-type", "text/html")
 
-                content = proxy_response.content
+        #         content = proxy_response.content
 
-                if "text/html" in content_type:
+        #         if "text/html" in content_type:
 
-                    engine = RewriteEngine(
-                        base_url=redirect_url,
-                        slug=slug,
-                        ip=visitor.ip,
-                        user_agent=visitor.user_agent_string,
-                    )
+        #             engine = RewriteEngine(
+        #                 base_url=redirect_url,
+        #                 slug=slug,
+        #                 ip=visitor.ip,
+        #                 user_agent=visitor.user_agent_string,
+        #             )
 
-                    content = engine.rewrite_html(proxy_response.text).encode()
+        #             content = engine.rewrite_html(proxy_response.text).encode()
 
-                return Response(content=content, media_type=content_type)
+        #         return Response(content=content, media_type=content_type)
 
-            except Exception:
+        #     except Exception:
 
-                return RedirectResponse(
-                    redirect_url or campaign.fallback_url or "/decoy"
-                )
+        #         return RedirectResponse(
+        #             redirect_url or campaign.fallback_url or "/decoy"
+        #         )
 
         # -----------------------------
         # FULL PROXY MODE
         # -----------------------------
-        if mode == "full_proxy":
+        # if mode == "full_proxy":
 
-            try:
+        #     try:
 
-                async with httpx.AsyncClient(
-                    timeout=20, follow_redirects=True
-                ) as client:
-                    proxy_response = await client.get(redirect_url)
+        #         async with httpx.AsyncClient(
+        #             timeout=20, follow_redirects=True
+        #         ) as client:
+        #             proxy_response = await client.get(redirect_url)
 
-                content_type = proxy_response.headers.get("content-type", "text/html")
+        #         content_type = proxy_response.headers.get("content-type", "text/html")
 
-                content = proxy_response.content
+        #         content = proxy_response.content
 
-                if "text/html" in content_type:
+        #         if "text/html" in content_type:
 
-                    engine = RewriteEngine(
-                        base_url=redirect_url,
-                        slug=slug,
-                        ip=visitor.ip,
-                        user_agent=visitor.user_agent_string,
-                    )
+        #             engine = RewriteEngine(
+        #                 base_url=redirect_url,
+        #                 slug=slug,
+        #                 ip=visitor.ip,
+        #                 user_agent=visitor.user_agent_string,
+        #             )
 
-                    content = engine.rewrite_html(proxy_response.text).encode()
+        #             content = engine.rewrite_html(proxy_response.text).encode()
 
-                return Response(content=content, media_type=content_type)
+        #         return Response(content=content, media_type=content_type)
 
-            except Exception:
+        #     except Exception:
 
-                return RedirectResponse(
-                    redirect_url or campaign.fallback_url or "/decoy"
-                )
+        #         return RedirectResponse(
+        #             redirect_url or campaign.fallback_url or "/decoy"
+        #         )
 
     # =========================================
     # 🔥 MICRO DELAY (ANTI BOT)
