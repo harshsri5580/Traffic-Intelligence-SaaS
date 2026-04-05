@@ -928,6 +928,8 @@ async def redirect_campaign(
             reason = "rule_match"
 
             redirect_url = selected_offer.url
+            print("🔥 FINAL DECISION:", decision)
+            print("🔥 USING URL:", redirect_url)
 
             redirect_url = redirect_url.replace("{sub1}", sub1 or "")
             redirect_url = redirect_url.replace("{sub2}", sub2 or "")
