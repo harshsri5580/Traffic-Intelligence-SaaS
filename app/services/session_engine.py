@@ -3,7 +3,7 @@ from app.services.redis_client import redis_client
 
 
 SESSION_TTL = 3600
-MAX_CLICKS_PER_SESSION = 20
+MAX_CLICKS_PER_SESSION = 30
 
 
 class SessionEngine:
