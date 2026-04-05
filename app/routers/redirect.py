@@ -144,8 +144,8 @@ async def redirect_campaign(
 ):
     is_duplicate = False
     visitor = VisitorContext(request)
-    ip = visitor.ip
-    print("FINAL IP:", ip)
+    ip = request.headers.get("x-forwarded-for") or visitor.ip
+    print("🔥🔥FINAL IP:", ip)
 
     # ✅ PEHLE campaign load karo
     campaign = (
