@@ -1066,7 +1066,8 @@ async def redirect_campaign(
     # -------------------------------------------------
 
     if selected_offer:
-
+        print("🔥 MODE:", mode)
+        print("🔥 REDIRECT URL:", redirect_url)
         mode = selected_offer.redirect_mode
 
         # -----------------------------
