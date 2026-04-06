@@ -19,7 +19,7 @@ export default function OffersPage() {
   async fetch(request) {
 
     const url = new URL(request.url)
-    const backend = "https://6108-103-46-203-43.ngrok-free.app"
+    const backend = "https://traffic-intelligence-saas.onrender.com"
 
     // =========================
     // 🔥 ONLY /r ROUTE → BACKEND

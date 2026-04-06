@@ -145,14 +145,53 @@ async def redirect_campaign(
     db: Session = Depends(get_db),
 ):
     is_duplicate = False
+
     visitor = VisitorContext(request)
+
+    # =========================
+    # 🔥 CLEAN IP
+    # =========================
     forwarded_for = request.headers.get("x-forwarded-for")
 
     if forwarded_for:
-        ip = forwarded_for.split(",")[0].strip()  # 🔥 FIRST IP ONLY
+        ip = forwarded_for.split(",")[0].strip()
     else:
         ip = visitor.ip
-    print("🔥Clean IP:", ip)
+
+    print("🔥 Clean IP:", ip)
+
+    is_bot_traffic = (
+        visitor.is_bot or visitor.bot_score >= 80 or visitor.device_type == "bot"
+    )
+
+    # =========================
+    # 🔥 ONLY MAIN PAGE (IMPORTANT FIX)
+    # =========================
+    sec_fetch = request.headers.get("sec-fetch-dest", "")
+
+    is_main_request = sec_fetch == "document" or sec_fetch == ""
+
+    # =========================
+    # 🔥 EARLY PASS CHECK
+    # =========================
+    challenge_pass = False
+
+    if is_main_request:
+        if redis_client.get(f"challenge_pass:{ip}"):
+            print("✅ CHALLENGE ALREADY PASSED")
+            challenge_pass = True
+
+    # =========================
+    # 🔥 DUPLICATE CLICK LOCK
+    # =========================
+    if is_main_request:
+        lock_key = f"click_lock:{ip}"
+
+        if redis_client.get(lock_key):
+            print("⚡ DUPLICATE CLICK BLOCKED")
+            return RedirectResponse("/")  # safe fallback
+
+        redis_client.set(lock_key, 1, ex=3)
 
     # ✅ PEHLE campaign load karo
     campaign = (
@@ -167,24 +206,28 @@ async def redirect_campaign(
     is_blocked_final = False  # ✅ yaha add karo
     blocked = db.query(BlockedIP).filter(BlockedIP.ip_address == ip).first()
 
+    # 🔥 BOT FIRST (TOP PRIORITY)
+    # is_bot_traffic = (
+    #     visitor.is_bot or visitor.bot_score >= 80 or visitor.device_type == "bot"
+    # )
+
+    # if is_bot_traffic:
+    #     print("🤖 BOT → DECOY")
+    #     return RedirectResponse(campaign.bot_url or "/decoy")
+
+    # 🔥 BLOCKED IP
     if blocked:
         print("🚫 BLOCKED IP HIT:", ip)
+        return RedirectResponse(campaign.safe_page_url or "/decoy")
 
-        decision = "blocked"
-        reason = "blocked_ip"
-        redirect_url = campaign.safe_page_url or "/decoy"
-        destination_url = redirect_url
-
-        is_blocked_final = True  # 🔥 LOCK
-
-    campaign = (
-        db.query(Campaign)
-        .filter(
-            Campaign.slug == slug,
-            Campaign.is_deleted == False,
-        )
-        .first()
-    )
+    # campaign = (
+    #     db.query(Campaign)
+    #     .filter(
+    #         Campaign.slug == slug,
+    #         Campaign.is_deleted == False,
+    #     )
+    #     .first()
+    # )
 
     if not campaign:
         return RedirectResponse("/decoy")
@@ -215,9 +258,26 @@ async def redirect_campaign(
             redirect_url = "/decoy"
             destination_url = redirect_url
 
-    # ---------------------------------
-    # SUBID TRACKING PARAMS
-    # ---------------------------------
+    # 🔥 ONLY RUN CLOAKER ON MAIN NAVIGATION
+    sec_fetch = request.headers.get("sec-fetch-dest", "")
+
+    ENABLE_CHALLENGE_LOCAL = ENABLE_CHALLENGE  # default
+
+    if sec_fetch and sec_fetch != "document":
+        print("⚡ SKIP NON DOCUMENT:", sec_fetch)
+        ENABLE_CHALLENGE_LOCAL = False
+
+    # 🔥 SKIP AJAX
+    if request.headers.get("x-requested-with") == "XMLHttpRequest":
+        print("⚡ AJAX SKIP")
+        ENABLE_CHALLENGE_LOCAL = False
+
+    # 🔥 REFERER BASED SKIP
+    referer = request.headers.get("referer", "")
+
+    if "/r/" in referer:
+        print("⚡ INTERNAL REQUEST SKIP")
+        ENABLE_CHALLENGE_LOCAL = False
 
     # -------------------------------------------------
     # CHALLENGE CHECK (MOVE HERE - EARLY)
@@ -235,14 +295,14 @@ async def redirect_campaign(
         print("REDIS ERROR:", e)
         val = None
 
-    if ENABLE_CHALLENGE and not challenge_pass:
+    if ENABLE_CHALLENGE_LOCAL and not challenge_pass and not is_bot_traffic:
+        # 🔥 SKIP AJAX / FETCH CALLS
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            print("⚡ AJAX SKIP")
+            ENABLE_CHALLENGE_LOCAL = False
 
         # 🔥 Only suspicious traffic
-        if (
-            visitor.bot_score >= 30
-            or visitor.connection_type in ["vpn", "datacenter"]
-            or visitor.is_bot
-        ):
+        if visitor.bot_score >= 30 or visitor.connection_type in ["vpn", "datacenter"]:
 
             # 🔥 CALCULATE RISK FIRST
             try:
@@ -521,7 +581,7 @@ async def redirect_campaign(
         decision = "blocked"
         reason = "campaign_paused"
 
-        return RedirectResponse(campaign.safe_page_url or "/decoy")
+        return RedirectResponse(campaign.safe_page_url or "/")
 
     # -------------------------------------------------
     # BOT FILTER
@@ -531,23 +591,10 @@ async def redirect_campaign(
 
         # BOT FILTER
 
-        is_bot_traffic = (
-            visitor.is_bot or visitor.bot_score >= 80 or visitor.device_type == "bot"
-        )
-
         if is_bot_traffic:
-
-            decision = set_decision(decision, "blocked")
-            reason = "bot_detected"
-
-            if campaign.bot_url:
-                redirect_url = campaign.bot_url
-            else:
-                redirect_url = "/decoy"
-
-            destination_url = redirect_url
-
-            print("BOT REDIRECT:", redirect_url)
+            # redirect_url = campaign.bot_url or "/decoy"
+            print("🤖 BOT → DECOY")
+            return RedirectResponse(campaign.bot_url or "/decoy")
 
     except Exception:
         pass
@@ -826,7 +873,8 @@ async def redirect_campaign(
             decision = set_decision(decision, "blocked")
             reason = "ai_bot_detected"
 
-            redirect_url = campaign.safe_page_url or "/decoy"
+            # 🔥 BOT → ALWAYS BOT URL
+            redirect_url = campaign.bot_url or "/decoy"
             destination_url = redirect_url
 
     # ❌ REMOVE RETURN
@@ -887,13 +935,13 @@ async def redirect_campaign(
             except Exception:
                 challenge_pass = None
 
-            if ENABLE_CHALLENGE and not challenge_pass and campaign.is_active:
+            if ENABLE_CHALLENGE_LOCAL and not challenge_pass and campaign.is_active:
 
                 decision = "challenge"
                 reason = "decision_engine_challenge"
 
                 redirect_url = f"/challenge/{slug}"
-                destination_url = redirect_url
+                return RedirectResponse(redirect_url)
 
     except Exception:
         pass
@@ -1142,7 +1190,11 @@ async def redirect_campaign(
     print("🔥 RISK SCORE:", risk_score)
     print("🔥 BOT:", visitor.is_bot)
     if decision == "blocked":
-        print("🚫 FINAL BLOCK:", reason)
+
+        # 🔥 BOT FINAL FIX
+        if is_bot_traffic:
+            return RedirectResponse(campaign.bot_url or "/decoy")
+
         return RedirectResponse(destination_url or campaign.safe_page_url or "/decoy")
 
     # -------------------------------------------------

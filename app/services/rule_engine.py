@@ -258,6 +258,18 @@ class RuleEngine:
         # STRING
         field_value = str(field_value).strip().lower()
         condition_value = str(condition_value).strip().lower()
+        # 🔥 SMART PARTIAL MATCH (CRITICAL FIX)
+        if operator == "equals":
+            return (
+                field_value == condition_value
+                or condition_value in field_value
+                or field_value in condition_value
+            )
+
+        if operator == "not_equals":
+            return not (
+                field_value == condition_value or condition_value in field_value
+            )
 
         # 🔥 ISP MATCH (CORRECT)
         if operator == "isp_match":
@@ -269,11 +281,11 @@ class RuleEngine:
             rule_asn = [int(v.strip()) for v in condition_value.split(",")]
             return int(field_value) in rule_asn
 
-        if operator == "equals":
-            return field_value == condition_value
+        # if operator == "equals":
+        #     return field_value == condition_value
 
-        if operator == "not_equals":
-            return field_value != condition_value
+        # if operator == "not_equals":
+        #     return field_value != condition_value
 
         if operator == "contains":
             return condition_value in field_value
