@@ -516,14 +516,12 @@ async def redirect_campaign(
 
         print("⛔ CAMPAIGN PAUSED")
 
-        redirect_url = campaign.safe_page_url or campaign.fallback_url or "/decoy"
-
         destination_url = redirect_url
 
         decision = "blocked"
         reason = "campaign_paused"
 
-        return RedirectResponse(redirect_url)
+        return RedirectResponse(campaign.safe_page_url or "/decoy")
 
     # -------------------------------------------------
     # BOT FILTER
@@ -743,14 +741,24 @@ async def redirect_campaign(
                 return Response(
                     content=html,
                     media_type="text/html",
-                    headers={"Access-Control-Allow-Origin": "*"},
+                    headers={
+                        "Access-Control-Allow-Origin": "*",
+                        "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+                        "Pragma": "no-cache",
+                        "Expires": "0",
+                    },
                 )
 
             # 🔥 ASSETS / VIDEO / FILES
             return Response(
                 content=content,
                 media_type=content_type,
-                headers={"Access-Control-Allow-Origin": "*"},
+                headers={
+                    "Access-Control-Allow-Origin": "*",
+                    "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+                    "Pragma": "no-cache",
+                    "Expires": "0",
+                },
             )
 
         except Exception as e:

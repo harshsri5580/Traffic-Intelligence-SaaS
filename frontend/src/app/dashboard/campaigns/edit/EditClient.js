@@ -61,14 +61,21 @@ console.error("Sources load error",err);
 };
 
 const updateCampaign = async()=>{
-try{
-await api.put(`/campaigns/${id}`,form);
-toast.success("Campaign updated 🚀");
-router.push("/dashboard/campaigns");
-}catch(err){
-console.error(err);
-toast.error("Campaign Failed to Update");
-}
+
+  // 🔥 ADD THIS VALIDATION
+  if (!form.safe_page_url) {
+    toast.error("Safe Page URL required (Domain required)");
+    return;
+  }
+
+  try{
+    await api.put(`/campaigns/${id}`,form);
+    toast.success("Campaign updated 🚀");
+    router.push("/dashboard/campaigns");
+  }catch(err){
+    console.error(err);
+    toast.error("Campaign Failed to Update");
+  }
 };
 
 if (!id) return <div>Loading...</div>;
@@ -102,9 +109,12 @@ value={form.fallback_url}
 onChange={(e)=>setForm({...form,fallback_url:e.target.value})}
 />
 
-<input className="border p-2 rounded" placeholder="Safe Page URL"
-value={form.safe_page_url}
-onChange={(e)=>setForm({...form,safe_page_url:e.target.value})}
+<input
+  className="border p-2 rounded"
+  placeholder="Safe Page URL"
+  required
+  value={form.safe_page_url}
+  onChange={(e)=>setForm({...form,safe_page_url:e.target.value})}
 />
 
 <input className="border p-2 rounded col-span-2" placeholder="Bot URL"
@@ -115,8 +125,12 @@ onChange={(e)=>setForm({...form,bot_url:e.target.value})}
 </div>
 
 <div className="mt-6 flex gap-3">
-<button onClick={updateCampaign} className="bg-blue-600 text-white px-5 py-2 rounded">
-Update Campaign
+<button
+  onClick={updateCampaign}
+  disabled={!form.safe_page_url}
+  className="bg-blue-600 text-white px-5 py-2 rounded disabled:opacity-50"
+>
+  Update Campaign
 </button>
 
 <button onClick={()=>router.push("/dashboard/campaigns")} className="bg-gray-200 px-5 py-2 rounded">

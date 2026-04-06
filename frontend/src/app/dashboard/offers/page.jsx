@@ -13,7 +13,94 @@ export default function OffersPage() {
   const [creating, setCreating] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingOfferId, setEditingOfferId] = useState(null);
+  const [showProxyModal, setShowProxyModal] = useState(false);
+  const [step, setStep] = useState(1);
+  const workerCode = `export default {
+  async fetch(request) {
 
+    const url = new URL(request.url)
+    const backend = "https://6108-103-46-203-43.ngrok-free.app"
+
+    // =========================
+    // 🔥 ONLY /r ROUTE → BACKEND
+    // =========================
+    if (!url.pathname.startsWith("/r")) {
+      return fetch(request) // 🔥 bypass → real website load
+    }
+
+    const cache = caches.default
+
+    const isStatic = /\.(js|css|png|jpg|jpeg|gif|svg|ico|webp|woff2?|ttf|mp4|mp3)$/i.test(url.pathname)
+
+    // 🔥 CACHE ONLY STATIC
+    if (isStatic && request.method === "GET") {
+      const cached = await cache.match(request)
+      if (cached) return cached
+    }
+
+    // =========================
+    // 🔥 HEADERS
+    // =========================
+    const headers = new Headers(request.headers)
+
+    headers.set("x-forwarded-for", request.headers.get("cf-connecting-ip") || "")
+    headers.set("x-forwarded-proto", "https")
+    headers.set("x-forwarded-host", url.host)
+    headers.set("range", request.headers.get("range") || "")
+
+    // =========================
+    // 🔥 BODY SAFE
+    // =========================
+    let body = null
+    if (request.method !== "GET" && request.method !== "HEAD") {
+      body = await request.arrayBuffer()
+    }
+
+   // =========================
+  // 🔥 FETCH BACKEND
+  // =========================
+  let backendResponse = await fetch(backend + url.pathname + url.search, {
+    method: request.method,
+    headers,
+    body,
+    redirect: "manual" // 🔥 IMPORTANT
+  })
+
+  // =========================
+  // 🔥 HANDLE REDIRECT
+  // =========================
+  if (backendResponse.status === 301 || backendResponse.status === 302) {
+    const location = backendResponse.headers.get("location")
+    if (location) {
+      return Response.redirect(location, backendResponse.status)
+    }
+  }
+
+  // =========================
+  // 🔥 NORMAL RESPONSE
+  // =========================
+  let response = new Response(backendResponse.body, backendResponse)
+
+    response = new Response(response.body, response)
+
+    // =========================
+    // 🔥 CACHE LOGIC
+    // =========================
+    if (isStatic && request.method === "GET") {
+      response.headers.set("Cache-Control", "public, max-age=86400")
+      await cache.put(request, response.clone())
+    } else {
+      response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate")
+    }
+
+    // =========================
+    // 🔥 CORS
+    // =========================
+    response.headers.set("Access-Control-Allow-Origin", "*")
+
+    return response
+  }
+}`
   const [formData, setFormData] = useState({
     campaign_id: "",
     name: "",
@@ -315,6 +402,14 @@ export default function OffersPage() {
               {/* <option value="full_proxy">Full Proxy</option> */}
 
             </select>
+            {formData.redirect_mode === "proxy" && (
+              <button
+                onClick={() => setShowProxyModal(true)}
+                className="bg-purple-600 text-white px-3 py-2 rounded"
+              >
+                Setup Proxy 🚀
+              </button>
+            )}
 
           </div>
 
@@ -432,6 +527,169 @@ export default function OffersPage() {
           </tbody>
 
         </table>
+        {showProxyModal && (
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+
+            <div className="bg-white w-[800px] max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl p-6">
+
+              {/* HEADER */}
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold">
+                  🚀 Proxy Setup Guide
+                </h2>
+                <button
+                  onClick={() => setShowProxyModal(false)}
+                  className="text-gray-500 hover:text-black text-xl"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* STEP INDICATOR */}
+              <div className="flex justify-between mb-6 text-sm font-medium">
+                <div className={`${step === 1 ? "text-blue-600" : "text-gray-400"}`}>1. Domain</div>
+                <div className={`${step === 2 ? "text-blue-600" : "text-gray-400"}`}>2. Worker</div>
+                <div className={`${step === 3 ? "text-blue-600" : "text-gray-400"}`}>3. Routes</div>
+              </div>
+
+              {/* STEP 1 */}
+              {step === 1 && (
+                <div className="space-y-3">
+                  <h3 className="text-lg font-semibold">🌐 Domain Setup (Cloudflare)</h3>
+
+                  <ul className="list-disc pl-5 text-gray-700 space-y-2">
+                    <li>Login to Cloudflare</li>
+                    <li>Add your domain</li>
+                    <li>Go to DNS settings</li>
+                    <li>Turn ON proxy (🟠 Orange Cloud)</li>
+                  </ul>
+
+                  <div className="bg-yellow-100 text-yellow-800 p-3 rounded-lg mt-4 text-sm">
+                    ⚠️ Proxy must be ON, otherwise cloaking will NOT work.
+                  </div>
+                </div>
+              )}
+
+              {/* STEP 2 */}
+              {step === 2 && (
+                <div className="space-y-4">
+
+                  <h3 className="text-lg font-semibold">⚙️ Create Worker + Paste Code</h3>
+
+                  <ul className="list-disc pl-5 text-gray-700 space-y-1 text-sm">
+                    <li>Go to Cloudflare → Workers</li>
+                    <li>Create new Worker</li>
+                    <li>Delete default code</li>
+                    <li>Paste below code</li>
+                  </ul>
+
+                  {/* COPY BUTTON */}
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(workerCode)
+                        toast.success("Copied 🚀")
+                      }}
+                      className="bg-blue-600 text-white px-3 py-1 rounded text-sm"
+                    >
+                      Copy Code
+                    </button>
+                  </div>
+
+                  {/* CODE BOX */}
+                  <textarea
+                    readOnly
+                    className="w-full h-64 border rounded p-3 font-mono text-xs bg-gray-100"
+                    value={workerCode}
+                  />
+
+                  <div className="bg-red-100 text-red-700 p-3 rounded-lg text-sm">
+                    ⚠️ Note: Some websites may break (CSS/JS/images not load properly).
+                    This is normal in proxy mode. Use high-quality landing pages.
+                  </div>
+
+                </div>
+              )}
+
+              {/* STEP 3 */}
+              {step === 3 && (
+                <div className="space-y-4">
+
+                  <h3 className="text-lg font-semibold">🔗 Add Routes</h3>
+
+                  <p className="text-sm text-gray-600">
+                    Go to Worker → Settings → Routes → Add:
+                  </p>
+
+                  {/* COPY ROUTE 1 */}
+                  <div className="flex justify-between items-center bg-gray-100 p-2 rounded">
+                    <code>yourdomain.com/*</code>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText("yourdomain.com/*")
+                        toast.success("Copied")
+                      }}
+                      className="text-blue-600 text-sm"
+                    >
+                      Copy
+                    </button>
+                  </div>
+
+                  {/* COPY ROUTE 2 */}
+                  <div className="flex justify-between items-center bg-gray-100 p-2 rounded">
+                    <code>*.yourdomain.com/*</code>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText("*.yourdomain.com/*")
+                        toast.success("Copied")
+                      }}
+                      className="text-blue-600 text-sm"
+                    >
+                      Copy
+                    </button>
+                  </div>
+
+                  <div className="bg-yellow-100 text-yellow-800 p-3 rounded text-sm">
+                    ⚠️ If routes are configured incorrectly, the proxy will not work properly.
+                  </div>
+                </div>
+              )}
+
+              {/* NAVIGATION */}
+              <div className="flex justify-between mt-6">
+
+                {/* <button
+                  onClick={() => setShowProxyModal(false)}
+                  className="text-gray-500"
+                >
+                  Close
+                </button> */}
+
+                <div className="flex gap-2">
+                  {step > 1 && (
+                    <button
+                      onClick={() => setStep(step - 1)}
+                      className="px-4 py-2 bg-gray-200 rounded"
+                    >
+                      Back
+                    </button>
+                  )}
+
+                  {step < 3 && (
+                    <button
+                      onClick={() => setStep(step + 1)}
+                      className="px-4 py-2 bg-blue-600 text-white rounded"
+                    >
+                      Next →
+                    </button>
+                  )}
+                </div>
+
+              </div>
+
+            </div>
+          </div>
+        )}
 
       </div>
 

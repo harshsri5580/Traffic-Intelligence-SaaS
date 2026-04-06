@@ -97,6 +97,10 @@ def create_campaign(
     current_user: User = Depends(get_current_user),
 ):
     check_active_subscription(db, current_user.id)
+    # 🔥 ADD THIS EXACT LINE
+
+    if not data.safe_page_url:
+        raise HTTPException(status_code=400, detail="Safe page URL required")
 
     try:
 
@@ -244,6 +248,7 @@ def list_campaigns(
                 "id": c.id,
                 "name": c.name,
                 "slug": c.slug,
+                "safe_page_url": c.safe_page_url,
                 "traffic_source": c.traffic_source,
                 "sub1": c.sub1,
                 "sub2": c.sub2,
@@ -462,6 +467,9 @@ def update_campaign(
 
     if not campaign:
         raise HTTPException(status_code=404, detail="Campaign not found")
+    # 🔥 ADD THIS VALIDATION
+    if "safe_page_url" in data and not data.get("safe_page_url"):
+        raise HTTPException(status_code=400, detail="Safe page URL required")
 
     # 🔥 CRITICAL FIX
     data.pop("user_id", None)

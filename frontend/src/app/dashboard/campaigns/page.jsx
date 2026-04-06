@@ -42,8 +42,32 @@ export default function Campaigns() {
     }
   };
 
-  const generateTrackingLink = (c) => {
-    const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8000";
+  const generateProxyLink = (c) => {
+    const getDomain = (url) => {
+      try {
+        if (!url) return null;
+
+        // 🔥 CLEAN URL
+        url = url.trim();
+
+        // 🔥 ADD https if missing
+        if (!url.startsWith("http")) {
+          url = "https://" + url;
+        }
+
+        return new URL(url).origin;
+      } catch {
+        return null;
+      }
+    };
+
+    const BASE_URL = getDomain(c.safe_page_url);
+
+    // 🔥 HARD FAIL (no localhost fallback)
+    if (!BASE_URL) {
+      console.error("❌ Invalid safe_page_url", c);
+      return "⚠️ Invalid domain (set safe page URL)";
+    }
 
     let url = `${BASE_URL}/r/${c.slug}`;
 
@@ -170,6 +194,11 @@ export default function Campaigns() {
   const createCampaign = async () => {
     if (!form.name) {
       toast.error("Campaign name required");
+      return;
+    }
+
+    if (!form.safe_page_url) {
+      toast.error("Safe Page URL required (Domain required)");
       return;
     }
 
@@ -498,7 +527,7 @@ ${c.traffic_source === "facebook" ? "bg-blue-100 text-blue-700" :
 
                   <button
                     onClick={async () => {
-                      const link = generateTrackingLink(c)
+                      const link = generateProxyLink(c)
 
                       try {
                         await navigator.clipboard.writeText(link)
