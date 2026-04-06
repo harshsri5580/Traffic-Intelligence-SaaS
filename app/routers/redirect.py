@@ -13,9 +13,11 @@ from app.models import campaign
 from app.models.campaign import Campaign
 from app.models.offer import Offer
 from app.models.blocked_ip import BlockedIP
+from fastapi.responses import StreamingResponse
 from app.models.click_log import ClickLog
 from app.models.raw_hit_log import RawHitLog
 from app.services.bot_classifier import BotClassifier
+from app.services.super_rewrite import rewrite_all
 from app.models.subscription import Subscription
 from app.routers.challenge import get_real_ip
 from app.services.visitor_context import VisitorContext
@@ -655,43 +657,105 @@ async def redirect_campaign(
         return RedirectResponse(redirect_url or campaign.fallback_url or "/decoy")
 
     # -------------------------------------------------
-    # PROXY MODE
+    # PROXY MODE (FINAL CLEAN)
     # -------------------------------------------------
 
     proxied_url = request.query_params.get("__ti_url__")
 
+    # 🔥 ASSET SUPPORT
+    if not proxied_url and any(
+        request.url.path.endswith(ext)
+        for ext in [
+            ".js",
+            ".css",
+            ".png",
+            ".jpg",
+            ".jpeg",
+            ".gif",
+            ".svg",
+            ".ico",
+            ".mp4",
+            ".mp3",
+            ".webp",
+            ".json",
+            ".woff",
+            ".woff2",
+            ".ttf",
+        ]
+    ):
+        proxied_url = request.query_params.get("__ti_url__")
+
     if proxied_url:
 
-        redirect_url = urllib.parse.unquote(proxied_url)
+        target_url = urllib.parse.unquote(proxied_url)
 
-        if not redirect_url.startswith("http"):
+        if not target_url.startswith("http"):
             raise HTTPException(status_code=400, detail="Invalid proxy URL")
 
         try:
 
-            async with httpx.AsyncClient(timeout=15, follow_redirects=True) as client:
-                proxy_response = await client.get(redirect_url)
+            async with httpx.AsyncClient(timeout=25, follow_redirects=True) as client:
 
-            content_type = proxy_response.headers.get("content-type", "text/html")
-
-            content = proxy_response.content
-
-            if "text/html" in content_type:
-
-                engine = RewriteEngine(
-                    base_url=redirect_url,
-                    slug=slug,
-                    ip=visitor.ip,
-                    user_agent=visitor.user_agent_string,
+                proxy_response = await client.request(
+                    method=request.method,
+                    url=target_url,
+                    headers={
+                        "user-agent": request.headers.get("user-agent"),
+                        "accept": "*/*",
+                        "referer": target_url,
+                        "origin": target_url,
+                    },
+                    content=await request.body(),
                 )
 
-                content = engine.rewrite_html(proxy_response.text).encode()
+            content_type = proxy_response.headers.get("content-type", "")
+            content = proxy_response.content
 
-            return Response(content=content, media_type=content_type)
+            # 🔥 HTML REWRITE
+            if "text/html" in content_type:
 
-        except Exception:
+                html = proxy_response.text
 
-            return RedirectResponse(redirect_url or campaign.fallback_url or "/decoy")
+                # BASE FIX
+                html = html.replace(
+                    "<head>", f'<head><base href="/r/{slug}?__ti_url__={target_url}/">'
+                )
+
+                # RELATIVE LINKS
+                html = html.replace(
+                    'href="/', f'href="/r/{slug}?__ti_url__={target_url}/'
+                )
+                html = html.replace(
+                    'src="/', f'src="/r/{slug}?__ti_url__={target_url}/'
+                )
+
+                # ABSOLUTE LINKS
+                html = html.replace(target_url, f"/r/{slug}?__ti_url__={target_url}")
+
+                # API CALLS
+                html = html.replace(
+                    'fetch("/', f'fetch("/r/{slug}?__ti_url__={target_url}/'
+                )
+                html = html.replace(
+                    'axios.get("/', f'axios.get("/r/{slug}?__ti_url__={target_url}/'
+                )
+
+                return Response(
+                    content=html,
+                    media_type="text/html",
+                    headers={"Access-Control-Allow-Origin": "*"},
+                )
+
+            # 🔥 ASSETS / VIDEO / FILES
+            return Response(
+                content=content,
+                media_type=content_type,
+                headers={"Access-Control-Allow-Origin": "*"},
+            )
+
+        except Exception as e:
+            print("PROXY ERROR:", e)
+            return RedirectResponse(target_url)
 
     # -------------------------------------------------
     # RAPID CLICK DETECTION
@@ -1065,7 +1129,10 @@ async def redirect_campaign(
     # -------------------------------------------------
     # BLOCK HANDLING (SAFE)
     # -------------------------------------------------
-
+    print("🔥 FINAL DECISION:", decision)
+    print("🔥 FINAL URL:", redirect_url)
+    print("🔥 RISK SCORE:", risk_score)
+    print("🔥 BOT:", visitor.is_bot)
     if decision == "blocked":
         print("🚫 FINAL BLOCK:", reason)
         return RedirectResponse(destination_url or campaign.safe_page_url or "/decoy")
