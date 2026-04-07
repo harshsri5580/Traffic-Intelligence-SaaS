@@ -151,9 +151,12 @@ async def redirect_campaign(
     # =========================
     # 🔥 CLEAN IP
     # =========================
+    cf_ip = request.headers.get("cf-connecting-ip")
     forwarded_for = request.headers.get("x-forwarded-for")
 
-    if forwarded_for:
+    if cf_ip:
+        ip = cf_ip
+    elif forwarded_for:
         ip = forwarded_for.split(",")[0].strip()
     else:
         ip = visitor.ip
