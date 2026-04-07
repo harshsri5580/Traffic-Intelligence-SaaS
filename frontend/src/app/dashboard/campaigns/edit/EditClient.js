@@ -17,6 +17,7 @@ const [form,setForm] = useState({
   safe_page_url:"",
   bot_url:"",
   traffic_source:"",
+  tracking_domain:"",
   sub1:null,
   sub2:null
 });
@@ -43,6 +44,7 @@ setForm({
   safe_page_url: res.data.safe_page_url || "",
   bot_url: res.data.bot_url || "",
   traffic_source: res.data.traffic_source || "",
+  tracking_domain: res.data.tracking_domain || "",
   sub1: res.data.sub1 || null,
   sub2: res.data.sub2 || null
 });
@@ -69,7 +71,10 @@ const updateCampaign = async()=>{
   }
 
   try{
-    await api.put(`/campaigns/${id}`,form);
+    await api.put(`/campaigns/${id}`,{
+      ...form,
+      tracking_domain: form.tracking_domain || null
+    });
     toast.success("Campaign updated 🚀");
     router.push("/dashboard/campaigns");
   }catch(err){
@@ -116,7 +121,12 @@ onChange={(e)=>setForm({...form,fallback_url:e.target.value})}
   value={form.safe_page_url}
   onChange={(e)=>setForm({...form,safe_page_url:e.target.value})}
 />
-
+<input
+  className="border p-2 rounded"
+  placeholder="Tracking Domain (https://yourdomain.com)"
+  value={form.tracking_domain}
+  onChange={(e)=>setForm({...form,tracking_domain:e.target.value})}
+/>
 <input className="border p-2 rounded col-span-2" placeholder="Bot URL"
 value={form.bot_url}
 onChange={(e)=>setForm({...form,bot_url:e.target.value})}

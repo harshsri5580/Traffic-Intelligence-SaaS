@@ -61,7 +61,7 @@ export default function Campaigns() {
       }
     };
 
-    const BASE_URL = process.env.BASE_URL;
+    const BASE_URL = getDomain(c.tracking_domain) || process.env.NEXT_PUBLIC_BASE_URL;
 
     // 🔥 HARD FAIL (no localhost fallback)
     if (!BASE_URL) {
@@ -216,6 +216,7 @@ export default function Campaigns() {
         safe_page_url: form.safe_page_url || null,
         bot_url: form.bot_url || null,
         traffic_source: form.traffic_source, // ✅ FIXED
+        tracking_domain: form.tracking_domain || null,
         sub1: sub1,
         sub2: sub2,
         auto_optimize: autoOptimize,
@@ -238,6 +239,7 @@ export default function Campaigns() {
         name: "",
         fallback_url: "",
         safe_page_url: "",
+        tracking_domain: "",
         bot_url: "",
         traffic_source: "direct"  // ✅ ADD THIS
 
@@ -301,7 +303,12 @@ export default function Campaigns() {
             value={form.safe_page_url}
             onChange={(e) => setForm({ ...form, safe_page_url: e.target.value })}
           />
-
+          <input
+            className="border p-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Tracking Domain (https://yourdomain.com)"
+            value={form.tracking_domain}
+            onChange={(e) => setForm({ ...form, tracking_domain: e.target.value })}
+          />
           <input
             className="border p-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="Bot URL"

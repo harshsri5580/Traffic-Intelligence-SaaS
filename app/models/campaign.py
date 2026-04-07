@@ -16,7 +16,7 @@ class Campaign(Base):
     fallback_url = Column(String, nullable=True)
     safe_page_url = Column(String, nullable=True)
     bot_url = Column(String, nullable=True)
-
+    tracking_domain = Column(String, nullable=True)
     is_active = Column(Boolean, default=True, nullable=False)
     is_deleted = Column(Boolean, default=False, nullable=False)
 

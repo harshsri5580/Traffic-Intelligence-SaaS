@@ -77,6 +77,7 @@ class CampaignCreate(BaseModel):
     safe_page_url: Optional[HttpUrl] = None
     bot_url: Optional[HttpUrl] = None
     traffic_source: Optional[str] = "direct"
+    tracking_domain: Optional[str] = None
     # 🔥 ADD THIS
     sub1: Optional[str] = None
     sub2: Optional[str] = None
@@ -147,6 +148,7 @@ def create_campaign(
             fallback_url=str(data.fallback_url) if data.fallback_url else None,
             safe_page_url=str(data.safe_page_url) if data.safe_page_url else None,
             bot_url=str(data.bot_url) if data.bot_url else None,
+            tracking_domain=data.tracking_domain,
             traffic_source=data.traffic_source,
             auto_optimize=data.auto_optimize,
             roi_threshold=data.roi_threshold,
@@ -249,6 +251,7 @@ def list_campaigns(
                 "name": c.name,
                 "slug": c.slug,
                 "safe_page_url": c.safe_page_url,
+                "tracking_domain": c.tracking_domain,
                 "traffic_source": c.traffic_source,
                 "sub1": c.sub1,
                 "sub2": c.sub2,
@@ -480,6 +483,7 @@ def update_campaign(
     campaign.name = data.get("name", campaign.name)
     campaign.fallback_url = data.get("fallback_url", campaign.fallback_url)
     campaign.safe_page_url = data.get("safe_page_url", campaign.safe_page_url)
+    campaign.tracking_domain = data.get("tracking_domain", campaign.tracking_domain)
     campaign.bot_url = data.get("bot_url", campaign.bot_url)
     campaign.traffic_source = data.get("traffic_source", campaign.traffic_source)
     campaign.sub1 = data.get("sub1", campaign.sub1)
