@@ -59,7 +59,7 @@ class RegisterRequest(BaseModel):
 
 router = APIRouter(tags=["Auth"])
 
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+ACCESS_TOKEN_EXPIRE_MINUTES = 180
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 

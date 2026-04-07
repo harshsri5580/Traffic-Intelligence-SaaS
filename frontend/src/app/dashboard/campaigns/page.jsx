@@ -61,7 +61,7 @@ export default function Campaigns() {
       }
     };
 
-    const BASE_URL = getDomain(c.safe_page_url);
+    const BASE_URL = process.env.BASE_URL;
 
     // 🔥 HARD FAIL (no localhost fallback)
     if (!BASE_URL) {
