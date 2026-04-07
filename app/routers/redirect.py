@@ -149,20 +149,19 @@ async def redirect_campaign(
     visitor = VisitorContext(request)
 
     # =========================
-    # 🔥 CLEAN IP
+    # 🔥 CLEAN IP (FINAL FIX)
     # =========================
-    cf_ip = request.headers.get("cf-connecting-ip")
     forwarded_for = request.headers.get("x-forwarded-for")
+    cf_ip = request.headers.get("cf-connecting-ip")
 
-    if cf_ip:
+    if forwarded_for:
+        ip = forwarded_for.split(",")[0].strip()  # ✅ REAL USER IP
+    elif cf_ip:
         ip = cf_ip
-    elif forwarded_for:
-        ip = forwarded_for.split(",")[0].strip()
     else:
         ip = visitor.ip
-
-    print("🔥 CF-IP:", request.headers.get("cf-connecting-ip"))
-    print("🔥 XFF:", request.headers.get("x-forwarded-for"))
+    print("🔥 XFF:", forwarded_for)
+    print("🔥 CF-IP:", cf_ip)
     print("🔥 FINAL IP:", ip)
 
     print("🔥 Clean IP:", ip)
