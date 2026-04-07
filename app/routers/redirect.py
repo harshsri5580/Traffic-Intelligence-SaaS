@@ -161,6 +161,10 @@ async def redirect_campaign(
     else:
         ip = visitor.ip
 
+    print("🔥 CF-IP:", request.headers.get("cf-connecting-ip"))
+    print("🔥 XFF:", request.headers.get("x-forwarded-for"))
+    print("🔥 FINAL IP:", ip)
+
     print("🔥 Clean IP:", ip)
 
     is_bot_traffic = (

@@ -14,10 +14,12 @@ router = APIRouter(tags=["Challenge"])
 
 
 def get_real_ip(request: Request):
-    ip = request.headers.get("x-forwarded-for")
-    if ip:
-        return ip.split(",")[0].strip()
-    return request.client.host
+    return (
+        request.headers.get("cf-connecting-ip")
+        or request.headers.get("x-forwarded-for", "").split(",")[0].strip()
+        or request.headers.get("x-real-ip")
+        or request.client.host
+    )
 
 
 # ================= CHALLENGE PAGE =================
@@ -86,7 +88,7 @@ const res = await fetch(API_BASE + "/api/challenge/verify", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-        botScore: score,
+        botScore: botScore,
         userAgent: navigator.userAgent,
         webdriver: navigator.webdriver,
         plugins: navigator.plugins.length,
@@ -94,7 +96,7 @@ const res = await fetch(API_BASE + "/api/challenge/verify", {
         platform: navigator.platform
     })
 });
-
+const API_BASE = "";
 const result = await res.json();
 
 if(result.status === "ok"){{
@@ -128,6 +130,9 @@ async def verify_challenge(request: Request):
     data = await request.json()
 
     ip = get_real_ip(request)
+    print("🔥 CF-IP:", request.headers.get("cf-connecting-ip"))
+    print("🔥 XFF:", request.headers.get("x-forwarded-for"))
+    print("🔥 FINAL IP:", ip)
 
     # 🔥 SIMPLE BOT SCORE (FAST + EFFECTIVE)
     score = 0
@@ -163,7 +168,9 @@ async def verify_challenge(request: Request):
     # ================= PASS =================
 
     # 🔥 OPTIONAL fingerprint (lightweight)
-    fp_string = f"{data.get('userAgent')}-{data.get('platform')}-{data.get('language')}"
+    fp_string = (
+        f"{data.get('userAgent')}-{data.get('platform')}-{data.get('languages')}"
+    )
     fp_hash = hashlib.sha256(fp_string.encode()).hexdigest()[:16]
 
     redis_client.set(f"fp:{ip}", fp_hash, ex=300)
