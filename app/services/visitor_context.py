@@ -23,9 +23,11 @@ class VisitorContext:
         )
 
         self.ip = (
-            request.headers.get("cf-connecting-ip")
+            (
+                forwarded.split(",")[0].strip() if forwarded else None
+            )  # ✅ FIRST PRIORITY
+            or request.headers.get("cf-connecting-ip")
             or request.headers.get("x-real-ip")
-            or (forwarded.split(",")[0].strip() if forwarded else None)
             or (request.client.host if request.client else None)
             or "0.0.0.0"
         )
