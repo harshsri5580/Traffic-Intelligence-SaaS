@@ -188,10 +188,9 @@ async def redirect_campaign(
         lock_key = f"click_lock:{ip}"
 
         if redis_client.get(lock_key):
-            print("⚡ DUPLICATE CLICK BLOCKED")
-            return RedirectResponse("/")  # safe fallback
-
-        redis_client.set(lock_key, 1, ex=3)
+            print("⚡ DUPLICATE CLICK (ALLOW)")
+        else:
+            redis_client.set(lock_key, 1, ex=3)
 
     # ✅ PEHLE campaign load karo
     campaign = (
@@ -284,7 +283,7 @@ async def redirect_campaign(
     # -------------------------------------------------
 
     try:
-        challenge_pass = redis_client.get(f"challenge_pass:{ip}")
+        challenge_pass = bool(redis_client.get(f"challenge_pass:{ip}"))
     except Exception:
         challenge_pass = None
     print("IP:", ip)
@@ -295,7 +294,16 @@ async def redirect_campaign(
         print("REDIS ERROR:", e)
         val = None
 
-    if ENABLE_CHALLENGE_LOCAL and not challenge_pass and not is_bot_traffic:
+    if (
+        ENABLE_CHALLENGE_LOCAL
+        and not challenge_pass
+        and not is_bot_traffic
+        and (
+            visitor.bot_score >= 30
+            or visitor.connection_type in ["vpn", "datacenter"]
+            or visitor.is_bot
+        )
+    ):
         # 🔥 SKIP AJAX / FETCH CALLS
         if request.headers.get("x-requested-with") == "XMLHttpRequest":
             print("⚡ AJAX SKIP")
@@ -935,7 +943,15 @@ async def redirect_campaign(
             except Exception:
                 challenge_pass = None
 
-            if ENABLE_CHALLENGE_LOCAL and not challenge_pass and campaign.is_active:
+            # 🔥 FINAL FIX
+            if challenge_pass:
+                print("✅ CHALLENGE ALREADY PASSED → FORCE ALLOW")
+                is_bot_traffic = False
+
+                decision_type = "allow"  # 🔥 IMPORTANT
+                # continue flow without challenge
+
+            elif ENABLE_CHALLENGE_LOCAL and campaign.is_active:
 
                 decision = "challenge"
                 reason = "decision_engine_challenge"

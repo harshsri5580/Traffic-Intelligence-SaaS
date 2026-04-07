@@ -39,7 +39,7 @@ async def challenge_page(slug: str, request: Request, db: Session = Depends(get_
     if not campaign:
         raise HTTPException(status_code=404, detail="Campaign not found")
 
-    html = f"""
+    html = """
 <!DOCTYPE html>
 <html>
 <head>
@@ -82,14 +82,18 @@ async function runChallenge(){{
 try{{
 const botScore = detectBot();
 
-const res = await fetch("/api/challenge/verify", {{
-method: "POST",
-headers: {{ "Content-Type": "application/json" }},
-body: JSON.stringify({{
-botScore: botScore,
-userAgent: navigator.userAgent
-}})
-}});
+const res = await fetch(API_BASE + "/api/challenge/verify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+        botScore: score,
+        userAgent: navigator.userAgent,
+        webdriver: navigator.webdriver,
+        plugins: navigator.plugins.length,
+        languages: navigator.languages,
+        platform: navigator.platform
+    })
+});
 
 const result = await res.json();
 
@@ -165,6 +169,8 @@ async def verify_challenge(request: Request):
     redis_client.set(f"fp:{ip}", fp_hash, ex=300)
 
     # 🔥 MAIN PASS KEY
-    redis_client.set(f"challenge_pass:{ip}", 1, ex=600)  # 🔥 10 min
+    redis_client.set(f"challenge_pass:{ip}", "1", ex=1800)
+
+    print("✅ REDIS SET:", f"challenge_pass:{ip}")  # 🔥 10 min
 
     return {"status": "ok"}
