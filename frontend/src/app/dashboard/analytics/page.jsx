@@ -82,6 +82,7 @@ export default function AnalyticsPage() {
   };
 
   useEffect(() => {
+    setLoading(true);
     loadData();
   }, [page]);
 
@@ -237,6 +238,15 @@ export default function AnalyticsPage() {
     }
   }
 
+  if (loading && page === 1) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        <p className="text-gray-600 font-medium">Loading analytics...</p>
+      </div>
+    );
+  }
+
   return (
 
     <div className="p-8 space-y-10 bg-gray-50 min-h-screen w-full overflow-x-hidden">
@@ -378,6 +388,12 @@ export default function AnalyticsPage() {
         </button>
 
       </div>
+
+      {loading && (
+        <div className="text-center text-sm text-gray-500 mb-4">
+          🔄 Updating data...
+        </div>
+      )}
 
       <div className="w-full min-w-0 bg-gradient-to-br from-gray-900 to-gray-700 text-white shadow-xl rounded-xl p-6">
 

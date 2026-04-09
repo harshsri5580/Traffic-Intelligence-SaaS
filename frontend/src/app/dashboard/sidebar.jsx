@@ -52,7 +52,12 @@ export default function Sidebar() {
       case "dollar":
         return <svg className={base} fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 1v22M17 5H9a4 4 0 0 0 0 8h6a4 4 0 0 1 0 8H7" /></svg>;
       case "settings":
-        return <svg className={base} fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06-2 3.46-.07-.02a1.65 1.65 0 0 0-1.51.31l-.21.15-3.46-2-.02-.07a1.65 1.65 0 0 0-.31-1.51l-.15-.21-2-3.46.07-.02a1.65 1.65 0 0 0 1.51-.31l.21-.15 3.46 2 .02.07c.13.53.41 1.02.82 1.39z" /></svg>;
+        return (
+          <svg className={base} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
+            <path d="M19.4 15a7.97 7.97 0 0 0 .1-2l2-1.5-2-3.5-2.4.5a7.97 7.97 0 0 0-1.7-1l-.3-2.5h-4l-.3 2.5a7.97 7.97 0 0 0-1.7 1l-2.4-.5-2 3.5 2 1.5a7.97 7.97 0 0 0 0 2l-2 1.5 2 3.5 2.4-.5a7.97 7.97 0 0 0 1.7 1l.3 2.5h4l.3-2.5a7.97 7.97 0 0 0 1.7-1l2.4.5 2-3.5-2-1.5z" />
+          </svg>
+        );
       default:
         return null;
     }

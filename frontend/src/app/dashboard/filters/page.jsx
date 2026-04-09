@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import api from "../../../services/api";
 import toast from "react-hot-toast";
-
 export default function FiltersPage() {
 
     const [filters, setFilters] = useState([]);
+    const [value, setValue] = useState("");
+    const [category, setCategory] = useState("ip");
     const [form, setForm] = useState({ category: "domain", value: "" });
 
     useEffect(() => {
@@ -20,36 +21,61 @@ export default function FiltersPage() {
 
     const addFilter = async () => {
 
-        if (!form.value || form.value.trim() === "") {
-            toast.error("Please enter a value");
+        let val = value?.trim().toLowerCase();
+
+        if (!val) {
+            toast.error("Value required");
             return;
         }
 
-        await api.post("/filters/", form);
+        // IP validation
+        if (category === "ip") {
+            const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
 
-        setForm({ category: "domain", value: "" });
+            if (!ipRegex.test(val)) {
+                toast.error("Invalid IP address");
+                return;
+            }
+        }
 
-        loadFilters();
+        // Domain normalize
+        if (category === "domain") {
+            val = val
+                .replace(/^https?:\/\//, "")
+                .replace(/\/$/, "");
+        }
 
+        try {
+            await api.post("/filters", {
+                category,
+                value: val
+            });
+
+            toast.success(`${category.toUpperCase()} filter added`);
+
+            setValue("");
+            loadFilters();
+
+        } catch (err) {
+            toast.error("Failed to add filter");
+        }
     };
 
-    const deleteFilter = async (id) => {
+    const deleteFilter = async (f) => {
+        try {
 
-        if (!confirm("Delete filter?")) return;
+            await api.delete(`/filters/${f.id}`);
 
-        await api.delete(`/filters/${id}`);
+            toast.success(`${f.category.toUpperCase()} filter removed`);
 
-        loadFilters();
+            loadFilters();
 
+        } catch (err) {
+            toast.error("Failed to delete filter");
+        }
     };
 
-    const toggleFilter = async (id) => {
 
-        await api.put(`/filters/${id}/toggle`);
-
-        loadFilters();
-
-    };
 
     return (
 
@@ -64,23 +90,19 @@ export default function FiltersPage() {
             <div className="flex gap-2 mb-6">
 
                 <select
-                    className="border p-2 rounded"
-                    value={form.category}
-                    onChange={(e) => setForm({ ...form, category: e.target.value })}
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
                 >
-
+                    <option value="ip">IP</option>
                     <option value="domain">Domain</option>
                     <option value="isp">ISP</option>
                     <option value="ua">User Agent</option>
-                    <option value="ip">IP</option>
-
                 </select>
 
                 <input
-                    className="border p-2 rounded"
+                    value={value}
+                    onChange={(e) => setValue(e.target.value)}
                     placeholder="value"
-                    value={form.value}
-                    onChange={(e) => setForm({ ...form, value: e.target.value })}
                 />
 
                 <button
@@ -143,7 +165,7 @@ ${f.is_active ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
 
 
                                     <button
-                                        onClick={() => deleteFilter(f.id)}
+                                        onClick={() => deleteFilter(f)}
                                         className="text-red-600 font-semibold"
                                     >
                                         Delete

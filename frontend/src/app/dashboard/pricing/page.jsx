@@ -9,6 +9,7 @@ export default function PricingPage() {
   const [currentPlan, setCurrentPlan] = useState(null);
   const [token, setToken] = useState(null);
   const [daysLeft, setDaysLeft] = useState(0);
+  const [loading, setLoading] = useState(true);
   const [expired, setExpired] = useState(false);
 
   useEffect(() => {
@@ -18,8 +19,16 @@ export default function PricingPage() {
 
   useEffect(() => {
     if (!token) return;
-    loadPlans();
-    loadCurrentPlan();
+
+    const loadAll = async () => {
+      try {
+        await Promise.all([loadPlans(), loadCurrentPlan()]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAll();
   }, [token]);
 
   const loadCurrentPlan = async () => {
@@ -45,6 +54,8 @@ export default function PricingPage() {
       setPlans(data.sort((a, b) => a.price - b.price));
     } catch {
       setPlans([]);
+    } finally {
+      setLoading(false); // 🔥 ADD THIS
     }
   };
 
@@ -57,8 +68,13 @@ export default function PricingPage() {
       "https://traffic-intelligence.lemonsqueezy.com/checkout/buy/2dedcb1e-dbd3-4375-a929-6e1474a3d098",
   };
 
-  if (!token) {
-    return <div className="p-10 text-center">Loading...</div>;
+  if (!token || loading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        <p className="text-gray-600 font-medium">Loading pricing...</p>
+      </div>
+    );
   }
 
   return (
