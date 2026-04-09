@@ -28,22 +28,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
 
-      {/* NAVBAR */}
-      <div className="flex justify-between items-center px-8 py-4 bg-white shadow-sm">
-        <h1 className="text-xl font-bold">FlowIntel</h1>
 
-        <div className="space-x-4">
-          <Link href="/login" className="text-gray-600 hover:text-black">
-            Login
-          </Link>
-          <Link
-            href="/register"
-            className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
-          >
-            Get Started
-          </Link>
-        </div>
-      </div>
 
       {/* HERO */}
       <div className="text-center py-20 px-6">
@@ -148,10 +133,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* FOOTER */}
-      <div className="text-center text-sm text-gray-500 py-6">
-        © 2026 FlowIntel — Analytics Platform
-      </div>
 
     </div>
   );
