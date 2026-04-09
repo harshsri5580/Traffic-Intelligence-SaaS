@@ -86,24 +86,13 @@ export default function AnalyticsPage() {
     loadData();
   }, [page]);
 
-  useEffect(() => {
 
-    const interval = setInterval(() => {
 
-      loadData()
-
-    }, 10000)
-
-    return () => clearInterval(interval)
-
-  }, [])
-
-  const refresh = async () => {
-
+  const refresh = async (e) => {
+    e?.preventDefault(); // extra safety
     setRefreshing(true);
     await loadData();
     setRefreshing(false);
-
   };
 
 
@@ -381,6 +370,7 @@ export default function AnalyticsPage() {
 
         {/* 🔄 REFRESH */}
         <button
+          type="button"  // 🔥 MOST IMPORTANT
           onClick={refresh}
           className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl transition font-medium shadow-md"
         >

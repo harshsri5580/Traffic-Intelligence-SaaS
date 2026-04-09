@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-
 export default function Header() {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const pathname = usePathname();
