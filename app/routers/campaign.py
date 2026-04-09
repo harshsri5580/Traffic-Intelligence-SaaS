@@ -433,6 +433,7 @@ def get_campaign(
         "name": campaign.name,
         "slug": campaign.slug,
         "traffic_source": campaign.traffic_source,
+        "tracking_domain": campaign.tracking_domain,
         "sub1": campaign.sub1,
         "sub2": campaign.sub2,
         "is_active": campaign.is_active,

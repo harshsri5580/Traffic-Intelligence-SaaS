@@ -163,6 +163,13 @@ export default function OffersPage() {
     }
 
   };
+  const getTotalWeight = () => {
+    return offers.reduce((sum, o) => {
+      // agar edit kar rahe ho to current offer exclude karo
+      if (editingOfferId && o.id === editingOfferId) return sum;
+      return sum + Number(o.weight || 0);
+    }, 0);
+  };
 
   const saveOffer = async () => {
 
@@ -171,6 +178,18 @@ export default function OffersPage() {
       return;
     }
 
+    const currentTotal = getTotalWeight();
+    const newWeight = Number(formData.weight);
+
+    if (newWeight <= 0) {
+      toast.error("Weight must be greater than 0");
+      return;
+    }
+
+    if (currentTotal + newWeight > 100) {
+      toast.error(`Total weight cannot exceed 100%. Current: ${currentTotal}%`);
+      return;
+    }
     setCreating(true);
 
     try {
@@ -381,11 +400,18 @@ export default function OffersPage() {
 
             <input
               type="number"
+              min="1"
+              max="100"
               className="border p-2 rounded"
               value={formData.weight}
-              onChange={(e) =>
-                setFormData({ ...formData, weight: e.target.value })
-              }
+              onChange={(e) => {
+                let value = Number(e.target.value);
+
+                if (value > 100) value = 100;
+                if (value < 0) value = 0;
+
+                setFormData({ ...formData, weight: value });
+              }}
             />
 
             <select
@@ -411,6 +437,10 @@ export default function OffersPage() {
               </button>
             )}
 
+          </div>
+
+          <div className="text-sm text-gray-600">
+            Total Weight: {getTotalWeight() + Number(formData.weight || 0)} / 100
           </div>
 
           <div className="mt-4 flex gap-3">

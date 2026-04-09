@@ -5,7 +5,6 @@ import Link from "next/link";
 import api from "../services/api";
 
 export default function Home() {
-
   const [plans, setPlans] = useState([]);
 
   useEffect(() => {
@@ -15,15 +14,12 @@ export default function Home() {
   const loadPlans = async () => {
     try {
       const res = await api.get("/billing/plans");
-
       const data = Array.isArray(res.data)
         ? res.data
         : res.data?.plans || [];
 
       const sorted = data.sort((a, b) => a.price - b.price);
-
       setPlans(sorted);
-
     } catch (err) {
       console.log(err);
     }
@@ -34,7 +30,7 @@ export default function Home() {
 
       {/* NAVBAR */}
       <div className="flex justify-between items-center px-8 py-4 bg-white shadow-sm">
-        <h1 className="text-xl font-bold">Traffic Intelligence</h1>
+        <h1 className="text-xl font-bold">FlowIntel</h1>
 
         <div className="space-x-4">
           <Link href="/login" className="text-gray-600 hover:text-black">
@@ -52,11 +48,12 @@ export default function Home() {
       {/* HERO */}
       <div className="text-center py-20 px-6">
         <h1 className="text-5xl font-extrabold mb-6">
-          Analyze Traffic. Prevent Fraud. Grow Smarter 🚀
+          Understand Your Traffic. Improve Performance. Grow Faster 🚀
         </h1>
 
         <p className="text-gray-600 max-w-2xl mx-auto mb-8">
-          Monitor traffic quality, detect invalid clicks, and improve campaign performance with real-time analytics.
+          FlowIntel is a modern analytics platform that helps you monitor traffic,
+          understand user behavior, and optimize your campaigns with real-time insights.
         </p>
 
         <Link
@@ -72,11 +69,11 @@ export default function Home() {
 
         {[
           "Real-time Traffic Analytics",
-          "Invalid Click Detection",
-          "Campaign Performance Insights",
-          "IP Reputation Monitoring",
-          "VPN & Proxy Detection",
-          "Traffic Quality Scoring",
+          "User Behavior Insights",
+          "Campaign Performance Tracking",
+          "Geographic & Device Insights",
+          "Traffic Quality Monitoring",
+          "Smart Reporting Dashboard",
         ].map((f, i) => (
           <div key={i} className="bg-white p-6 rounded-xl shadow text-center">
             <h3 className="font-semibold text-lg">{f}</h3>
@@ -85,17 +82,28 @@ export default function Home() {
 
       </div>
 
+      {/* TRUST SECTION */}
+      <div className="text-center pb-20 px-6">
+        <h2 className="text-2xl font-bold mb-4">
+          Built for Modern Marketers & Businesses
+        </h2>
+
+        <p className="text-gray-600 max-w-2xl mx-auto">
+          Our platform provides transparent analytics, reliable performance insights,
+          and scalable infrastructure designed for businesses of all sizes.
+        </p>
+      </div>
+
       {/* PRICING */}
       <div className="bg-white py-20">
 
         <h2 className="text-3xl font-bold text-center mb-12">
-          Choose Your Plan
+          Simple & Transparent Pricing
         </h2>
 
         <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto px-6">
 
           {plans.map((p) => {
-
             const isPopular = p.name.toLowerCase().includes("pro");
 
             return (
@@ -104,7 +112,6 @@ export default function Home() {
                 className={`relative p-8 rounded-2xl border shadow-lg
                 ${isPopular ? "border-indigo-600 scale-105" : "bg-gray-50"}`}
               >
-
                 {isPopular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-xs px-3 py-1 rounded-full">
                     Most Popular
@@ -124,8 +131,8 @@ export default function Home() {
                   <p>✔ {p.max_campaigns} Campaigns</p>
                   <p>✔ {p.max_monthly_clicks || "Unlimited"} Events</p>
                   <p>✔ Real-time Analytics</p>
-                  <p>✔ Fraud Detection</p>
-                  <p>✔ Dashboard Insights</p>
+                  <p>✔ Performance Insights</p>
+                  <p>✔ Reporting Dashboard</p>
                 </div>
 
                 <Link
@@ -134,7 +141,6 @@ export default function Home() {
                 >
                   Start Free Trial
                 </Link>
-
               </div>
             );
           })}
@@ -144,7 +150,7 @@ export default function Home() {
 
       {/* FOOTER */}
       <div className="text-center text-sm text-gray-500 py-6">
-        © 2026 Traffic Intelligence Platform
+        © 2026 FlowIntel — Analytics Platform
       </div>
 
     </div>

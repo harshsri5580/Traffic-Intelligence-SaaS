@@ -83,6 +83,22 @@ export default function Campaigns() {
     return url;
   };
 
+  const generateTrackingLink = (c) => {
+    const BASE_URL =
+      process.env.NEXT_PUBLIC_BASE_URL ||
+      (typeof window !== "undefined" && window.location.origin) ||
+      "http://127.0.0.1:8000";
+
+    if (!BASE_URL) {
+      console.error("❌ BASE URL missing");
+      return "⚠️ Base URL not set";
+    }
+
+    const url = `${BASE_URL}/r/${c.slug}?sub1={zoneid}&sub2={cost}`;
+    return url;
+  };
+
+
   const [form, setForm] = useState({
     name: "",
     fallback_url: "",
@@ -545,9 +561,24 @@ ${c.traffic_source === "facebook" ? "bg-blue-100 text-blue-700" :
                     }}
                     className="px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition"
                   >
-                    Tracking Link
+                    Proxy Link
                   </button>
 
+                  <button
+                    onClick={async () => {
+                      const link = generateTrackingLink(c)
+
+                      try {
+                        await navigator.clipboard.writeText(link)
+                        toast.success("Tracking Link Copied!")
+                      } catch {
+                        toast.error("Copy failed")
+                      }
+                    }}
+                    className="px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700 hover:bg-orange-200 transition"
+                  >
+                    Tracking Link
+                  </button>
                   <button
                     onClick={() => router.push(`/dashboard/campaigns/manage?id=${c.id}`)}
                     className="px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 transition"
