@@ -23,6 +23,7 @@ export default function Footer() {
                 <div className="flex justify-center gap-6 text-sm text-gray-600 mb-4">
                     <Link href="/privacy">Privacy Policy</Link>
                     <Link href="/terms">Terms of Service</Link>
+                    <Link href="/refund">Refund Policy</Link>
                     <Link href="/contact">Contact</Link>
                 </div>
 
