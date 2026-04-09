@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import api from "../../../services/api";
 import { useRouter } from "next/navigation";
+import { toast } from "react-hot-toast";
 
 export default function LogsPage() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -75,21 +76,18 @@ export default function LogsPage() {
 
   const blockIP = async (ip) => {
 
-    if (!confirm(`Block ${ip}?`)) return;
-
     try {
 
       await api.post("/admin/block", null, {
         params: { ip }
       });
 
-      alert("IP blocked");
-
-      loadData(); // 🔥 logs reload
+      toast.success("IP blocked successfully");
+      loadData();
 
     } catch (err) {
 
-      alert("Block failed");
+      toast.error("Block failed");
 
     }
 
@@ -103,13 +101,16 @@ export default function LogsPage() {
 
   const unblockIP = async (ip) => {
 
-    if (!confirm(`Unblock ${ip}?`)) return;
+    try {
 
-    await api.delete(`/admin/unblock/${ip}`);
+      await api.delete(`/admin/unblock/${ip}`);
 
-    alert("IP unblocked");
+      toast.success("IP unblocked successfully");
+      loadData();
 
-    loadData();
+    } catch (err) {
+      toast.error("Unblock failed");
+    }
 
   };
 

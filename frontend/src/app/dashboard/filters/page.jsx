@@ -141,25 +141,6 @@ ${f.is_active ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
 
                                 <td className="p-2 border space-x-2">
 
-                                    {f.is_active ? (
-
-                                        <button
-                                            onClick={() => toggleFilter(f.id)}
-                                            className="text-yellow-600 font-semibold"
-                                        >
-                                            Unblock
-                                        </button>
-
-                                    ) : (
-
-                                        <button
-                                            onClick={() => toggleFilter(f.id)}
-                                            className="text-green-600 font-semibold"
-                                        >
-                                            Block
-                                        </button>
-
-                                    )}
 
                                     <button
                                         onClick={() => deleteFilter(f.id)}

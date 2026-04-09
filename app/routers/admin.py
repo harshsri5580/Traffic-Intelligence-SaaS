@@ -21,6 +21,7 @@ from app.models.system_log import SystemLog
 from datetime import datetime
 from sqlalchemy import func
 from datetime import datetime, timedelta
+from app.models.traffic_filter import TrafficFilter
 
 router = APIRouter(tags=["Admin"])
 
@@ -118,17 +119,36 @@ def block_ip(
     current_user: User = Depends(get_current_user),
 ):
 
+    # ✅ check blacklist
     existing = db.query(BlockedIP).filter(BlockedIP.ip_address == ip).first()
 
     if existing:
         raise HTTPException(status_code=400, detail="IP already blocked")
 
+    # ✅ add to BlockedIP
     blocked = BlockedIP(ip_address=ip)
-
     db.add(blocked)
+
+    # ✅ ALSO add to TrafficFilter (MAIN FIX)
+    existing_filter = (
+        db.query(TrafficFilter)
+        .filter(
+            TrafficFilter.value == ip,
+            TrafficFilter.category == "ip",
+            TrafficFilter.user_id == current_user.id,
+        )
+        .first()
+    )
+
+    if not existing_filter:
+        tf = TrafficFilter(
+            category="ip", value=ip, is_active=True, user_id=current_user.id
+        )
+        db.add(tf)
+
     db.commit()
 
-    return {"message": f"{ip} blocked"}
+    return {"message": f"{ip} blocked successfully"}
 
 
 # ==============================
@@ -143,12 +163,26 @@ def unblock_ip(
     current_user: User = Depends(get_current_user),
 ):
 
+    # ✅ remove from BlockedIP
     blocked = db.query(BlockedIP).filter(BlockedIP.ip_address == ip).first()
 
-    if not blocked:
-        raise HTTPException(status_code=404, detail="IP not found")
+    if blocked:
+        db.delete(blocked)
 
-    db.delete(blocked)
+    # ✅ ALSO remove from TrafficFilter
+    filters = (
+        db.query(TrafficFilter)
+        .filter(
+            TrafficFilter.value == ip,
+            TrafficFilter.category == "ip",
+            TrafficFilter.user_id == current_user.id,
+        )
+        .all()
+    )
+
+    for f in filters:
+        db.delete(f)
+
     db.commit()
 
     return {"message": f"{ip} unblocked successfully"}

@@ -4,6 +4,7 @@ from app.database import get_db
 from app.models.traffic_filter import TrafficFilter
 from pydantic import BaseModel
 from app.routers.auth import get_current_user
+from app.models.blocked_ip import BlockedIP
 
 router = APIRouter(prefix="/filters", tags=["Traffic Filters"])
 
@@ -35,11 +36,27 @@ def add_filter(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),  # 🔥 ADD
 ):
+    clean_value = data.value.strip().lower()
+    # 🔥 CHECK duplicate (ADD THIS)
+    existing = (
+        db.query(TrafficFilter)
+        .filter(
+            TrafficFilter.category == data.category,
+            TrafficFilter.value == clean_value,
+            TrafficFilter.user_id == current_user.id,
+        )
+        .first()
+    )
+
+    if existing:
+        return existing  # already exists → no duplicate
+
+    # ✅ create new
     f = TrafficFilter(
         category=data.category,
-        value=data.value,
+        value=clean_value,
         is_active=True,
-        user_id=current_user.id,  # 🔥 ADD
+        user_id=current_user.id,
     )
 
     db.add(f)
@@ -69,6 +86,11 @@ def delete_filter(
         raise HTTPException(status_code=404, detail="Filter not found")
 
     db.delete(f)
+    # 🔥 ALSO remove from BlockedIP (MAIN FIX)
+    blocked = db.query(BlockedIP).filter(BlockedIP.ip_address == f.value).first()
+
+    if blocked:
+        db.delete(blocked)
     db.commit()
 
     return {"success": True}
