@@ -1,6 +1,9 @@
+"use client";
+
 import "./globals.css";
 import Link from "next/link";
 import { Toaster } from "react-hot-toast";
+import { useEffect, useState } from "react";
 
 export const metadata = {
   title: "FlowIntel",
@@ -8,6 +11,13 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }) {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token"); // ya jo tum use kar rahe ho
+    setIsLoggedIn(!!token);
+  }, []);
+
   return (
     <html lang="en">
       <body className="bg-gray-50">
@@ -20,18 +30,21 @@ export default function RootLayout({ children }) {
               FlowIntel
             </Link>
 
-            <div className="space-x-4">
-              <Link href="/login" className="text-gray-600 hover:text-black">
-                Login
-              </Link>
+            {/* ✅ CONDITION */}
+            {!isLoggedIn && (
+              <div className="space-x-4">
+                <Link href="/login" className="text-gray-600 hover:text-black">
+                  Login
+                </Link>
 
-              <Link
-                href="/register"
-                className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
-              >
-                Get Started
-              </Link>
-            </div>
+                <Link
+                  href="/register"
+                  className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
+                >
+                  Get Started
+                </Link>
+              </div>
+            )}
 
           </div>
         </div>
@@ -48,17 +61,9 @@ export default function RootLayout({ children }) {
             <h2 className="font-semibold text-lg mb-4">FlowIntel</h2>
 
             <div className="flex justify-center gap-6 text-sm text-gray-600 mb-4">
-              <Link href="/privacy" className="hover:text-black">
-                Privacy Policy
-              </Link>
-
-              <Link href="/terms" className="hover:text-black">
-                Terms of Service
-              </Link>
-
-              <Link href="/contact" className="hover:text-black">
-                Contact
-              </Link>
+              <Link href="/privacy">Privacy Policy</Link>
+              <Link href="/terms">Terms of Service</Link>
+              <Link href="/contact">Contact</Link>
             </div>
 
             <p className="text-gray-500 text-xs">
@@ -68,7 +73,6 @@ export default function RootLayout({ children }) {
           </div>
         </div>
 
-        {/* 🔥 TOASTER */}
         <Toaster position="top-right" />
 
       </body>
