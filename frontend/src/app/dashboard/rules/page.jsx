@@ -390,6 +390,15 @@ export default function RulesPage() {
 
   };
 
+  if (loading && page === 1) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        <p className="text-gray-600 font-medium">Loading rules...</p>
+      </div>
+    );
+  }
+
   return (
 
     <div className="p-8">

@@ -302,12 +302,13 @@ export default function OffersPage() {
   if (loading) {
 
     return (
-      <div className="flex justify-center items-center h-screen">
-        Loading offers...
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        <p className="text-gray-600 font-medium">Loading offers...</p>
       </div>
     );
-
   }
+
 
   return (
 

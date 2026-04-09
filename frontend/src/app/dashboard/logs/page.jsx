@@ -206,7 +206,12 @@ export default function LogsPage() {
   const totalPages = Math.ceil(filteredLogs.length / rowsPerPage);
 
   if (loading) {
-    return <div className="p-10">Loading logs...</div>
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        <p className="text-gray-600 font-medium">Loading analytics...</p>
+      </div>
+    );
   }
 
   return (
