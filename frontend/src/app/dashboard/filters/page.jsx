@@ -46,7 +46,7 @@ export default function FiltersPage() {
         }
 
         try {
-            await api.post("/filters", {
+            await api.post("/filters/", {
                 category,
                 value: val
             });
