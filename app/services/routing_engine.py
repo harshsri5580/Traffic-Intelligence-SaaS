@@ -22,6 +22,7 @@ class RoutingEngine:
         # 🔥 Priority-based routing (Adspect style)
 
         for method in [
+            self.behavior_routing,
             self.device_routing,
             self.country_routing,
             self.timezone_routing,
@@ -203,3 +204,40 @@ class RoutingEngine:
 
     def random_token(self) -> str:
         return hashlib.md5(str(random.random()).encode()).hexdigest()[:8]
+
+    def behavior_routing(self) -> Optional[str]:
+
+        try:
+            from app.services.redis_client import redis_client
+
+            visitor_id = getattr(self.visitor, "ip", None)
+            ua = getattr(self.visitor, "user_agent_string", "")
+
+            if not visitor_id:
+                return None
+
+            import hashlib
+
+            fp = hashlib.md5(f"{visitor_id}:{ua}".encode()).hexdigest()
+
+            key = f"behavior:{fp}"
+
+            score = redis_client.hget(key, "score")
+
+            if not score:
+                return None
+
+            score = int(score)
+
+            # 🔥 SMART LOGIC (no hard block)
+            if score >= 10:
+                return getattr(self.campaign, "main_url", None)
+
+            elif score >= 3:
+                return getattr(self.campaign, "warmup_url", None)
+
+            else:
+                return getattr(self.campaign, "safe_page_url", None)
+
+        except Exception:
+            return None

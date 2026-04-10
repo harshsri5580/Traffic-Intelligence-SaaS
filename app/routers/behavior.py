@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request
 from pydantic import BaseModel
-from app.services.redis_client import redis_client
+from app.services.behavior_tracker import track_behavior
 
 router = APIRouter(tags=["Behavior"])
 
@@ -13,20 +13,24 @@ class BehaviorData(BaseModel):
 
 
 @router.post("/track")
-async def track_behavior(data: BehaviorData, request: Request):
+async def track_behavior_api(data: BehaviorData, request: Request):
+    print("🔥 BEHAVIOR API HIT")
     try:
-        ip = request.client.host
+        ip = request.headers.get("x-forwarded-for")
 
-        key = f"behavior:{ip}"
+        if ip:
+            ip = ip.split(",")[0].strip()
+        else:
+            ip = request.client.host
+        ua = request.headers.get("user-agent", "")
+        print("IP:", ip)
+        print("UA:", ua)
+        print("DATA:", data.dict())
 
-        # 🔥 store in Redis (safe update)
-        redis_client.hincrby(key, "mouse_moves", data.mouse)
-        redis_client.hincrby(key, "scrolls", data.scroll)
-        redis_client.hincrby(key, "clicks", data.click)
-
-        redis_client.expire(key, 300)  # 5 min TTL
+        # 🔥 ONLY THIS (no duplicate logic)
+        track_behavior(ip, ua, data.dict())
 
         return {"status": "ok"}
 
-    except Exception:
-        return {"status": "error"}
+    except Exception as e:
+        return {"status": "error", "msg": str(e)}
