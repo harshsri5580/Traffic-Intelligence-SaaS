@@ -48,10 +48,13 @@ export default function PricingPage() {
   const paddleRef = useRef(null);
 
   const getPaddle = async () => {
-    if (!paddleRef.current) {
-      const Paddle = (await import("@paddle/paddle-js")).default;
 
-      paddleRef.current = await Paddle.Initialize({
+    console.log("PADDLE TOKEN:", process.env.NEXT_PUBLIC_PADDLE_TOKEN);
+
+    if (!paddleRef.current) {
+      const { initializePaddle } = await import("@paddle/paddle-js");
+
+      paddleRef.current = await initializePaddle({
         environment: "production",
         token: process.env.NEXT_PUBLIC_PADDLE_TOKEN,
       });
@@ -61,13 +64,22 @@ export default function PricingPage() {
   };
 
   const openPaddleCheckout = async (txnId) => {
-    const paddle = await getPaddle();
+    try {
+      const paddle = await getPaddle();
 
-    paddle.Checkout.open({
-      transactionId: txnId,
-    });
+      if (!paddle) {
+        console.error("Paddle not initialized");
+        return;
+      }
+
+      paddle.Checkout.open({
+        transactionId: txnId,
+      });
+
+    } catch (err) {
+      console.error("Paddle error:", err);
+    }
   };
-
 
 
   const loadPlans = async () => {
