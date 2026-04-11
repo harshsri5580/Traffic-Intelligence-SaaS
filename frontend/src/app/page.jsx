@@ -3,12 +3,26 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import api from "../services/api";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const [plans, setPlans] = useState([]);
+  const router = useRouter();
 
   useEffect(() => {
     loadPlans();
+  }, []);
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const txn = urlParams.get("_ptxn");
+
+    if (txn) {
+      console.log("Payment success txn:", txn);
+
+      // 👉 redirect dashboard
+      router.push("/dashboard?payment=success");
+    }
   }, []);
 
   const loadPlans = async () => {
