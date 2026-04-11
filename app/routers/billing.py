@@ -150,7 +150,7 @@ def create_checkout(
                 detail="Checkout URL not generated",
             )
 
-        return {"checkout_url": checkout_url}
+        return {"checkout_url": checkout_url, "txn_id": data.get("data", {}).get("id")}
 
     except Exception as e:
         print("PADDLE ERROR:", str(e))

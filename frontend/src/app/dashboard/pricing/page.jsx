@@ -43,6 +43,27 @@ export default function PricingPage() {
     }
   };
 
+  let paddleInstance = null;
+
+  const getPaddle = async () => {
+    if (!paddleInstance) {
+      const Paddle = (await import("@paddle/paddle-js")).default;
+
+      paddleInstance = await Paddle.Initialize({
+        environment: "production",
+        token: "live_xxxxxxxxx", // 🔥 अपना client token डाल
+      });
+    }
+
+    return paddleInstance;
+  };
+
+
+  const handleChoosePlan = async (planId) => {
+    const res = await api.post(`/billing/create-checkout/${planId}`);
+
+    window.location.href = res.data.checkout_url; // ❌ गलत
+  };
   const loadPlans = async () => {
     try {
       const res = await api.get("/billing/plans");
@@ -151,8 +172,10 @@ export default function PricingPage() {
 
                     console.log("CHECKOUT URL:", url); // 🔥 ADD THIS
 
-                    if (url) {
-                      window.location.href = url;
+                    const txnId = res?.data?.txn_id;
+
+                    if (txnId) {
+                      await openPaddleCheckout(txnId);
                     } else {
                       toast.error("Checkout failed");
                     }
