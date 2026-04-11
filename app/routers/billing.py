@@ -90,14 +90,16 @@ def my_subscription(
 
 
 # ======================================
-# CREATE PADDLE CHECKOUT LINK
+# CREATE PADDLE CHECKOUT LINK (PRODUCTION READY)
 # ======================================
+
 import requests
 import os
 from fastapi import HTTPException, Depends
 from sqlalchemy.orm import Session
 
 PADDLE_API_KEY = os.getenv("PADDLE_API_KEY")
+PADDLE_ENV = os.getenv("PADDLE_ENV", "production")  # sandbox / production
 
 
 @router.post("/create-checkout/{plan_id}")
@@ -107,7 +109,7 @@ def create_checkout(
     current_user=Depends(get_current_user),
 ):
 
-    # 🔍 Plan fetch
+    # 🔍 Fetch Plan
     plan = db.query(Plan).filter(Plan.id == plan_id).first()
 
     if not plan:
@@ -116,33 +118,60 @@ def create_checkout(
     if not plan.paddle_price_id:
         raise HTTPException(status_code=400, detail="Price ID not set")
 
-    # 🌐 Paddle API
-    url = "https://api.paddle.com/transactions"
+    # 🌐 ENV-based Paddle URL
+    if PADDLE_ENV == "sandbox":
+        base_url = "https://sandbox-api.paddle.com"
+    else:
+        base_url = "https://api.paddle.com"
 
+    url = f"{base_url}/transactions"
+
+    # 🧾 Payload
     payload = {
         "items": [{"price_id": plan.paddle_price_id, "quantity": 1}],
         "customer": {"email": current_user.email},
         "checkout": {
             "url": "https://traffic-intelligence-saas.vercel.app",
-            "success_url": "https://traffic-intelligence-saas.vercel.app/dashboard?success=1",
+            "success_url": "https://traffic-intelligence-saas.vercel.app/dashboard?payment=success",
             "cancel_url": "https://traffic-intelligence-saas.vercel.app/dashboard/pricing",
         },
     }
+
+    # 🔐 Headers
     headers = {
         "Authorization": f"Bearer {PADDLE_API_KEY}",
         "Content-Type": "application/json",
     }
 
+    # 🐞 DEBUG LOGS (VERY IMPORTANT)
+    print("\n===== PADDLE DEBUG START =====")
+    print("ENV:", PADDLE_ENV)
+    print("BASE URL:", base_url)
+    print("PLAN ID:", plan.id)
+    print("PLAN NAME:", plan.name)
+    print("PRICE ID:", plan.paddle_price_id)
+    print("USER:", current_user.email)
+    print("API KEY (first 10):", PADDLE_API_KEY[:10] if PADDLE_API_KEY else "MISSING")
+
     try:
         res = requests.post(url, json=payload, headers=headers)
+
+        print("STATUS CODE:", res.status_code)
+        print("RAW RESPONSE:", res.text)
+
         data = res.json()
 
-        print("PADDLE RESPONSE:", data)
+        print("PARSED RESPONSE:", data)
 
-        # ✅ SAFE checkout url extraction
-        checkout_url = data.get("data", {}).get("checkout", {}).get("url") or data.get(
-            "data", {}
-        ).get("checkout_url")
+        # ❌ Paddle error handle
+        if "error" in data:
+            raise HTTPException(
+                status_code=400,
+                detail=data["error"].get("detail", "Paddle error"),
+            )
+
+        # ✅ Checkout URL extraction
+        checkout_url = data.get("data", {}).get("checkout", {}).get("url")
 
         if not checkout_url:
             raise HTTPException(
@@ -150,10 +179,16 @@ def create_checkout(
                 detail="Checkout URL not generated",
             )
 
-        return {"checkout_url": checkout_url, "txn_id": data.get("data", {}).get("id")}
+        print("✅ CHECKOUT URL:", checkout_url)
+        print("===== PADDLE DEBUG END =====\n")
+
+        return {
+            "checkout_url": checkout_url,
+            "txn_id": data.get("data", {}).get("id"),
+        }
 
     except Exception as e:
-        print("PADDLE ERROR:", str(e))
+        print("❌ PADDLE EXCEPTION:", str(e))
         raise HTTPException(status_code=500, detail="Payment failed")
 
 
