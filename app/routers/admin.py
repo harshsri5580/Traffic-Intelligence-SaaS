@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.blocked_ip import BlockedIP
+from app.models.plan import Plan
 from app.models.user import User
 from app.models.campaign import Campaign
 from sqlalchemy import func, cast, Integer
@@ -550,3 +551,16 @@ def admin_chart_stats(db: Session = Depends(get_db)):
         clicks_data.append(count or 0)
 
     return {"labels": last_7_days[::-1], "clicks": clicks_data[::-1]}
+
+
+@router.post("/set-price-id")
+def set_price_id(plan_id: int, price_id: str, db: Session = Depends(get_db)):
+    plan = db.query(Plan).filter(Plan.id == plan_id).first()
+
+    if not plan:
+        return {"error": "plan not found"}
+
+    plan.paddle_price_id = price_id
+    db.commit()
+
+    return {"message": "updated"}

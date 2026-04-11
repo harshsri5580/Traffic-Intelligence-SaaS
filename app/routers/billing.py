@@ -17,8 +17,8 @@ router = APIRouter(prefix="/billing", tags=["Billing"])
 # PADDLE CONFIG
 # ======================================
 
-# PADDLE_VENDOR_ID = os.getenv("PADDLE_VENDOR_ID")
-# PADDLE_API_KEY = os.getenv("PADDLE_API_KEY")
+PADDLE_API_KEY = os.getenv("PADDLE_API_KEY")
+print("API KEY:", PADDLE_API_KEY)  # DEBUG
 
 
 # ======================================
@@ -92,25 +92,69 @@ def my_subscription(
 # ======================================
 # CREATE PADDLE CHECKOUT LINK
 # ======================================
+import requests
+import os
+from fastapi import HTTPException, Depends
+from sqlalchemy.orm import Session
+
+PADDLE_API_KEY = os.getenv("PADDLE_API_KEY")
 
 
-# @router.post("/create-checkout/{plan_id}")
-# def create_checkout(
-#     plan_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)
-# ):
+@router.post("/create-checkout/{plan_id}")
+def create_checkout(
+    plan_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
 
-#     plan = db.query(Plan).filter(Plan.id == plan_id, Plan.is_active == True).first()
+    # 🔍 Plan fetch
+    plan = db.query(Plan).filter(Plan.id == plan_id).first()
 
-#     if not plan:
-#         raise HTTPException(status_code=404, detail="Plan not found")
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plan not found")
 
-#     # 👉 Paddle me product/price already create hona chahiye
-#     if not plan.paddle_price_id:
-#         raise HTTPException(status_code=400, detail="Paddle price ID missing")
+    if not plan.paddle_price_id:
+        raise HTTPException(status_code=400, detail="Price ID not set")
 
-#     return {
-#         "checkout_url": f"https://checkout.paddle.com/checkout/{plan.paddle_price_id}?passthrough={current_user.id}"
-#     }
+    # 🌐 Paddle API
+    url = "https://api.paddle.com/transactions"
+
+    payload = {
+        "items": [{"price_id": plan.paddle_price_id, "quantity": 1}],
+        "customer": {"email": current_user.email},
+        "checkout": {
+            "url": "https://traffic-intelligence-saas.vercel.app",
+            "success_url": "https://traffic-intelligence-saas.vercel.app/dashboard?success=1",
+            "cancel_url": "https://traffic-intelligence-saas.vercel.app/dashboard/pricing",
+        },
+    }
+    headers = {
+        "Authorization": f"Bearer {PADDLE_API_KEY}",
+        "Content-Type": "application/json",
+    }
+
+    try:
+        res = requests.post(url, json=payload, headers=headers)
+        data = res.json()
+
+        print("PADDLE RESPONSE:", data)
+
+        # ✅ SAFE checkout url extraction
+        checkout_url = data.get("data", {}).get("checkout", {}).get("url") or data.get(
+            "data", {}
+        ).get("checkout_url")
+
+        if not checkout_url:
+            raise HTTPException(
+                status_code=400,
+                detail="Checkout URL not generated",
+            )
+
+        return {"checkout_url": checkout_url}
+
+    except Exception as e:
+        print("PADDLE ERROR:", str(e))
+        raise HTTPException(status_code=500, detail="Payment failed")
 
 
 # ======================================
@@ -118,51 +162,79 @@ def my_subscription(
 # ======================================
 
 
-# @router.post("/webhook")
-# async def paddle_webhook(request: Request, db: Session = Depends(get_db)):
+@router.post("/webhook")
+async def paddle_webhook(request: Request, db: Session = Depends(get_db)):
 
-#     data = await request.json()
+    data = await request.json()
 
-#     event_type = data.get("event_type")
+    event = data.get("event_type")
 
-#     if event_type == "subscription_created":
+    # ✅ Subscription started
+    if event == "subscription.created":
 
-#         user_id = data.get("passthrough")
-#         plan_id = data.get("subscription", {}).get("plan_id")
+        customer = data.get("data", {}).get("customer", {})
+        user_id = customer.get("external_id")
 
-#         if not user_id:
-#             return {"status": "no user"}
+        items = data.get("data", {}).get("items", [])
+        price_id = items[0]["price"]["id"] if items else None
 
-#         existing = (
-#             db.query(Subscription)
-#             .filter(
-#                 Subscription.user_id == int(user_id), Subscription.status == "active"
-#             )
-#             .first()
-#         )
+        if not user_id:
+            return {"status": "no user"}
 
-#         if existing:
-#             existing.status = "cancelled"
+        # plan find karo
+        plan = db.query(Plan).filter(Plan.paddle_price_id == price_id).first()
 
-#         expire = datetime.utcnow() + timedelta(days=30)
+        if not plan:
+            return {"status": "plan not found"}
 
-#         new_sub = Subscription(
-#             user_id=int(user_id),
-#             plan_id=int(plan_id),
-#             start_date=datetime.utcnow(),
-#             expire_date=expire,
-#             status="active",
-#         )
+        # old cancel
+        old = (
+            db.query(Subscription)
+            .filter(
+                Subscription.user_id == int(user_id),
+                Subscription.status == "active",
+            )
+            .first()
+        )
 
-#         db.add(new_sub)
-#         db.commit()
+        if old:
+            old.status = "cancelled"
 
-#         print(f"✅ Paddle subscription created user {user_id}")
+        new_sub = Subscription(
+            user_id=int(user_id),
+            plan_id=plan.id,
+            start_date=datetime.utcnow(),
+            expire_date=datetime.utcnow() + timedelta(days=30),
+            status="active",
+        )
 
-#     elif event_type == "subscription_cancelled":
-#         print("❌ Subscription cancelled")
+        db.add(new_sub)
+        db.commit()
 
-#     return {"status": "success"}
+        print(f"✅ Paddle subscription created user {user_id}")
+
+    # ❌ Cancel
+    elif event == "subscription.canceled":
+
+        customer = data.get("data", {}).get("customer", {})
+        user_id = customer.get("external_id")
+
+        sub = (
+            db.query(Subscription)
+            .filter(
+                Subscription.user_id == int(user_id),
+                Subscription.status == "active",
+            )
+            .first()
+        )
+
+        if sub:
+            sub.status = "cancelled"
+            db.commit()
+
+        print(f"❌ Subscription cancelled {user_id}")
+
+    return {"status": "ok"}
 
 
 # ======================================
@@ -262,66 +334,63 @@ def subscribe_local(
     return {"message": "Subscribed successfully"}
 
 
-@router.post("/webhook/lemonsqueezy")
-async def lemonsqueezy_webhook(request: Request, db: Session = Depends(get_db)):
-    try:
-        data = await request.json()
-        print("🔥 WEBHOOK DATA:", data)
+# @router.post("/webhook/lemonsqueezy")
+# async def lemonsqueezy_webhook(request: Request, db: Session = Depends(get_db)):
+#     try:
+#         data = await request.json()
+#         print("🔥 WEBHOOK DATA:", data)
 
-        event = data.get("meta", {}).get("event_name")
-        attributes = data.get("data", {}).get("attributes", {})
+#         event = data.get("meta", {}).get("event_name")
+#         attributes = data.get("data", {}).get("attributes", {})
 
-        email = attributes.get("user_email")
+#         email = attributes.get("user_email")
 
-        if not email:
-            return {"status": "no email"}
+#         if not email:
+#             return {"status": "no email"}
 
-        user = db.query(User).filter(User.email == email).first()
+#         user = db.query(User).filter(User.email == email).first()
 
-        if not user:
-            return {"status": "user not found"}
+#         if not user:
+#             return {"status": "user not found"}
 
-        # ✅ ONLY handle subscription_updated (BEST EVENT)
-        if event == "subscription_updated":
+#         if event == "subscription_updated":
 
-            product_name = attributes.get("product_name")
+#             product_name = attributes.get("product_name")
 
-            # plan find karo DB se
-            plan = db.query(Plan).filter(Plan.name == product_name).first()
+#             # plan find karo DB se
+#             plan = db.query(Plan).filter(Plan.name == product_name).first()
 
-            if not plan:
-                print("❌ Plan not found in DB")
-                return {"status": "plan not found"}
+#             if not plan:
+#                 print("❌ Plan not found in DB")
+#                 return {"status": "plan not found"}
 
-            # old subscription cancel
-            old = (
-                db.query(Subscription)
-                .filter(
-                    Subscription.user_id == user.id,
-                    Subscription.status == "active",
-                )
-                .first()
-            )
+#             old = (
+#                 db.query(Subscription)
+#                 .filter(
+#                     Subscription.user_id == user.id,
+#                     Subscription.status == "active",
+#                 )
+#                 .first()
+#             )
 
-            if old:
-                old.status = "cancelled"
+#             if old:
+#                 old.status = "cancelled"
 
-            # new subscription create
-            new_sub = Subscription(
-                user_id=user.id,
-                plan_id=plan.id,
-                start_date=datetime.utcnow(),
-                expire_date=datetime.utcnow() + timedelta(days=30),
-                status="active",
-            )
+#             new_sub = Subscription(
+#                 user_id=user.id,
+#                 plan_id=plan.id,
+#                 start_date=datetime.utcnow(),
+#                 expire_date=datetime.utcnow() + timedelta(days=30),
+#                 status="active",
+#             )
 
-            db.add(new_sub)
-            db.commit()
+#             db.add(new_sub)
+#             db.commit()
 
-            print(f"✅ Subscription created for {email}: {product_name}")
+#             print(f"✅ Subscription created for {email}: {product_name}")
 
-        return {"status": "ok"}
+#         return {"status": "ok"}
 
-    except Exception as e:
-        print("❌ WEBHOOK ERROR:", str(e))
-        return {"status": "error"}
+#     except Exception as e:
+#         print("❌ WEBHOOK ERROR:", str(e))
+#         return {"status": "error"}

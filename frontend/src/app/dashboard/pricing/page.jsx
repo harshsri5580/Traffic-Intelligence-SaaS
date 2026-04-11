@@ -59,14 +59,7 @@ export default function PricingPage() {
     }
   };
 
-  const checkoutLinks = {
-    Basic:
-      "https://traffic-intelligence.lemonsqueezy.com/checkout/buy/2e53426d-cf76-4ce2-9ea7-e794f4604cff",
-    Pro:
-      "https://traffic-intelligence.lemonsqueezy.com/checkout/buy/43392cb4-bd85-4b66-b4a3-aa0452b03da2",
-    Enterprise:
-      "https://traffic-intelligence.lemonsqueezy.com/checkout/buy/2dedcb1e-dbd3-4375-a929-6e1474a3d098",
-  };
+
 
   if (!token || loading) {
     return (
@@ -148,12 +141,25 @@ export default function PricingPage() {
 
               <button
                 disabled={isCurrent && !expired}
-                onClick={() => {
-                  const link = checkoutLinks[planName];
-                  if (link) {
-                    window.location.href = link;
-                  } else {
-                    toast.error("Invalid plan");
+                onClick={async () => {
+                  try {
+                    const res = await api.post(`/billing/create-checkout/${p.id}`);
+
+                    console.log("API RESPONSE:", res.data); // 🔥 ADD THIS
+
+                    const url = res?.data?.checkout_url;
+
+                    console.log("CHECKOUT URL:", url); // 🔥 ADD THIS
+
+                    if (url) {
+                      window.location.href = url;
+                    } else {
+                      toast.error("Checkout failed");
+                    }
+
+                  } catch (err) {
+                    console.error(err);
+                    toast.error("Payment error");
                   }
                 }}
                 className={`mt-8 w-full py-3 rounded-lg font-semibold transition
