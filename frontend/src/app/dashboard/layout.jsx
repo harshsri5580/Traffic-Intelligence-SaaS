@@ -250,10 +250,7 @@ export default function DashboardLayout({ children }) {
           )}
 
           <Toaster position="top-right" />
-          <Script
-            src="https://cdn.paddle.com/paddle/v2/paddle.js"
-            strategy="afterInteractive"
-          />
+
         </main>
 
       </div>

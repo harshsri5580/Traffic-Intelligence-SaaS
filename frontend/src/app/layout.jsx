@@ -17,10 +17,6 @@ export default function RootLayout({ children }) {
       <body className="bg-gray-50">
 
         <Header />
-        <Script
-          src="https://cdn.paddle.com/paddle/v2/paddle.js"
-          strategy="afterInteractive"
-        />
 
         <main className="min-h-[80vh]">
           {children}

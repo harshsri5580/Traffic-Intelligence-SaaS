@@ -19,22 +19,6 @@ export default function PricingPage() {
   }, []);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (window.Paddle) {
-        window.Paddle.Environment.set("sandbox");
-
-        window.Paddle.Initialize({
-          token: process.env.NEXT_PUBLIC_PADDLE_TOKEN,
-        });
-
-        clearInterval(interval);
-      }
-    }, 500);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
     if (!token) return;
 
     const loadAll = async () => {
@@ -61,37 +45,39 @@ export default function PricingPage() {
   };
 
 
-  // const paddleRef = useRef(null);
+  const paddleRef = useRef(null);
 
-  // const getPaddle = async () => {
+  const getPaddle = async () => {
 
-  //   console.log("PADDLE TOKEN:", process.env.NEXT_PUBLIC_PADDLE_TOKEN);
+    console.log("PADDLE TOKEN:", process.env.NEXT_PUBLIC_PADDLE_TOKEN);
 
-  //   if (!paddleRef.current) {
-  //     const { initializePaddle } = await import("@paddle/paddle-js");
+    if (!paddleRef.current) {
+      const { initializePaddle } = await import("@paddle/paddle-js");
 
-  //     paddleRef.current = await initializePaddle({
-  //       environment: "production",
-  //       token: process.env.NEXT_PUBLIC_PADDLE_TOKEN,
-  //     });
-  //   }
-
-  //   return paddleRef.current;
-  // };
-
-  const openCheckout = async (planId) => {
-    const res = await fetch(`/api/billing/create-checkout/${planId}`, {
-      method: "POST",
-    });
-
-    const data = await res.json();
-
-    if (data.checkout_url) {
-      window.Paddle.Checkout.open({
-        url: data.checkout_url,
+      paddleRef.current = await initializePaddle({
+        environment: "production",
+        token: process.env.NEXT_PUBLIC_PADDLE_TOKEN,
       });
-    } else {
-      alert("Payment error");
+    }
+
+    return paddleRef.current;
+  };
+
+  const openPaddleCheckout = async (txnId) => {
+    try {
+      const paddle = await getPaddle();
+
+      if (!paddle) {
+        console.error("Paddle not initialized");
+        return;
+      }
+
+      paddle.Checkout.open({
+        transactionId: txnId,
+      });
+
+    } catch (err) {
+      console.error("Paddle error:", err);
     }
   };
 
@@ -163,7 +149,7 @@ export default function PricingPage() {
             <div
               key={p.id}
               className={`relative p-8 rounded-2xl border shadow-lg transition
-                ${isPopular
+              ${isPopular
                   ? "border-indigo-600 bg-white scale-105"
                   : "bg-white border-gray-200"
                 }`}
@@ -194,9 +180,28 @@ export default function PricingPage() {
 
               <button
                 disabled={isCurrent && !expired}
-                onClick={() => openCheckout(p.id)}
+                onClick={async () => {
+                  try {
+                    const res = await api.post(`/billing/create-checkout/${p.id}`);
+
+                    console.log("API RESPONSE:", res.data);
+
+                    const txnId = res?.data?.txn_id;
+
+                    if (!txnId) {
+                      toast.error("Checkout failed");
+                      return;
+                    }
+
+                    await openPaddleCheckout(txnId);
+
+                  } catch (err) {
+                    console.error(err);
+                    toast.error("Payment error");
+                  }
+                }}
                 className={`mt-8 w-full py-3 rounded-lg font-semibold transition
-                    ${isCurrent && !expired
+                  ${isCurrent && !expired
                     ? "bg-gray-400 cursor-not-allowed"
                     : isPopular
                       ? "bg-indigo-600 text-white hover:bg-indigo-700"
