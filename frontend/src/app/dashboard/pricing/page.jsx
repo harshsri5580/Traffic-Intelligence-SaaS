@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import api from "../../../services/api";
 import toast from "react-hot-toast";
+import { useRef } from "react";
 
 export default function PricingPage() {
   const [plans, setPlans] = useState([]);
@@ -43,27 +44,32 @@ export default function PricingPage() {
     }
   };
 
-  let paddleInstance = null;
+
+  const paddleRef = useRef(null);
 
   const getPaddle = async () => {
-    if (!paddleInstance) {
+    if (!paddleRef.current) {
       const Paddle = (await import("@paddle/paddle-js")).default;
 
-      paddleInstance = await Paddle.Initialize({
+      paddleRef.current = await Paddle.Initialize({
         environment: "production",
-        token: "live_xxxxxxxxx", // 🔥 अपना client token डाल
+        token: process.env.NEXT_PUBLIC_PADDLE_TOKEN,
       });
     }
 
-    return paddleInstance;
+    return paddleRef.current;
+  };
+
+  const openPaddleCheckout = async (txnId) => {
+    const paddle = await getPaddle();
+
+    paddle.Checkout.open({
+      transactionId: txnId,
+    });
   };
 
 
-  const handleChoosePlan = async (planId) => {
-    const res = await api.post(`/billing/create-checkout/${planId}`);
 
-    window.location.href = res.data.checkout_url; // ❌ गलत
-  };
   const loadPlans = async () => {
     try {
       const res = await api.get("/billing/plans");
@@ -166,19 +172,16 @@ export default function PricingPage() {
                   try {
                     const res = await api.post(`/billing/create-checkout/${p.id}`);
 
-                    console.log("API RESPONSE:", res.data); // 🔥 ADD THIS
-
-                    const url = res?.data?.checkout_url;
-
-                    console.log("CHECKOUT URL:", url); // 🔥 ADD THIS
+                    console.log("API RESPONSE:", res.data);
 
                     const txnId = res?.data?.txn_id;
 
-                    if (txnId) {
-                      await openPaddleCheckout(txnId);
-                    } else {
+                    if (!txnId) {
                       toast.error("Checkout failed");
+                      return;
                     }
+
+                    await openPaddleCheckout(txnId);
 
                   } catch (err) {
                     console.error(err);
