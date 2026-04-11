@@ -48,6 +48,7 @@ export default function PricingPage() {
   const paddleRef = useRef(null);
 
   const getPaddle = async () => {
+    if (typeof window === "undefined") return null; // ✅ SSR safe
 
     console.log("PADDLE TOKEN:", process.env.NEXT_PUBLIC_PADDLE_TOKEN);
 
@@ -55,7 +56,7 @@ export default function PricingPage() {
       const { initializePaddle } = await import("@paddle/paddle-js");
 
       paddleRef.current = await initializePaddle({
-        environment: "production",
+        environment: process.env.NEXT_PUBLIC_PADDLE_ENV || "production",
         token: process.env.NEXT_PUBLIC_PADDLE_TOKEN,
       });
     }
@@ -187,6 +188,11 @@ export default function PricingPage() {
                     console.log("API RESPONSE:", res.data);
 
                     const txnId = res?.data?.txn_id;
+
+                    // ✅ DEBUG YAHAN ADD KARO
+                    console.log("ENV:", process.env.NEXT_PUBLIC_PADDLE_ENV);
+                    console.log("TOKEN:", process.env.NEXT_PUBLIC_PADDLE_TOKEN);
+                    console.log("TXN ID:", txnId);
 
                     if (!txnId) {
                       toast.error("Checkout failed");
