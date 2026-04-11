@@ -110,6 +110,10 @@ def create_checkout(
     # 🔍 Plan fetch
     plan = db.query(Plan).filter(Plan.id == plan_id).first()
 
+    # ✅ 👉 YAHAN ADD KARO
+    print("PLAN:", plan.name)
+    print("PRICE ID:", plan.paddle_price_id)
+
     if not plan:
         raise HTTPException(status_code=404, detail="Plan not found")
 
