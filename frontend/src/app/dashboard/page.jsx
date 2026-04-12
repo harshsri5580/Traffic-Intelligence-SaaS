@@ -1,15 +1,30 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import api from "../../services/api";
 import { countries } from "../../data/countries";
 
-import {
-  ComposableMap,
-  Geographies,
-  Geography,
-  Marker
-} from "react-simple-maps";
+import dynamic from "next/dynamic";
+
+const ComposableMap = dynamic(
+  () => import("react-simple-maps").then(m => m.ComposableMap),
+  { ssr: false }
+);
+
+const Geographies = dynamic(
+  () => import("react-simple-maps").then(m => m.Geographies),
+  { ssr: false }
+);
+
+const Geography = dynamic(
+  () => import("react-simple-maps").then(m => m.Geography),
+  { ssr: false }
+);
+
+const Marker = dynamic(
+  () => import("react-simple-maps").then(m => m.Marker),
+  { ssr: false }
+);
 
 const geoUrl = "/world.json";
 
@@ -49,7 +64,6 @@ export default function Dashboard() {
 
   useEffect(() => {
 
-
     const token = localStorage.getItem("token");
 
     if (!token) {
@@ -57,10 +71,11 @@ export default function Dashboard() {
       return;
     }
 
-
     loadDashboard();
 
-    const ws = new WebSocket("ws://localhost:8000/ws/live")
+    const ws = new WebSocket("ws://localhost:8000/ws/live");
+
+    let buffer = [];
 
     ws.onopen = () => {
       console.log("Realtime connected");
@@ -68,11 +83,7 @@ export default function Dashboard() {
 
     ws.onmessage = (event) => {
 
-      console.log("WS RAW:", event.data);
-
       const data = JSON.parse(event.data);
-
-
 
       const mapped = {
         ip_address: data.ip,
@@ -83,21 +94,22 @@ export default function Dashboard() {
         created_at: data.time
       };
 
-      console.log("WS MAPPED:", mapped);
+      buffer.push(mapped);
 
-      setRecent((prev) => {
-
-        const today = new Date().toDateString();
-        const logDate = new Date(mapped.created_at).toDateString();
-
-        if (logDate !== today) return prev;
-
-        const updated = [mapped, ...prev];
-
-        return updated.slice(0, 20);
-
-      });
+      // ✅ batch update (performance boost)
+      if (buffer.length >= 5) {
+        setRecent(prev => [...buffer, ...prev].slice(0, 20));
+        buffer = [];
+      }
     };
+
+    setTimeout(() => {
+      if (buffer.length > 0) {
+        setRecent(prev => [...buffer, ...prev].slice(0, 20));
+        buffer = [];
+      }
+    }, 2000);
+
     ws.onerror = (err) => {
       console.log("WS error", err);
     };
@@ -160,11 +172,13 @@ export default function Dashboard() {
       // ✅ EXPIRED
       setExpired(days <= 0);
 
-      await loadRecent();
-      await loadSources(range);
-      await loadOffers();   // 👈 add this
-      await loadCampaigns();
-      await loadZones();   // 👈 ADD THIS
+      await Promise.all([
+        loadRecent(),
+        loadSources(range),
+        loadOffers(),
+        loadCampaigns(),
+        loadZones()
+      ]);  // 👈 ADD THIS
 
       setLoading(false);
 
@@ -295,6 +309,36 @@ export default function Dashboard() {
     const roi = z.cost > 0 ? ((z.revenue - z.cost) / z.cost) * 100 : 0;
     return roi < 0;
   });
+
+  const campaignSummary = useMemo(() => {
+
+    const campaignMap = {};
+
+    campaigns.forEach(c => {
+      campaignMap[c.name] = (c.pass_count || 0) + (c.block_count || 0);
+    });
+
+    const result = {};
+
+    zones.forEach((z) => {
+      const name = z.campaign_name || "Unknown";
+
+      if (!result[name]) {
+        result[name] = {
+          campaign: name,
+          clicks: campaignMap[name] || 0,
+          cost: 0,
+          revenue: 0
+        };
+      }
+
+      result[name].cost += z.cost || 0;
+      result[name].revenue += z.revenue || 0;
+    });
+
+    return Object.values(result);
+
+  }, [campaigns, zones]);
 
   if (loading && page === 1) {
     return (
@@ -582,39 +626,7 @@ export default function Dashboard() {
 
             <tbody>
 
-              {Object.values((() => {
-
-                // ✅ campaign clicks map
-                const campaignMap = {};
-
-                campaigns.forEach(c => {
-                  campaignMap[c.name] = (c.pass_count || 0) + (c.block_count || 0);
-                });
-
-                // ✅ zones se cost + revenue
-                const result = {};
-
-                zones.forEach((z) => {
-
-                  const name = z.campaign_name || "Unknown";
-
-                  if (!result[name]) {
-                    result[name] = {
-                      campaign: name,
-                      clicks: campaignMap[name] || 0, // ✅ FIXED
-                      cost: 0,
-                      revenue: 0
-                    };
-                  }
-
-                  result[name].cost += z.cost || 0;
-                  result[name].revenue += z.revenue || 0;
-
-                });
-
-                return result;
-
-              })()).map((c, i) => {
+              {campaignSummary.map((c, i) => {
 
                 const profit = c.revenue - c.cost;
                 const roi = c.cost > 0 ? ((profit / c.cost) * 100).toFixed(2) : 0;
@@ -643,6 +655,7 @@ export default function Dashboard() {
 
                   </tr>
                 );
+
               })}
 
             </tbody>
