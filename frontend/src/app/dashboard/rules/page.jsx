@@ -207,13 +207,18 @@ export default function RulesPage() {
 
     try {
 
-      if (!formData.name || !formData.campaign_id) {
-        toast.error("Fill required fields");
+      if (!formData.name) {
+        toast.error("Enter Rule Name");
         return;
       }
 
-      if (formData.selected_offers.length === 0) {
-        toast.error("Select at least one offer");
+      if (!formData.campaign_id) {
+        toast.error("Select Campaign");
+        return;
+      }
+
+      if (!formData.selected_offers || formData.selected_offers.length === 0) {
+        toast.error("Attach at least one Offer");
         return;
       }
 

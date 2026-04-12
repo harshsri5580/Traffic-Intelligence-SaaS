@@ -23,8 +23,8 @@ export default function Campaigns() {
     { value: "clickid", label: "Click ID" },
     { value: "zoneid", label: "Zone ID" },
     { value: "campaignid", label: "Campaign ID" },
-    { value: "source", label: "Traffic Source" },
-    { value: "keyword", label: "Keyword" },
+    // { value: "source", label: "Traffic Source" },
+    // { value: "keyword", label: "Keyword" },
     { value: "cost", label: "Cost (Required for ROI)" }
   ]
 

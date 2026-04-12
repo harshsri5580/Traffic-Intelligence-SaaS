@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+from app.models.user import User
 
 from app.database import get_db
 from app.models.conversion import Conversion
@@ -10,9 +11,10 @@ from app.models.blocked_zone import BlockedZone
 router = APIRouter()
 
 
-@router.get("/track/conversion")
+@router.get("/api/postback")
 def track_conversion(
     click_id: str,
+    api_key: str,
     offer_id: int | None = None,
     campaign_id: int | None = None,
     payout: float = 0,
@@ -20,6 +22,10 @@ def track_conversion(
 ):
     try:
         # ✅ 1. check click exists
+        # ✅ API KEY CHECK
+        user = db.query(User).filter(User.api_key == api_key).first()
+        if not user:
+            return {"status": "invalid_api_key"}
         from app.models.click_log import ClickLog
 
         click = db.query(ClickLog).filter(ClickLog.click_id == click_id).first()

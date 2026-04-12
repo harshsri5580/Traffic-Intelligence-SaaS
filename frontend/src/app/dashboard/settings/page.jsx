@@ -40,7 +40,7 @@ export default function SettingsPage() {
   }, []);
 
   const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-  const postbackURL = `${BASE_URL}/track/conversion?click_id={clickid}&payout={payout}`;
+  const postbackURL = `${BASE_URL}/api/postback?api_key=${profile.api_key}&click_id={clickid}&payout={payout}`;
   // ================= PROFILE =================
 
   const loadProfile = async () => {
@@ -345,14 +345,14 @@ export default function SettingsPage() {
 
           <input
             className="input flex-1"
-            value={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/track/conversion?click_id={clickid}&payout={payout}`}
+            value={`${BASE_URL}/api/postback?api_key=${profile.api_key}&click_id={clickid}&payout={payout}`}
             readOnly
           />
 
           <button
             onClick={() => {
-              navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/track/conversion?click_id={clickid}&payout={payout}`)
-              toast.success("Copied!")
+              navigator.clipboard.writeText(`${BASE_URL}/api/postback?api_key=${profile.api_key}&click_id={clickid}&payout={payout}`);
+              toast.success("Copied!");
             }}
             className="btn-dark"
           >

@@ -198,10 +198,13 @@ export default function AnalyticsPage() {
 
   const filteredLogs = logs.filter((log) => {
 
-    if (statusFilter !== "all" && log.status !== statusFilter) return false;
+    if (statusFilter !== "all" && log.status !== statusFilter) {
+      return false;
+    }
 
     if (search) {
       const q = search.toLowerCase();
+
       return (
         log.ip_address?.toLowerCase().includes(q) ||
         log.campaign_name?.toLowerCase().includes(q)
@@ -395,7 +398,7 @@ export default function AnalyticsPage() {
             <thead className="sticky top-0 bg-gray-900 border-b border-gray-700 text-gray-400 text-xs uppercase tracking-wider">
 
               <tr>
-                {/* <th className="p-3">ClickID</th> */}
+                <th className="p-3">ClickID</th>
                 <th className="p-3">IP</th>
                 <th className="p-3">Country</th>
                 <th className="p-3">Device</th>
@@ -424,72 +427,62 @@ export default function AnalyticsPage() {
                 </tr>
               )}
 
-              {filteredLogs.map((log, i) => (
+              {filteredLogs.map((log, i) => {
 
-                <tr
-                  key={`${log.click_id}-${i}`}
-                  className="border-t border-gray-800 hover:bg-gray-800/40 transition text-center"
-                >
+                const revenue = log.revenue || 0;
+                const cost = log.cost || 0;
 
-                  {/* <td className="p-3 font-mono text-xs text-gray-400">
-                    {log.click_id || "-"}
-                  </td> */}
+                const roi = cost > 0 ? ((revenue - cost) / cost) * 100 : 0;
+                const epc = revenue; // temporary
 
-                  <td className="p-3">{log.ip_address || "-"}</td>
+                return (
 
-                  <td className="p-3">{getCountryName(log.country)}</td>
+                  <tr key={`${log.click_id}-${i}`} className="border-t border-gray-800 hover:bg-gray-800/40 transition text-center">
+                    {/* 🔥 CLICK ID ADD */}
+                    <td className="p-3 font-mono text-xs text-gray-400 max-w-[250px] truncate">
+                      {log.click_id || "-"}
+                    </td>
+                    <td className="p-3">{log.ip_address || "-"}</td>
 
-                  <td className="p-3">{log.device_type}</td>
+                    <td className="p-3">{getCountryName(log.country)}</td>
 
-                  <td className="p-3">{log.browser}</td>
+                    <td className="p-3">{log.device_type}</td>
 
-                  <td className="p-3">{log.isp}</td>
+                    <td className="p-3">{log.browser}</td>
 
-                  <td className="p-3 font-medium text-white">
-                    {log.campaign_name || "-"}
-                  </td>
+                    <td className="p-3">{log.isp}</td>
 
-                  <td className="p-3">{log.offer_name || "-"}</td>
+                    <td className="p-3 font-medium text-white">
+                      {log.campaign_name || "-"}
+                    </td>
 
-                  {/* 🔥 BOT SCORE */}
-                  <td className="p-3">
-                    <span className={`px-2 py-1 rounded text-xs font-semibold
-                ${log.bot_score >= 70 ? "bg-red-500/20 text-red-400" :
-                        log.bot_score >= 40 ? "bg-yellow-500/20 text-yellow-400" :
-                          "bg-green-500/20 text-green-400"}`}>
-                      {log.bot_score}
-                    </span>
-                  </td>
+                    <td className="p-3">{log.offer_name || "-"}</td>
 
-                  {/* 🔥 STATUS */}
-                  <td className="p-3">
-                    <span className={`px-2 py-1 text-xs rounded font-medium ${statusColor(log.status)}`}>
-                      {log.status}
-                    </span>
-                  </td>
+                    <td className="p-3">{log.bot_score}</td>
 
-                  <td className="p-3 text-gray-400">
-                    {log.created_at ? new Date(log.created_at).toLocaleString() : "-"}
-                  </td>
+                    <td className="p-3">{log.status}</td>
 
-                  {/* 🔥 REVENUE */}
-                  <td className="p-3 text-green-400 font-semibold">
-                    ${log.revenue || 0}
-                  </td>
+                    <td className="p-3">
+                      {log.created_at ? new Date(log.created_at).toLocaleString() : "-"}
+                    </td>
 
-                  {/* 🔥 EPC */}
-                  <td className="p-3 text-blue-400 font-semibold">
-                    {log.epc || 0}
-                  </td>
+                    <td className="p-3 text-green-400 font-semibold">
+                      ${revenue.toFixed(2)}
+                    </td>
 
-                  {/* 🔥 ROI */}
-                  <td className={`p-3 font-semibold ${log.roi > 0 ? "text-green-400" : "text-red-400"}`}>
-                    {log.roi || 0}%
-                  </td>
+                    <td className="p-3 text-blue-400 font-semibold">
+                      {epc.toFixed(2)}
+                    </td>
 
-                </tr>
+                    <td className={`p-3 font-semibold ${roi >= 0 ? "text-green-400" : "text-red-400"}`}>
+                      {roi.toFixed(2)}%
+                    </td>
 
-              ))}
+                  </tr>
+
+                );
+
+              })}
 
             </tbody>
 

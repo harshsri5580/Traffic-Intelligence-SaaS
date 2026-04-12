@@ -66,7 +66,7 @@ def get_recent_clicks(
         )
         .outerjoin(
             Conversion,
-            (ClickLog.click_id == Conversion.click_id) & (ClickLog.status == "offer"),
+            ClickLog.click_id == Conversion.click_id,
         )
         .outerjoin(Campaign, Campaign.id == ClickLog.campaign_id)
         .outerjoin(Offer, Offer.id == ClickLog.offer_id)
