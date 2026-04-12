@@ -9,7 +9,17 @@ export default function Header() {
 
     useEffect(() => {
         const token = localStorage.getItem("token");
-        setIsLoggedIn(!!token);
+
+        if (!token) return;
+
+        fetch("/api/me", {
+            headers: { Authorization: `Bearer ${token}` },
+        })
+            .then(res => {
+                if (res.ok) setIsLoggedIn(true);
+                else setIsLoggedIn(false);
+            })
+            .catch(() => setIsLoggedIn(false));
     }, []);
 
     // ✅ Dashboard par header hide
