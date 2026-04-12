@@ -85,7 +85,7 @@ export default function Campaigns() {
 
   const generateTrackingLink = (c) => {
     const BASE_URL =
-      process.env.NEXT_PUBLIC_BASE_URL ||
+      process.env.NEXT_PUBLIC_API_URL ||
       (typeof window !== "undefined" && window.location.origin) ||
       "http://127.0.0.1:8000";
 
