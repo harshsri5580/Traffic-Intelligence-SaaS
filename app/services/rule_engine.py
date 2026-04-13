@@ -74,7 +74,7 @@ class RuleEngine:
                 if final_threshold is not None:
                     if self.visitor.bot_score >= final_threshold:
                         print("BOT THRESHOLD MATCH:", final_threshold)
-                        return rule
+                        # return rule
 
                 # ---------------------------------
                 # NORMAL MATCH
