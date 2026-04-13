@@ -398,7 +398,7 @@ export default function AnalyticsPage() {
             <thead className="sticky top-0 bg-gray-900 border-b border-gray-700 text-gray-400 text-xs uppercase tracking-wider">
 
               <tr>
-                <th className="p-3">ClickID</th>
+                {/* <th className="p-3">ClickID</th> */}
                 <th className="p-3">IP</th>
                 <th className="p-3">Country</th>
                 <th className="p-3">Device</th>
@@ -439,9 +439,9 @@ export default function AnalyticsPage() {
 
                   <tr key={`${log.click_id}-${i}`} className="border-t border-gray-800 hover:bg-gray-800/40 transition text-center">
                     {/* 🔥 CLICK ID ADD */}
-                    <td className="p-3 font-mono text-xs text-gray-400 max-w-[250px] truncate">
+                    {/* <td className="p-3 font-mono text-xs text-gray-400 max-w-[250px] truncate">
                       {log.click_id || "-"}
-                    </td>
+                    </td> */}
                     <td className="p-3">{log.ip_address || "-"}</td>
 
                     <td className="p-3">{getCountryName(log.country)}</td>

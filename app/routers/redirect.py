@@ -243,32 +243,23 @@ async def redirect_campaign(
         db.query(Subscription).filter(Subscription.user_id == campaign.user_id).first()
     )
 
-    if sub:
+    if sub and sub.expire_date and sub.expire_date < datetime.utcnow():
 
-        if sub.expire_date and sub.expire_date < datetime.utcnow():
+        sub.status = "expired"
+        db.commit()
 
-            sub.status = "expired"
-            db.commit()
+        print("⛔ SUBSCRIPTION EXPIRED")
 
-            # pause campaign
-            # campaign.is_active = False
-            db.commit()
-
-            if campaign.fallback_url:
-                decision = "blocked"
-                reason = "subscription_expired"
-                redirect_url = campaign.fallback_url
-                destination_url = redirect_url
-
-            redirect_url = "/decoy"
-            destination_url = redirect_url
+        return RedirectResponse(
+            campaign.fallback_url or campaign.safe_page_url or "/decoy"
+        )
 
     # 🔥 ONLY RUN CLOAKER ON MAIN NAVIGATION
     sec_fetch = request.headers.get("sec-fetch-dest", "")
 
     ENABLE_CHALLENGE_LOCAL = ENABLE_CHALLENGE  # default
 
-    if sec_fetch and sec_fetch != "document":
+    if sec_fetch and sec_fetch not in ["document", "navigate"]:
         print("⚡ SKIP NON DOCUMENT:", sec_fetch)
         ENABLE_CHALLENGE_LOCAL = False
 
@@ -567,7 +558,7 @@ async def redirect_campaign(
     # BLOCKED IP CHECK
     # -------------------------------------------------
 
-    blocked = db.query(BlockedIP).filter(BlockedIP.ip_address == ip).first()
+    # blocked = db.query(BlockedIP).filter(BlockedIP.ip_address == ip).first()
 
     if blocked:
         decision = set_decision(decision, "blocked")
@@ -934,6 +925,13 @@ async def redirect_campaign(
     try:
         decision_type, final_score = compute_final_decision(visitor, risk_score)
 
+        # 🔥 SAVE CLEAN USERS (FIXED POSITION)
+        try:
+            if decision_type == "allow":
+                redis_client.setex(f"fast_pass:{ip}", 300, "1")  # 5 min cache
+        except Exception:
+            pass
+
         # 🔥 escalate only
         if decision_type == "blocked" and decision != "blocked":
             decision = set_decision(decision, "blocked")
@@ -953,9 +951,7 @@ async def redirect_campaign(
             if challenge_pass:
                 print("✅ CHALLENGE ALREADY PASSED → FORCE ALLOW")
                 is_bot_traffic = False
-
-                decision_type = "allow"  # 🔥 IMPORTANT
-                # continue flow without challenge
+                decision_type = "allow"
 
             elif ENABLE_CHALLENGE_LOCAL and campaign.is_active:
 
@@ -967,7 +963,6 @@ async def redirect_campaign(
 
     except Exception:
         pass
-
     # -------------------------------------------------
     # DATACENTER HARD BLOCK (ALWAYS INDEPENDENT)
     # -------------------------------------------------
@@ -994,7 +989,7 @@ async def redirect_campaign(
 
             if matched_rule:
                 # 🔥 HARD LOCK
-                is_bot_traffic = True
+                is_bot_traffic = is_bot_traffic
 
                 if matched_rule.action_type == "block":
 
@@ -1084,10 +1079,10 @@ async def redirect_campaign(
     # 🔥 NO RULE MATCH → SAFE PAGE (STRICT MODE)
     elif not is_bot_traffic and not is_blocked_final:
 
-        decision = "blocked"
+        decision = "fallback"
         reason = "no_rule_match"
 
-        redirect_url = campaign.safe_page_url or "/decoy"
+        redirect_url = campaign.safe_page_url or campaign.fallback_url or "/decoy"
         destination_url = redirect_url
     # -------------------------------------------------
     # FALLBACK (only if no offer selected)
@@ -1317,18 +1312,16 @@ async def redirect_campaign(
         #         )
 
     # =========================================
-    # 🔥 MICRO DELAY (ANTI BOT)
-
-    try:
-        if not visitor.is_bot:
-            await asyncio.sleep(random.uniform(0.05, 0.2))
-    except Exception:
-        pass
+    # 🔥 FINAL BLOCK LOCK (FAST + SAFE)
+    # =========================================
     if is_blocked_final:
         print("🚫 FINAL BLOCK LOCK ACTIVE")
 
+        # 🔥 BOT → safe page
         if visitor.is_bot:
             final_url = campaign.safe_page_url or "/decoy"
+
+        # 🔥 CLEAN BUT BLOCKED → bot url (trap)
         else:
             final_url = campaign.bot_url or campaign.safe_page_url or "/decoy"
 

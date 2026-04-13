@@ -49,8 +49,8 @@ class RuleEngine:
                 # 🔥 GLOBAL RISK OVERRIDE
                 # ---------------------------------
                 if self._risk_score >= 90:
-                    print("HIGH RISK OVERRIDE → BLOCK")
-                    return rule  # highest priority rule will handle
+                    print("HIGH RISK → FORCE BLOCK")
+                    return None
 
                 # ---------------------------------
                 # rule without conditions = auto match
@@ -95,11 +95,30 @@ class RuleEngine:
 
     def _get_risk_score(self):
 
+        # 🔥 CACHE (ULTRA FAST)
+        if self._risk_score is not None:
+            return self._risk_score
+
         try:
+            # 🔥 FAST PATH (no heavy calc for clean users)
+            if (
+                not getattr(self.visitor, "is_proxy", False)
+                and not getattr(self.visitor, "is_datacenter", False)
+                and not getattr(self.visitor, "is_vpn", False)
+                and getattr(self.visitor, "bot_score", 0) < 30
+            ):
+                self._risk_score = getattr(self.visitor, "bot_score", 0)
+                return self._risk_score
+
+            # 🔥 FULL RISK ENGINE (only when needed)
             engine = RiskEngine(self.visitor, self.campaign)
-            return engine.calculate()
+            self._risk_score = engine.calculate()
+
+            return self._risk_score
+
         except Exception:
-            return getattr(self.visitor, "bot_score", 0)
+            self._risk_score = getattr(self.visitor, "bot_score", 0)
+            return self._risk_score
 
     # =========================================
     # GROUPED CONDITION LOGIC (FIXED ✅)

@@ -30,6 +30,7 @@ class RoutingEngine:
             self.returning_visitor_routing,
             self.smart_offer_routing,
             self.traffic_split_routing,
+            self.behavior_routing,
         ]:
             try:
                 url = method()
@@ -163,7 +164,11 @@ class RoutingEngine:
         if not urls:
             return None
 
-        visitor_id = getattr(self.visitor, "ip", None) or str(random.random())
+        visitor_id = (
+            getattr(self.visitor, "visitor_hash", None)
+            or getattr(self.visitor, "ip", None)
+            or str(random.random())
+        )
 
         seed = self.hash_seed(visitor_id)
 
@@ -203,7 +208,8 @@ class RoutingEngine:
     # =====================================================
 
     def random_token(self) -> str:
-        return hashlib.md5(str(random.random()).encode()).hexdigest()[:8]
+        seed = getattr(self.visitor, "visitor_hash", None) or str(random.random())
+        return hashlib.md5(seed.encode()).hexdigest()[:8]
 
     def behavior_routing(self) -> Optional[str]:
 
@@ -220,7 +226,7 @@ class RoutingEngine:
 
             fp = hashlib.md5(f"{visitor_id}:{ua}".encode()).hexdigest()
 
-            key = f"behavior:{fp}"
+            key = f"behavior:{visitor_id}"
 
             score = redis_client.hget(key, "score")
 

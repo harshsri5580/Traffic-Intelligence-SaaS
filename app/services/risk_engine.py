@@ -1,5 +1,6 @@
 import json
 
+from app.routers import behavior
 from app.services.redis_client import redis_client
 from app.services.proxy_rotation_detector import detect_proxy_rotation
 from app.services.ip_reputation import get_ip_reputation, set_ip_reputation
@@ -17,11 +18,33 @@ class RiskEngine:
     # =========================================
 
     def calculate(self):
+        self.score = 0  # 🔥 MUST FIX (no side effect)
 
         ip = getattr(self.visitor, "ip", None)
 
         if not ip:
             return 0
+        # 🔥 ULTRA FAST PASS (ADSPECT LEVEL)
+        try:
+            if redis_client.get(f"fast_pass:{ip}"):
+                return getattr(self.visitor, "bot_score", 0)
+        except Exception:
+            pass
+
+        # =========================================
+        # 🔥 FAST CLEAN EXIT (ADSPECT CORE)
+        # =========================================
+        try:
+            if (
+                not getattr(self.visitor, "is_proxy", False)
+                and not getattr(self.visitor, "is_datacenter", False)
+                and not getattr(self.visitor, "is_vpn", False)
+                and getattr(self.visitor, "bot_score", 0) < 25
+                and getattr(self.visitor, "traffic_quality", "") != "fraud"
+            ):
+                return getattr(self.visitor, "bot_score", 0)
+        except Exception:
+            pass
 
         # ---------------------------------
         # LOCAL BYPASS (SAFE)
@@ -60,13 +83,15 @@ class RiskEngine:
         # ---------------------------------
         bot_score = getattr(self.visitor, "bot_score", 0) or 0
 
-        if bot_score >= 80:
-            self.score += 60
-        elif bot_score >= 60:
-            self.score += 40
-        elif bot_score >= 40:
-            self.score += 20
+        # 🔥 HARD BOT BLOCK (NO ESCAPE)
+        if bot_score >= 90:
+            return 100
 
+        elif bot_score >= 75:
+            self.score += 70
+
+        elif bot_score >= 50:
+            self.score += 30
         # ---------------------------------
         # TRAFFIC QUALITY
         # ---------------------------------
@@ -83,7 +108,7 @@ class RiskEngine:
         # DATACENTER
         # ---------------------------------
         if getattr(self.visitor, "is_datacenter", False):
-            self.score += 40
+            self.score += 25
 
         # ---------------------------------
         # VPN / PROXY (SAFE CACHE)
@@ -103,7 +128,7 @@ class RiskEngine:
                 if vpn_info.get("is_tor"):
                     self.score += 60
                 if vpn_info.get("is_vpn"):
-                    self.score += 40
+                    self.score += 25
                 if vpn_info.get("is_proxy"):
                     self.score += 30
                 if vpn_info.get("is_residential_proxy"):
@@ -132,12 +157,19 @@ class RiskEngine:
         try:
             behavior = redis_client.hgetall(f"behavior:{ip}") or {}
 
-            mouse = int(behavior.get("mouse_moves", 0) or 0)
-            scroll = int(behavior.get("scrolls", 0) or 0)
-            clicks = int(behavior.get("clicks", 0) or 0)
-
-            # 🔥 ONLY APPLY IF DATA EXISTS
+            # 🔥 FIX decode
+            behavior = {
+                (k.decode() if isinstance(k, bytes) else k): (
+                    v.decode() if isinstance(v, bytes) else v
+                )
+                for k, v in behavior.items()
+            }
+            # 🔥 APPLY BEHAVIOR (SAFE)
             if behavior:
+
+                mouse = int(behavior.get("mouse_moves", 0) or 0)
+                scroll = int(behavior.get("scrolls", 0) or 0)
+                clicks = int(behavior.get("clicks", 0) or 0)
 
                 if mouse < 3:
                     self.score += 5
@@ -160,8 +192,16 @@ class RiskEngine:
         try:
             fp = redis_client.hgetall(f"fingerprint:{ip}") or {}
 
+            fp = {
+                (k.decode() if isinstance(k, bytes) else k): (
+                    v.decode() if isinstance(v, bytes) else v
+                )
+                for k, v in fp.items()
+            }
+            # 🔥 APPLY FINGERPRINT (SAFE)
             if fp:
-                if fp.get("webdriver") == "true":
+
+                if str(fp.get("webdriver")).lower() == "true":
                     self.score += 50
 
                 if fp.get("screen") == "0x0":
@@ -186,8 +226,8 @@ class RiskEngine:
                 if hits == 1:
                     redis_client.expire(key, 300)
 
-                if hits > 10:
-                    self.score += 35
+                if hits > 20:
+                    self.score += 25
 
         except Exception:
             pass
@@ -202,8 +242,8 @@ class RiskEngine:
             if hits == 1:
                 redis_client.expire(key, 10)
 
-            if hits > 200:
-                self.score += 10
+            if hits > 100:
+                self.score += 15
 
         except Exception:
             pass
@@ -248,6 +288,7 @@ class RiskEngine:
         except Exception:
             pass
 
+        self.score = max(0, min(100, self.score))
         return self.score
 
     # =========================================

@@ -5,18 +5,28 @@ import { usePathname } from "next/navigation"; // ✅ IMPORTANT
 import Sidebar from "./sidebar";
 import { Toaster } from "react-hot-toast";
 import api from "../../services/api";
+import { useRouter } from "next/navigation";
 
 export default function DashboardLayout({ children }) {
   const [loading, setLoading] = useState(true);
+  const [collapsed, setCollapsed] = useState(false);
   const [expired, setExpired] = useState(false);
   const [showResume, setShowResume] = useState(false);
   const [noPlan, setNoPlan] = useState(false);
-
+  const [authChecked, setAuthChecked] = useState(false);
+  const router = useRouter();
   const pathname = usePathname(); // ✅ FIX
   const isPricingPage = pathname.includes("/pricing"); // ✅ FIX
 
   useEffect(() => {
     const token = localStorage.getItem("token");
+
+    if (!token) {
+      router.push("/login");
+      return;
+    }
+
+    setAuthChecked(true);
 
 
     // ===============================
@@ -70,7 +80,7 @@ export default function DashboardLayout({ children }) {
         });
 
         // Send to backend
-        fetch("/api/fingerprint", {
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/behavior/fingerprint`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -91,12 +101,8 @@ export default function DashboardLayout({ children }) {
     // run once
     sendFingerprint();
 
-    if (!token) {
-      window.location.href = "/login";
-      return;
-    }
-
     checkPlan();
+
   }, []);
 
   const checkPlan = async () => {
@@ -147,7 +153,7 @@ export default function DashboardLayout({ children }) {
     }
   };
 
-
+  if (!authChecked) return null;
   const resumeCampaigns = async () => {
     try {
       await api.post("/campaigns/resume-all");
@@ -167,14 +173,14 @@ export default function DashboardLayout({ children }) {
   }
 
   return (
-    <div className="flex h-screen bg-gray-100 overflow-hidden">
+    <div className="flex min-h-screen bg-gray-100">
 
       {/* ✅ Sidebar hide only when expired AND not pricing */}
-      <div className={`${expired ? "opacity-50" : ""}`}>
-        <Sidebar />
+      <div className={`flex-shrink-0 ${expired ? "opacity-50" : ""}`}>
+        <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
       </div>
 
-      <div className="flex flex-1 flex-col">
+      <div className={`flex flex-1 flex-col transition-all duration-300 ${collapsed ? "ml-20" : "ml-64"}`}>
 
         <header className="bg-white border-b px-6 py-4 shadow-sm flex justify-between items-center">
           <h1 className="text-lg font-semibold">
@@ -184,7 +190,7 @@ export default function DashboardLayout({ children }) {
 
         </header>
 
-        <main className="flex-1 overflow-y-auto p-8">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden p-6">
 
           {/* ✅ MAIN CONTENT */}
           <div
@@ -226,7 +232,7 @@ export default function DashboardLayout({ children }) {
                   <button
                     onClick={() => {
                       localStorage.removeItem("token");
-                      window.location.href = "/login";
+                      router.push("/login");
                     }}
                     className="bg-gray-300 hover:bg-gray-400 px-6 py-3 rounded-lg"
                   >

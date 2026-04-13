@@ -13,6 +13,9 @@ from app.models.conversion import Conversion
 from app.models.subscription import Subscription
 from datetime import datetime
 from fastapi import HTTPException
+from datetime import date, timedelta
+from sqlalchemy import case
+from sqlalchemy import Float
 
 
 router = APIRouter(prefix="/api/analytics", tags=["Analytics"])
@@ -342,7 +345,10 @@ def traffic_sources(
         query = query.filter(func.date(ClickLog.created_at) == func.current_date())
 
     elif range == "yesterday":
-        query = query.filter(func.date(ClickLog.created_at) == func.current_date() - 1)
+        query = query.filter(
+            func.date(ClickLog.created_at)
+            == func.current_date() - text("interval '1 day'")
+        )
 
     elif range == "7d":
         query = query.filter(
@@ -498,3 +504,52 @@ def zone_analytics(
         result[zone]["revenue"] += float(conv.payout or 0)
 
     return list(result.values())
+
+
+@router.get("/campaign-traffic")
+def campaign_traffic(
+    range: str = "today",
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    check_active_subscription(db, current_user.id)
+
+    query = (
+        db.query(
+            Campaign.name.label("campaign"),
+            func.count(ClickLog.id).label("total"),
+            func.sum(case((ClickLog.status == "offer", 1), else_=0)).label("passed"),
+            func.sum(case((ClickLog.status == "blocked", 1), else_=0)).label("blocked"),
+        )
+        .join(Campaign, Campaign.id == ClickLog.campaign_id)
+        .filter(ClickLog.user_id == current_user.id)
+    )
+
+    # 🔥 DATE FILTER (SAFE)
+    if range == "today":
+        query = query.filter(func.date(ClickLog.created_at) == func.current_date())
+
+    elif range == "yesterday":
+        query = query.filter(
+            func.date(ClickLog.created_at)
+            == func.current_date() - text("interval '1 day'")
+        )
+
+    elif range == "7d":
+        query = query.filter(
+            ClickLog.created_at >= func.now() - text("interval '7 days'")
+        )
+
+    # all = no filter
+
+    rows = query.group_by(Campaign.name).all()
+
+    return [
+        {
+            "campaign": r.campaign,
+            "total": int(r.total or 0),
+            "passed": int(r.passed or 0),
+            "blocked": int(r.blocked or 0),
+        }
+        for r in rows
+    ]

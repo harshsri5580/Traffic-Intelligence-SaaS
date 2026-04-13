@@ -60,6 +60,9 @@ export default function Dashboard() {
   const [daysLeft, setDaysLeft] = useState(0);
   const [expired, setExpired] = useState(false);
   const [hasSubscription, setHasSubscription] = useState(false);
+  const [profitData, setProfitData] = useState([]);
+  // const [profitRange, setProfitRange] = useState("today");
+  const [trafficRange, setTrafficRange] = useState("today");
 
 
   useEffect(() => {
@@ -177,7 +180,9 @@ export default function Dashboard() {
         loadSources(range),
         loadOffers(),
         loadCampaigns(),
-        loadZones()
+        loadZones(),
+        loadCampaignTraffic(trafficRange),
+        // loadCampaignProfit(profitRange) // ✅ ADD THIS
       ]);  // 👈 ADD THIS
 
       setLoading(false);
@@ -189,7 +194,25 @@ export default function Dashboard() {
     }
 
   };
+  const [campaignTraffic, setCampaignTraffic] = useState([]);
 
+  const loadCampaignTraffic = async (selectedRange = range) => {
+    try {
+      const res = await api.get(`/analytics/campaign-traffic?range=${selectedRange}`);
+      setCampaignTraffic(res.data || []);
+    } catch (err) {
+      console.error("Campaign traffic error", err);
+    }
+  };
+
+  // const loadCampaignProfit = async (selectedRange = range) => {
+  //   try {
+  //     const res = await api.get(`/analytics/campaign-profit?range=${selectedRange}`);
+  //     setProfitData(res.data || []);
+  //   } catch (err) {
+  //     console.error("Profit error", err);
+  //   }
+  // };
 
   const getCountryName = (code) => {
     const c = countries.find((x) => x.value === code);
@@ -520,49 +543,60 @@ export default function Dashboard() {
 
       </div>
 
-      <div className="bg-white shadow rounded p-6">
+      <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 
+shadow-[0_10px_30px_rgba(0,0,0,0.08)] 
+border border-gray-100 
+hover:shadow-[0_20px_60px_rgba(0,0,0,0.15)] 
+transition-all duration-300">
 
-        <h2 className="text-xl font-semibold mb-4">
+        <h2 className="text-xl font-semibold mb-6">
           Live Traffic
         </h2>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-hidden rounded-xl border border-gray-100">
 
           <table className="w-full text-sm">
 
-            <thead className="bg-gray-100">
-
+            <thead className="bg-gray-50">
               <tr>
-                <th className="p-3 border">IP</th>
-                <th className="p-3 border">Country</th>
-                <th className="p-3 border">Device</th>
-                <th className="p-3 border">Campaign</th>
-                <th className="p-3 border">Decision</th>
-                <th className="p-3 border">Time</th>
+                <th className="p-3 border-b">IP</th>
+                <th className="p-3 border-b">Country</th>
+                <th className="p-3 border-b">Device</th>
+                <th className="p-3 border-b">Campaign</th>
+                <th className="p-3 border-b">Decision</th>
+                <th className="p-3 border-b">Time</th>
               </tr>
-
             </thead>
 
             <tbody>
 
               {paginatedRecent.map((log, i) => (
 
-                <tr key={i} className="text-center hover:bg-gray-50">
+                <tr key={i} className="text-center hover:bg-gray-50 transition">
 
-                  <td className="p-2 border">{log.ip_address}</td>
-                  <td className="p-2 border">{getCountryName(log.country)}</td>
-                  <td className="p-2 border">{log.device_type}</td>
-                  <td className="p-2 border">{log.campaign_name || log.campaign_id || "-"}</td>
-
-                  <td className="p-2 border">
-
-                    <span className={`text-white text-xs px-2 py-1 rounded ${statusColor(log.status)}`}>
-                      {log.status}
-                    </span>
-
+                  <td className="p-3 border-b font-mono text-xs">
+                    {log.ip_address}
                   </td>
 
-                  <td className="p-2 border">
+                  <td className="p-3 border-b">
+                    {getCountryName(log.country)}
+                  </td>
+
+                  <td className="p-3 border-b capitalize">
+                    {log.device_type}
+                  </td>
+
+                  <td className="p-3 border-b">
+                    {log.campaign_name || log.campaign_id || "-"}
+                  </td>
+
+                  <td className="p-3 border-b">
+                    <span className={`text-white text-xs px-2 py-1 rounded-full shadow-sm ${statusColor(log.status)}`}>
+                      {log.status}
+                    </span>
+                  </td>
+
+                  <td className="p-3 border-b text-gray-500 text-xs">
                     {log.created_at ? new Date(log.created_at).toLocaleTimeString() : "-"}
                   </td>
 
@@ -574,36 +608,37 @@ export default function Dashboard() {
 
           </table>
 
-          <div className="flex justify-between items-center mt-4">
+        </div>
 
-            <button
-              disabled={page === 1}
-              onClick={() => setPage(page - 1)}
-              className="px-3 py-1 bg-gray-200 rounded"
-            >
-              Prev
-            </button>
+        {/* 🔥 PAGINATION UPGRADE */}
+        <div className="flex justify-between items-center mt-4">
 
-            <span>
-              Page {page} / {Math.ceil(recent.length / rowsPerPage)}
-            </span>
+          <button
+            disabled={page === 1}
+            onClick={() => setPage(page - 1)}
+            className="px-3 py-1 rounded-md bg-gray-100 hover:bg-gray-200 disabled:opacity-50 transition"
+          >
+            Prev
+          </button>
 
-            <button
-              disabled={page >= Math.ceil(recent.length / rowsPerPage)}
-              onClick={() => setPage(page + 1)}
-              className="px-3 py-1 bg-gray-200 rounded"
-            >
-              Next
-            </button>
+          <span className="text-sm text-gray-600">
+            Page {page} / {Math.ceil(recent.length / rowsPerPage)}
+          </span>
 
-          </div>
+          <button
+            disabled={page >= Math.ceil(recent.length / rowsPerPage)}
+            onClick={() => setPage(page + 1)}
+            className="px-3 py-1 rounded-md bg-gray-100 hover:bg-gray-200 disabled:opacity-50 transition"
+          >
+            Next
+          </button>
 
         </div>
 
       </div>
 
 
-      <div className="bg-white shadow-xl rounded-xl p-6">
+      <div className="bg-white rounded-xl p-6 shadow-[0_10px_30px_rgba(0,0,0,0.08)] border border-gray-100 hover:shadow-[0_20px_50px_rgba(0,0,0,0.12)] transition-all duration-300">
 
         <h2 className="text-xl font-semibold mb-6">
           Campaign Profit Summary
@@ -667,77 +702,130 @@ export default function Dashboard() {
       </div>
 
 
-      <div className="bg-white shadow rounded p-6">
+      {/* 🔥 FULL 3D CARD */}
+      <div className="bg-white rounded-2xl p-6 
+  shadow-[0_10px_30px_rgba(0,0,0,0.08)] 
+  border border-gray-100 
+  hover:shadow-[0_20px_60px_rgba(0,0,0,0.15)] 
+  transition-all duration-300">
 
-        <h2 className="text-xl font-semibold mb-4">
-          Campaign Traffic Summary
-        </h2>
+        {/* 🔹 HEADER */}
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-semibold">
+            Campaign Traffic Summary ({trafficRange})
+          </h2>
 
-        <table className="w-full text-sm">
+          <select
+            value={trafficRange}
+            onChange={(e) => {
+              const val = e.target.value;
+              setTrafficRange(val);
+              loadCampaignTraffic(val);
+            }}
+            className="border border-gray-300 px-3 py-1 rounded-md text-sm 
+      shadow-sm hover:border-gray-400 bg-white"
+          >
+            <option value="today">Today</option>
+            <option value="yesterday">Yesterday</option>
+            <option value="7d">Last 7 Days</option>
+            <option value="all">All Time</option>
+          </select>
+        </div>
 
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="p-3 border">Campaign</th>
-              <th className="p-3 border">Total</th>
-              <th className="p-3 border">Passed</th>
-              <th className="p-3 border">Blocked</th>
-            </tr>
-          </thead>
+        {/* 🔹 TABLE WRAPPER (important for 3D feel) */}
+        <div className="overflow-hidden rounded-xl border border-gray-100">
 
-          <tbody>
+          <table className="w-full text-sm">
 
-            {campaigns.map((c, i) => {
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="p-3 border-b">Campaign</th>
+                <th className="p-3 border-b">Total</th>
+                <th className="p-3 border-b">Passed</th>
+                <th className="p-3 border-b">Blocked</th>
+              </tr>
+            </thead>
 
-              const total = (c.pass_count || 0) + (c.block_count || 0);
+            <tbody>
 
-              return (
-                <tr key={i} className="text-center">
+              {campaignTraffic.map((c, i) => {
 
-                  <td className="p-2 border">{c.name}</td>
+                const total = c.total || 0;
+                const passed = c.passed || 0;
+                const blocked = c.blocked || 0;
 
-                  <td className="p-2 border">{total}</td>
+                return (
+                  <tr
+                    key={i}
+                    className="text-center hover:bg-gray-50 transition"
+                  >
 
-                  <td className="p-2 border text-green-600">
-                    {c.pass_count || 0}
-                  </td>
+                    <td className="p-3 border-b">{c.campaign}</td>
 
-                  <td className="p-2 border text-red-600">
-                    {c.block_count || 0}
-                  </td>
+                    <td className="p-3 border-b font-medium">{total}</td>
 
-                </tr>
-              );
+                    <td className="p-3 border-b text-green-600 font-semibold">
+                      {passed}
+                    </td>
 
-            })}
+                    <td className="p-3 border-b text-red-600 font-semibold">
+                      {blocked}
+                    </td>
 
-          </tbody>
+                  </tr>
+                );
 
-        </table>
+              })}
+
+            </tbody>
+          </table>
+
+        </div>
 
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-        <div className="bg-white shadow rounded p-6">
+        <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 
+shadow-[0_10px_30px_rgba(0,0,0,0.08)] 
+border border-gray-100 
+hover:shadow-[0_20px_60px_rgba(0,0,0,0.15)] 
+transition-all duration-300">
 
-          <h2 className="text-xl font-semibold mb-4">
+          <h2 className="text-xl font-semibold mb-6">
             Device Traffic
           </h2>
 
           {(stats.device_stats || []).map((d, i) => (
 
-            <div key={i} className="flex justify-between border-b py-2">
-              <span>{d.device_type || "unknown"}</span>
-              <span>{d.clicks}</span>
+            <div
+              key={i}
+              className="flex justify-between items-center mb-3 p-3 rounded-xl 
+      bg-white border border-gray-100 
+      shadow-sm hover:shadow-md transition"
+            >
+
+              <span className="capitalize text-gray-700 font-medium">
+                {d.device_type || "unknown"}
+              </span>
+
+              <span className="text-gray-900 font-semibold">
+                {d.clicks}
+              </span>
+
             </div>
 
           ))}
 
         </div>
 
-        <div className="bg-white shadow rounded p-6">
+        <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 
+shadow-[0_10px_30px_rgba(0,0,0,0.08)] 
+border border-gray-100 
+hover:shadow-[0_20px_60px_rgba(0,0,0,0.15)] 
+transition-all duration-300">
 
-          <h2 className="text-xl font-semibold mb-4">
+          <h2 className="text-xl font-semibold mb-6">
             Top Countries
           </h2>
 
@@ -746,25 +834,33 @@ export default function Dashboard() {
             const grouped = {};
 
             (stats.country_stats || []).forEach((c) => {
-
               const name = getCountryName(c.country) || "Unknown";
-
               if (!grouped[name]) grouped[name] = 0;
-
               grouped[name] += c.clicks;
-
             });
 
             const list = Object.entries(grouped)
               .map(([country, clicks]) => ({ country, clicks }))
               .sort((a, b) => b.clicks - a.clicks)
-              .slice(0, 5); // top 5 only
+              .slice(0, 5);
 
             return list.map((c, i) => (
 
-              <div key={i} className="flex justify-between border-b py-2">
-                <span>{c.country}</span>
-                <span>{c.clicks}</span>
+              <div
+                key={i}
+                className="flex justify-between items-center mb-3 p-3 rounded-xl 
+        bg-white border border-gray-100 
+        shadow-sm hover:shadow-md transition"
+              >
+
+                <span className="text-gray-700 font-medium">
+                  {c.country}
+                </span>
+
+                <span className="text-gray-900 font-semibold">
+                  {c.clicks}
+                </span>
+
               </div>
 
             ));
@@ -774,7 +870,11 @@ export default function Dashboard() {
         </div>
 
 
-        <div className="bg-white shadow rounded p-6">
+        <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 
+shadow-[0_10px_30px_rgba(0,0,0,0.08)] 
+border border-gray-100 
+hover:shadow-[0_20px_60px_rgba(0,0,0,0.15)] 
+transition-all duration-300">
 
           <div className="flex items-center justify-between mb-6">
 
@@ -788,7 +888,8 @@ export default function Dashboard() {
                 setRange(e.target.value);
                 loadSources(e.target.value);
               }}
-              className="border px-3 py-1 rounded text-sm"
+              className="border border-gray-300 px-3 py-1 rounded-md text-sm 
+      shadow-sm hover:border-gray-400 bg-white"
             >
               <option value="today">Today</option>
               <option value="yesterday">Yesterday</option>
@@ -803,16 +904,14 @@ export default function Dashboard() {
 
             sources.forEach((s) => {
               const key = (s.source || "direct").toLowerCase();
-
               if (!grouped[key]) grouped[key] = 0;
-
               grouped[key] += s.clicks;
             });
 
             const list = Object.entries(grouped)
               .map(([source, clicks]) => ({ source, clicks }))
               .sort((a, b) => b.clicks - a.clicks)
-              .slice(0, 5); // top 5 sources only
+              .slice(0, 5);
 
             const max = Math.max(...list.map((s) => s.clicks), 1);
 
@@ -820,7 +919,7 @@ export default function Dashboard() {
 
               <div key={i} className="mb-5">
 
-                <div className="flex justify-between text-sm mb-1">
+                <div className="flex justify-between text-sm mb-2">
 
                   <span className="capitalize font-medium text-gray-700">
                     {s.source}
@@ -832,10 +931,10 @@ export default function Dashboard() {
 
                 </div>
 
-                <div className="w-full bg-gray-200 h-2 rounded">
+                <div className="w-full bg-gray-200 h-2.5 rounded-full overflow-hidden">
 
                   <div
-                    className="bg-green-500 h-2 rounded transition-all"
+                    className="bg-gradient-to-r from-green-400 to-green-600 h-2.5 rounded-full transition-all duration-500"
                     style={{ width: `${(s.clicks / max) * 100}%` }}
                   />
 
@@ -849,7 +948,11 @@ export default function Dashboard() {
 
         </div>
 
-        <div className="bg-white shadow-xl rounded-xl p-6">
+        <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 
+shadow-[0_10px_30px_rgba(0,0,0,0.08)] 
+border border-gray-100 
+hover:shadow-[0_20px_60px_rgba(0,0,0,0.15)] 
+transition-all duration-300">
 
           <h2 className="text-xl font-semibold mb-6">
             Top Zone Performance
@@ -857,7 +960,7 @@ export default function Dashboard() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-            {/*  PROFIT */}
+            {/* ✅ BEST */}
             <div>
 
               <h3 className="text-green-600 font-semibold mb-3">
@@ -866,22 +969,27 @@ export default function Dashboard() {
 
               {profitZones
                 .sort((a, b) => (b.revenue - b.cost) - (a.revenue - a.cost))
-                .slice(0, 2) // ✅ top 2 only
+                .slice(0, 2)
                 .map((z, i) => {
 
                   const profit = z.revenue - z.cost;
                   const roi = z.cost > 0 ? ((profit / z.cost) * 100).toFixed(1) : 0;
 
                   return (
-                    <div key={i} className="mb-3 p-3 rounded bg-green-50">
+                    <div key={i} className="mb-3 p-4 rounded-xl 
+            bg-green-50 border border-green-100 
+            shadow-sm hover:shadow-md transition">
 
                       <div className="flex justify-between">
-                        <span>
+
+                        <span className="text-gray-700">
                           {z.campaign_name} • Zone {z.zone_id}
                         </span>
+
                         <span className="text-green-600 font-semibold">
                           +{roi}%
                         </span>
+
                       </div>
 
                     </div>
@@ -890,7 +998,7 @@ export default function Dashboard() {
 
             </div>
 
-            {/*  LOSS */}
+            {/* ❌ WORST */}
             <div>
 
               <h3 className="text-red-600 font-semibold mb-3">
@@ -899,22 +1007,27 @@ export default function Dashboard() {
 
               {lossZones
                 .sort((a, b) => (a.revenue - a.cost) - (b.revenue - a.cost))
-                .slice(0, 2) // ✅ top 2 only
+                .slice(0, 2)
                 .map((z, i) => {
 
                   const profit = z.revenue - z.cost;
                   const roi = z.cost > 0 ? ((profit / z.cost) * 100).toFixed(1) : 0;
 
                   return (
-                    <div key={i} className="mb-3 p-3 rounded bg-red-50">
+                    <div key={i} className="mb-3 p-4 rounded-xl 
+            bg-red-50 border border-red-100 
+            shadow-sm hover:shadow-md transition">
 
                       <div className="flex justify-between">
-                        <span>
+
+                        <span className="text-gray-700">
                           {z.campaign_name} • Zone {z.zone_id}
                         </span>
+
                         <span className="text-red-600 font-semibold">
                           {roi}%
                         </span>
+
                       </div>
 
                     </div>

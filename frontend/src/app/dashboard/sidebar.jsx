@@ -4,9 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
-export default function Sidebar() {
+export default function Sidebar({ collapsed, setCollapsed }) {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
 
   const logout = () => {
     localStorage.removeItem("token");
@@ -64,28 +63,34 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className={`${collapsed ? "w-20" : "w-64"} bg-gray-950 text-white min-h-screen p-4 flex flex-col border-r border-gray-800 transition-[width] duration-300 ease-in-out will-change-[width]`}>
+    <aside className={`${collapsed ? "w-20" : "w-64"} 
+fixed left-0 top-0 h-screen 
+bg-[#0B0F1A] text-white flex flex-col 
+border-r border-gray-800/50 
+transition-all duration-300 z-50`}>
 
-      {/* Top */}
-      <div className={`flex items-center mb-6 ${collapsed ? "justify-center" : "justify-between"}`}>
+      {/* TOP */}
+      <div className={`px-4 py-5 border-b border-gray-800 flex items-center ${collapsed ? "justify-center" : "justify-between"}`}>
+
         {!collapsed && (
           <div>
-            <h2 className="text-lg font-bold">Traffic Intelligence</h2>
-            <p className="text-xs text-gray-400">Manage your traffic flow</p>
+            <h2 className="text-sm font-semibold tracking-wide text-white">
+              FlowIntel
+            </h2>
+            <p className="text-xs text-gray-500">Traffic Intelligence</p>
           </div>
         )}
 
-        {/* Collapse Button */}
         <button
-          onClick={() => setCollapsed(!collapsed)}
+          onClick={() => setCollapsed(prev => !prev)}
           className="text-gray-400 hover:text-white"
         >
-          <span className="text-xl font-bold">☰</span>
+          ☰
         </button>
       </div>
 
-      {/* Menu */}
-      <nav className="flex-1 space-y-1">
+      {/* MENU */}
+      <nav className="flex-1 px-2 py-4 space-y-1">
 
         {menu.map((item) => {
           const active = isActive(item.path);
@@ -94,40 +99,46 @@ export default function Sidebar() {
             <Link
               key={item.path}
               href={item.path}
-              className={`group flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors duration-200 relative
-              ${active
-                  ? "bg-indigo-600 text-white"
+              className={`relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all
+          ${active
+                  ? "bg-indigo-600 text-white shadow-md"
                   : "text-gray-400 hover:bg-gray-800 hover:text-white"
                 }`}
             >
 
-              {/* Icon */}
-              <span>{getIcon(item.icon)}</span>
+              {/* ACTIVE LINE */}
+              {active && (
+                <span className="absolute left-0 top-1 bottom-1 w-[3px] bg-indigo-400 rounded-r"></span>
+              )}
 
-              {/* Label */}
-              <span className={`transition-opacity duration-200 ${collapsed ? "opacity-0 hidden" : "opacity-100"}`}>
-                {item.name}
-              </span>
+              {/* ICON */}
+              <span className="opacity-90">{getIcon(item.icon)}</span>
 
-              {/* Tooltip */}
+              {/* TEXT */}
+              {!collapsed && <span>{item.name}</span>}
+
+              {/* TOOLTIP */}
               {collapsed && (
-                <span className="absolute left-16 bg-black text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition">
+                <span className="absolute left-16 bg-gray-900 text-xs px-2 py-1 rounded shadow border border-gray-700 opacity-0 group-hover:opacity-100">
                   {item.name}
                 </span>
               )}
+
             </Link>
           );
         })}
 
       </nav>
 
-      {/* Logout */}
-      <button
-        onClick={logout}
-        className="mt-4 bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-md text-sm transition"
-      >
-        {collapsed ? "⎋" : "Logout"}
-      </button>
+      {/* LOGOUT (FIXED POSITION) */}
+      <div className="p-4 border-t border-gray-800">
+        <button
+          onClick={logout}
+          className="w-full bg-red-600/90 hover:bg-red-700 text-white py-2 rounded-lg text-sm transition shadow-md"
+        >
+          {collapsed ? "⎋" : "Logout"}
+        </button>
+      </div>
 
     </aside>
   );

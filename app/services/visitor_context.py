@@ -121,6 +121,27 @@ class VisitorContext:
             except Exception:
                 pass
 
+        # =========================================
+        # 🔥 HEADER SPOOF DETECTION
+        # =========================================
+        try:
+            if self.user_agent_string:
+
+                ua_lower = self.user_agent_string.lower()
+
+                # ❌ fake browser patterns
+                if "chrome" in ua_lower and not self.browser:
+                    self.bot_score += 20
+
+                if "windows" in ua_lower and self.os and "windows" not in self.os:
+                    self.bot_score += 15
+
+                if "android" in ua_lower and self.device_type == "desktop":
+                    self.bot_score += 25
+
+        except Exception:
+            pass
+
         # ================================
         # BOT KEYWORD DETECTION
         # ================================
@@ -224,7 +245,22 @@ class VisitorContext:
 
         except Exception:
             pass
+        # =========================================
+        # 🔥 GEO-ASN CONSISTENCY CHECK
+        # =========================================
+        try:
+            if self.country_code and self.org:
 
+                org_lower = self.org.lower()
+
+                if self.country_code == "IN" and "amazon" in org_lower:
+                    self.bot_score += 15
+
+                if self.country_code == "US" and "vps" in org_lower:
+                    self.bot_score += 20
+
+        except Exception:
+            pass
         # ================================
         # DATACENTER DETECTION
         # ================================
@@ -398,6 +434,26 @@ class VisitorContext:
         if not self.canvas_fingerprint:
             self.bot_score += 10
 
+        # =========================================
+        # 🔥 TRUST SCORE SYSTEM (ADSPECT++ CORE)
+        # =========================================
+        try:
+            trust_key = f"trust:{self.ip}"
+
+            trust = redis_client.get(trust_key)
+
+            if trust:
+                trust = int(trust)
+
+                if trust > 5:
+                    self.bot_score -= 20
+
+            else:
+                redis_client.setex(trust_key, 3600, 1)
+
+        except Exception:
+            pass
+
         # ================================
         # FINAL BOT SCORE
         # ================================
@@ -426,6 +482,20 @@ class VisitorContext:
 
         else:
             self.traffic_quality = "clean"
+
+        # =========================================
+        # 🔥 FINAL BOT SCORE NORMALIZATION (FIX)
+        # =========================================
+        self.bot_score = max(0, min(100, self.bot_score))
+
+        # =========================================
+        # 🔥 TRUST LEARNING
+        # =========================================
+        try:
+            if self.traffic_quality == "clean":
+                redis_client.incr(f"trust:{self.ip}")
+        except Exception:
+            pass
 
         # ================================
         # FINGERPRINT REUSE DETECTION 🔥
