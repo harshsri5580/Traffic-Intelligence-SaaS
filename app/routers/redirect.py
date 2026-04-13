@@ -444,17 +444,22 @@ async def redirect_campaign(
     # DEVICE FINGERPRINT
     # -------------------------------------------------
 
+    raw_fp = f"{visitor.ip}-{visitor.user_agent_string}-{visitor.os}-{visitor.browser}"
+    fingerprint = hashlib.sha256(raw_fp.encode()).hexdigest()[:16]
+
+    # 🔥 BOT SCORE LOCK (FIXED POSITION)
+    bot_key = f"bot_score:{ip}:{fingerprint}"
+
     try:
+        cached_score = redis_client.get(bot_key)
 
-        raw_fp = (
-            f"{visitor.ip}-{visitor.user_agent_string}-{visitor.os}-{visitor.browser}"
-        )
-
-        fingerprint = hashlib.sha256(raw_fp.encode()).hexdigest()[:16]
-
+        if cached_score:
+            visitor.bot_score = int(cached_score)
+            print("🔒 BOT SCORE LOCKED:", visitor.bot_score)
+        else:
+            redis_client.setex(bot_key, 10, visitor.bot_score)
     except Exception:
-
-        fingerprint = None
+        pass
 
     # -------------------------------------------------
     # CHALLENGE FINGERPRINT OVERRIDE (SAFE)
