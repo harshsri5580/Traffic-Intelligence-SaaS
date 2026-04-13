@@ -428,7 +428,6 @@ async def redirect_campaign(
     click_id = hashlib.md5(f"{ip}{datetime.utcnow()}".encode()).hexdigest()
     matched_rule = None
     reason = None
-    decision = None
     redirect_url = None
     destination_url = None
     # is_bot_traffic = False
@@ -1014,7 +1013,7 @@ async def redirect_campaign(
     # RULE ENGINE
     # ==============================
 
-    if decision != "blocked":
+    if decision != "blocked" and not proxied_url:
 
         try:
 
@@ -1111,7 +1110,7 @@ async def redirect_campaign(
             destination_url = redirect_url
 
     # 🔥 NO RULE MATCH → SAFE PAGE (STRICT MODE)
-    elif not is_bot_traffic and not is_blocked_final:
+    elif not is_bot_traffic and not is_blocked_final and not proxied_url:
 
         decision = "fallback"
         reason = "no_rule_match"
