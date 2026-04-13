@@ -236,7 +236,10 @@ async def redirect_campaign(
     subscription_active = True
 
     sub = (
-        db.query(Subscription).filter(Subscription.user_id == campaign.user_id).first()
+        db.query(Subscription)
+        .filter(Subscription.user_id == campaign.user_id)
+        .order_by(Subscription.expire_date.desc())
+        .first()
     )
 
     # 🔍 DEBUG (temporary)
