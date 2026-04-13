@@ -284,17 +284,21 @@ export default function Dashboard() {
   };
 
   const statusColor = (status) => {
+    const s = (status || "").toLowerCase();
 
-    if (status === "blocked") return "bg-red-500";
+    if (s === "blocked" || s === "block")
+      return "bg-red-500";
 
-    if (status === "pass" || status === "offer")
+    if (s === "pass" || s === "offer")
       return "bg-green-500";
 
-    if (status === "safe")
-      return "bg-yellow-500 text-black";
+    if (s === "safe")
+      return "bg-yellow-400 text-black";
+
+    if (s === "converted")
+      return "bg-purple-500"; // 🔥 FIXED
 
     return "bg-gray-400";
-
   };
 
   const loadCampaigns = async () => {

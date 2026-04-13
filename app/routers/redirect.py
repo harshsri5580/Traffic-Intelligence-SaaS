@@ -144,7 +144,7 @@ async def redirect_campaign(
     token: str | None = None,
     db: Session = Depends(get_db),
 ):
-    is_duplicate = False
+    # is_duplicate = False
 
     visitor = VisitorContext(request)
 
@@ -165,6 +165,11 @@ async def redirect_campaign(
     print("🔥 FINAL IP:", ip)
 
     print("🔥 Clean IP:", ip)
+    # 🔥 DEFINE REAL NAVIGATION (FIX)
+    sec_fetch = request.headers.get("sec-fetch-dest", "")
+    sec_mode = request.headers.get("sec-fetch-mode", "")
+
+    is_real_navigation = sec_fetch == "document" and sec_mode in ["navigate", ""]
 
     is_bot_traffic = (
         visitor.is_bot or visitor.bot_score >= 80 or visitor.device_type == "bot"
@@ -175,28 +180,17 @@ async def redirect_campaign(
     # =========================
     sec_fetch = request.headers.get("sec-fetch-dest", "")
 
-    is_main_request = sec_fetch == "document" or sec_fetch == ""
+    # is_main_request = sec_fetch == "document" or sec_fetch == ""
 
     # =========================
     # 🔥 EARLY PASS CHECK
     # =========================
     challenge_pass = False
 
-    if is_main_request:
+    if is_real_navigation:
         if redis_client.get(f"challenge_pass:{ip}"):
             print("✅ CHALLENGE ALREADY PASSED")
             challenge_pass = True
-
-    # =========================
-    # 🔥 DUPLICATE CLICK LOCK
-    # =========================
-    if is_main_request:
-        lock_key = f"click_lock:{ip}"
-
-        if redis_client.get(lock_key):
-            print("⚡ DUPLICATE CLICK (ALLOW)")
-        else:
-            redis_client.set(lock_key, 1, ex=3)
 
     # ✅ PEHLE campaign load karo
     campaign = (
@@ -237,22 +231,25 @@ async def redirect_campaign(
     if not campaign:
         return RedirectResponse("/decoy")
 
-    # 🔥 SUBSCRIPTION CHECK (FINAL FIX)
+    # 🔥 SUBSCRIPTION CHECK (PERMANENT FIX)
+
+    subscription_active = True
 
     sub = (
         db.query(Subscription).filter(Subscription.user_id == campaign.user_id).first()
     )
 
     if sub and sub.expire_date and sub.expire_date < datetime.utcnow():
+        subscription_active = False
 
-        sub.status = "expired"
-        db.commit()
+        # update status (optional)
+        if sub.status != "expired":
+            sub.status = "expired"
+            db.commit()
 
         print("⛔ SUBSCRIPTION EXPIRED")
 
-        return RedirectResponse(
-            campaign.fallback_url or campaign.safe_page_url or "/decoy"
-        )
+        # 🔥 IMPORTANT: YAHAN RETURN NAHI HOGA ❌
 
     # 🔥 ONLY RUN CLOAKER ON MAIN NAVIGATION
     sec_fetch = request.headers.get("sec-fetch-dest", "")
@@ -581,12 +578,13 @@ async def redirect_campaign(
 
         print("⛔ CAMPAIGN PAUSED")
 
-        destination_url = redirect_url
-
         decision = "blocked"
         reason = "campaign_paused"
 
-        return RedirectResponse(campaign.safe_page_url or "/")
+        redirect_url = campaign.safe_page_url or campaign.fallback_url or "/decoy"
+        destination_url = redirect_url
+
+        is_blocked_final = True  # 🔥 IMPORTANT
 
     # -------------------------------------------------
     # BOT FILTER
@@ -597,9 +595,16 @@ async def redirect_campaign(
         # BOT FILTER
 
         if is_bot_traffic:
-            # redirect_url = campaign.bot_url or "/decoy"
+
             print("🤖 BOT → DECOY")
-            return RedirectResponse(campaign.bot_url or "/decoy")
+
+            decision = "blocked"
+            reason = "bot_traffic"
+
+            redirect_url = campaign.bot_url or "/decoy"
+            destination_url = redirect_url
+
+            is_blocked_final = True
 
     except Exception:
         pass
@@ -1098,17 +1103,21 @@ async def redirect_campaign(
 
     # 🔥 FINAL DEDUPE (FIXED ✅)
 
-    dedupe_key = f"click:{ip}:{campaign.id}"
+    # 🔥 FINAL HARD DEDUPE (NO DOUBLE LOG)
+    # 🔥 FINAL HARD DEDUPE (NO DOUBLE LOG)
+    log_key = f"log:{ip}:{campaign.id}:{fingerprint}"
+
+    should_log_final = True  # ✅ FIX (IMPORTANT)
 
     try:
-        if redis_client and redis_client.get(dedupe_key):
-            print("⚠️ DEDUPE HIT")
-            is_duplicate = True
-        elif redis_client:
-            redis_client.setex(dedupe_key, 5, "1")
+        if redis_client.get(log_key):
+            print("⚠️ FINAL DUPLICATE BLOCKED")
+            should_log_final = False
+        else:
+            redis_client.setex(log_key, 3, "1")
     except Exception as e:
-        print("REDIS ERROR:", e)
-        is_duplicate = False
+        print("Redis error:", e)
+        should_log_final = True  # ✅ fallback safe
     # -------------------------------------------------
     # CLICK LOGGING
 
@@ -1117,8 +1126,9 @@ async def redirect_campaign(
         # print("DECISION:", decision)
         # print("REASON:", reason)
         # print("DESTINATION:", destination_url)
-        should_log = "/r/" in request.url.path
-        if should_log and not is_duplicate:
+        if should_log_final and is_real_navigation:
+
+            print("🔥 REAL CLICK LOGGED")
 
             click = ClickLog(
                 campaign_id=campaign.id,
