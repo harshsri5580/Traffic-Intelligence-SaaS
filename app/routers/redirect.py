@@ -155,22 +155,39 @@ async def redirect_campaign(
     cf_ip = request.headers.get("cf-connecting-ip")
 
     if forwarded_for:
-        ip = forwarded_for.split(",")[0].strip()  # ✅ REAL USER IP
+        ip = forwarded_for.split(",")[0].strip()
     elif cf_ip:
         ip = cf_ip
     else:
         ip = visitor.ip
+
     print("🔥 XFF:", forwarded_for)
     print("🔥 CF-IP:", cf_ip)
     print("🔥 FINAL IP:", ip)
-
     print("🔥 Clean IP:", ip)
-    # 🔥 DEFINE REAL NAVIGATION (FIX)
+
+    # =========================
+    # 🔥 DEFINE REAL NAVIGATION (FIX FIRST)
+    # =========================
     sec_fetch = request.headers.get("sec-fetch-dest", "")
     sec_mode = request.headers.get("sec-fetch-mode", "")
 
     is_real_navigation = sec_fetch == "document" and sec_mode in ["navigate", ""]
 
+    # =========================
+    # 🔥 SKIP NON MAIN REQUESTS (FINAL FIX)
+    # =========================
+    if not is_real_navigation:
+        print("⚡ NON MAIN REQUEST → SKIP")
+
+        return RedirectResponse(
+            url="/decoy",
+            status_code=307,
+        )
+
+    # =========================
+    # 🔥 BOT DETECTION (SAFE)
+    # =========================
     is_bot_traffic = (
         visitor.is_bot or visitor.bot_score >= 80 or visitor.device_type == "bot"
     )
