@@ -428,9 +428,9 @@ async def redirect_campaign(
     click_id = hashlib.md5(f"{ip}{datetime.utcnow()}".encode()).hexdigest()
     matched_rule = None
     reason = None
-    # decision = None
-    # redirect_url = None
-    # destination_url = None
+    decision = None
+    redirect_url = None
+    destination_url = None
     # is_bot_traffic = False
     risk_score = 0
     fingerprint = visitor.visitor_hash[:16]
@@ -1014,7 +1014,7 @@ async def redirect_campaign(
     # RULE ENGINE
     # ==============================
 
-    if not is_bot_traffic and not is_blocked_final:
+    if decision != "blocked":
 
         try:
 
@@ -1133,20 +1133,19 @@ async def redirect_campaign(
     # 🔥 FINAL DEDUPE (FIXED ✅)
 
     # 🔥 FINAL HARD DEDUPE (NO DOUBLE LOG)
-    # 🔥 FINAL HARD DEDUPE (NO DOUBLE LOG)
     log_key = f"log:{ip}:{campaign.id}:{fingerprint}"
 
-    should_log_final = True  # ✅ FIX (IMPORTANT)
+    should_log_final = True
 
     try:
         if redis_client.get(log_key):
-            print("⚠️ FINAL DUPLICATE BLOCKED")
+            print("⚠️ FINAL DUPLICATE DETECTED (LOG SKIPPED)")
+            # ❌ DO NOT BLOCK FLOW
             should_log_final = False
         else:
             redis_client.setex(log_key, 3, "1")
-    except Exception as e:
-        print("Redis error:", e)
-        should_log_final = True  # ✅ fallback safe
+    except Exception:
+        should_log_final = True
     # -------------------------------------------------
     # CLICK LOGGING
 
