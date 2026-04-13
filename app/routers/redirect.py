@@ -1090,7 +1090,7 @@ async def redirect_campaign(
             destination_url = redirect_url
 
     # 🔥 NO RULE MATCH → SAFE PAGE (STRICT MODE)
-    elif not is_bot_traffic and not is_blocked_final:
+    elif not is_bot_traffic and not is_blocked_final and decision != "blocked":
 
         decision = "fallback"
         reason = "no_rule_match"
@@ -1101,7 +1101,7 @@ async def redirect_campaign(
     # FALLBACK (only if no offer selected)
     # -------------------------------------------------
 
-    if not redirect_url:
+    if not redirect_url and decision != "blocked":
 
         decision = "fallback"
         redirect_url = campaign.fallback_url or "/decoy"
