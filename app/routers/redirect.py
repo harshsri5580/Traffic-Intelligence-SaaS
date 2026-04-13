@@ -240,7 +240,6 @@ async def redirect_campaign(
     )
 
     if sub and sub.expire_date and sub.expire_date < datetime.utcnow():
-        subscription_active = False
 
         if sub.status != "expired":
             sub.status = "expired"
@@ -248,7 +247,6 @@ async def redirect_campaign(
 
         print("⛔ SUBSCRIPTION EXPIRED")
 
-        # 🔥 HARD BLOCK (FIX)
         decision = "blocked"
         reason = "subscription_expired"
 
@@ -256,6 +254,9 @@ async def redirect_campaign(
         destination_url = redirect_url
 
         is_blocked_final = True
+
+        # 🔥 MOST IMPORTANT
+        return RedirectResponse(redirect_url)
 
     # 🔥 ONLY RUN CLOAKER ON MAIN NAVIGATION
     sec_fetch = request.headers.get("sec-fetch-dest", "")
