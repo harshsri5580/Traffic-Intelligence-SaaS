@@ -242,14 +242,20 @@ async def redirect_campaign(
     if sub and sub.expire_date and sub.expire_date < datetime.utcnow():
         subscription_active = False
 
-        # update status (optional)
         if sub.status != "expired":
             sub.status = "expired"
             db.commit()
 
         print("⛔ SUBSCRIPTION EXPIRED")
 
-        # 🔥 IMPORTANT: YAHAN RETURN NAHI HOGA ❌
+        # 🔥 HARD BLOCK (FIX)
+        decision = "blocked"
+        reason = "subscription_expired"
+
+        redirect_url = campaign.safe_page_url or "/decoy"
+        destination_url = redirect_url
+
+        is_blocked_final = True
 
     # 🔥 ONLY RUN CLOAKER ON MAIN NAVIGATION
     sec_fetch = request.headers.get("sec-fetch-dest", "")
@@ -931,11 +937,11 @@ async def redirect_campaign(
         decision_type, final_score = compute_final_decision(visitor, risk_score)
 
         # 🔥 SAVE CLEAN USERS (FIXED POSITION)
-        try:
-            if decision_type == "allow":
-                redis_client.setex(f"fast_pass:{ip}", 300, "1")  # 5 min cache
-        except Exception:
-            pass
+        # try:
+        #     if decision_type == "allow":
+        #         redis_client.setex(f"fast_pass:{ip}", 300, "1")  # 5 min cache
+        # except Exception:
+        #     pass
 
         # 🔥 escalate only
         if decision_type == "blocked" and decision != "blocked":
