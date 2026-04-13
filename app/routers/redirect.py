@@ -430,6 +430,7 @@ async def redirect_campaign(
     reason = None
     redirect_url = None
     destination_url = None
+    decision = None
     # is_bot_traffic = False
     risk_score = 0
     fingerprint = visitor.visitor_hash[:16]
