@@ -1224,11 +1224,15 @@ async def redirect_campaign(
     print("🔥 BOT:", visitor.is_bot)
     if decision == "blocked":
 
-        # 🔥 BOT FINAL FIX
-        if is_bot_traffic:
-            return RedirectResponse(campaign.bot_url or "/decoy")
+        print("🚫 FINAL BLOCK EXECUTED")
 
-        return RedirectResponse(destination_url or campaign.safe_page_url or "/decoy")
+        # 🔥 ALWAYS FORCE SAFE URL (NO LEAK)
+        safe_url = campaign.safe_page_url or "/decoy"
+
+        if is_bot_traffic:
+            return RedirectResponse(campaign.bot_url or safe_url)
+
+        return RedirectResponse(safe_url)
 
     # -------------------------------------------------
     # OFFER REDIRECT MODES
