@@ -404,11 +404,11 @@ async def redirect_campaign(
     selected_offer = None
     click_id = hashlib.md5(f"{ip}{datetime.utcnow()}".encode()).hexdigest()
     matched_rule = None
-    decision = None
+    # decision = None
     reason = None
-    redirect_url = None
-    destination_url = None
-    is_bot_traffic = False
+    # redirect_url = None
+    # destination_url = None
+    # is_bot_traffic = False
     risk_score = 0
     fingerprint = visitor.visitor_hash[:16]
     # DEBUG
