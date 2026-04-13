@@ -231,35 +231,51 @@ async def redirect_campaign(
     if not campaign:
         return RedirectResponse("/decoy")
 
-    # 🔥 SUBSCRIPTION CHECK (PERMANENT FIX)
+    # 🔥 SUBSCRIPTION CHECK (FINAL FIX)
 
     subscription_active = True
 
     sub = (
         db.query(Subscription).filter(Subscription.user_id == campaign.user_id).first()
     )
+
+    # 🔍 DEBUG (temporary)
     print("SUB STATUS:", sub.status if sub else None)
     print("SUB EXPIRE:", sub.expire_date if sub else None)
     print("NOW UTC:", datetime.utcnow())
-    print("USER ID:", user.id)
+    print("USER ID:", campaign.user_id)
 
-    if sub and sub.status == "expired":
+    # ❌ NO SUBSCRIPTION → BLOCK
+    if not sub:
+        print("⛔ NO SUBSCRIPTION FOUND")
+
         subscription_active = False
+        is_blocked_final = True
 
-        if sub.status != "expired":
-            sub.status = "expired"
-            db.commit()
+    # 🔴 EXPIRED BY STATUS
+    elif sub.status == "expired":
+        print("⛔ SUBSCRIPTION EXPIRED (STATUS)")
 
-        print("⛔ SUBSCRIPTION EXPIRED")
+        subscription_active = False
+        is_blocked_final = True
 
-        # 🔥 HARD BLOCK (FIX)
+    # 🟡 EXPIRED BY DATE (SAFE CHECK)
+    elif sub.expire_date and sub.expire_date < datetime.utcnow():
+        print("⛔ SUBSCRIPTION EXPIRED (DATE)")
+
+        sub.status = "expired"
+        db.commit()
+
+        subscription_active = False
+        is_blocked_final = True
+
+    # 🔥 FINAL BLOCK ACTION
+    if not subscription_active:
         decision = "blocked"
         reason = "subscription_expired"
 
         redirect_url = campaign.safe_page_url or "/decoy"
         destination_url = redirect_url
-
-        is_blocked_final = True
 
     # 🔥 ONLY RUN CLOAKER ON MAIN NAVIGATION
     sec_fetch = request.headers.get("sec-fetch-dest", "")
