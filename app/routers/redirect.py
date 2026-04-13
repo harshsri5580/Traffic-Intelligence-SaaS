@@ -427,8 +427,8 @@ async def redirect_campaign(
     selected_offer = None
     click_id = hashlib.md5(f"{ip}{datetime.utcnow()}".encode()).hexdigest()
     matched_rule = None
-    # decision = None
     reason = None
+    # decision = None
     # redirect_url = None
     # destination_url = None
     # is_bot_traffic = False
@@ -960,11 +960,11 @@ async def redirect_campaign(
         decision_type, final_score = compute_final_decision(visitor, risk_score)
 
         # 🔥 SAVE CLEAN USERS (FIXED POSITION)
-        try:
-            if decision_type == "allow":
-                redis_client.setex(f"fast_pass:{ip}", 300, "1")  # 5 min cache
-        except Exception:
-            pass
+        # try:
+        #     if decision_type == "allow":
+        #         redis_client.setex(f"fast_pass:{ip}", 300, "1")  # 5 min cache
+        # except Exception:
+        #     pass
 
         # 🔥 escalate only
         if decision_type == "blocked" and decision != "blocked":
