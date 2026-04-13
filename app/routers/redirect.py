@@ -9,7 +9,7 @@ import urllib.parse
 import hashlib
 from app.core.config import ENABLE_CHALLENGE, BASE_URL
 from app.database import get_db
-from app.models import campaign
+from app.models import campaign, user
 from app.models.campaign import Campaign
 from app.models.offer import Offer
 from app.models.blocked_ip import BlockedIP
@@ -238,8 +238,12 @@ async def redirect_campaign(
     sub = (
         db.query(Subscription).filter(Subscription.user_id == campaign.user_id).first()
     )
+    print("SUB STATUS:", sub.status if sub else None)
+    print("SUB EXPIRE:", sub.expire_date if sub else None)
+    print("NOW UTC:", datetime.utcnow())
+    print("USER ID:", user.id)
 
-    if sub and sub.expire_date and sub.expire_date < datetime.utcnow():
+    if sub and sub.status == "expired":
         subscription_active = False
 
         if sub.status != "expired":
