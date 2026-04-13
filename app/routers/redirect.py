@@ -255,8 +255,9 @@ async def redirect_campaign(
 
         is_blocked_final = True
 
-        # 🔥 MOST IMPORTANT
-        return RedirectResponse(redirect_url)
+        # 🔥 HARD LOCK (MOST IMPORTANT)
+        matched_rule = None
+        selected_offer = None
 
     # 🔥 ONLY RUN CLOAKER ON MAIN NAVIGATION
     sec_fetch = request.headers.get("sec-fetch-dest", "")
@@ -405,7 +406,7 @@ async def redirect_campaign(
     selected_offer = None
     click_id = hashlib.md5(f"{ip}{datetime.utcnow()}".encode()).hexdigest()
     matched_rule = None
-    decision = None
+    # decision = None
     reason = None
     redirect_url = None
     destination_url = None
