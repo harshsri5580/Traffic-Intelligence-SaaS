@@ -149,6 +149,25 @@ async def redirect_campaign(
     visitor = VisitorContext(request)
 
     # =========================
+    # 🔥 JS SIGNALS (HYBRID)
+    # =========================
+    js_fp = request.headers.get("x-ti-fp")
+    js_cpu = request.headers.get("x-ti-cpu")
+    js_screen = request.headers.get("x-ti-screen")
+
+    if js_fp:
+        visitor.js_fingerprint = js_fp
+
+    if js_cpu:
+        try:
+            visitor.js_cpu = int(js_cpu)
+        except:
+            visitor.js_cpu = 0
+
+    if js_screen:
+        visitor.js_screen = js_screen
+
+    # =========================
     # 🔥 CLEAN IP (FINAL FIX)
     # =========================
     forwarded_for = request.headers.get("x-forwarded-for")
@@ -446,6 +465,20 @@ async def redirect_campaign(
 
     raw_fp = f"{visitor.ip}-{visitor.user_agent_string}-{visitor.os}-{visitor.browser}"
     fingerprint = hashlib.sha256(raw_fp.encode()).hexdigest()[:16]
+    # =========================
+    # 🔒 DECISION LOCK (SAFE)
+    # =========================
+    lock_key = f"lock:{campaign.id}:{ip}:{fingerprint}"
+
+    locked_decision = None
+
+    try:
+        cached = redis_client.get(lock_key)
+        if cached:
+            locked_decision = cached.decode() if isinstance(cached, bytes) else cached
+            print("🔒 LOCK HIT:", locked_decision)
+    except Exception:
+        pass
 
     # 🔥 BOT SCORE LOCK (FIXED POSITION)
     bot_key = f"bot_score:{ip}:{fingerprint}"
@@ -1083,8 +1116,19 @@ async def redirect_campaign(
     except Exception:
         pass
 
-    # -------------------------------------------------
+    # =========================
+    # 🔒 APPLY DECISION LOCK
+    # =========================
+    if locked_decision and decision not in ["blocked", "challenge"]:
+        print("🔒 USING LOCKED DECISION:", locked_decision)
 
+        if locked_decision == "offer":
+            decision = "offer"
+
+        elif locked_decision == "fallback":
+            decision = "fallback"
+
+    # -------------------------------------------------
     # FINAL DECISION LOGIC (CLEAN + SAFE)
     # -------------------------------------------------
 
@@ -1151,6 +1195,16 @@ async def redirect_campaign(
             redis_client.setex(log_key, 3, "1")
     except Exception:
         should_log_final = True
+
+    # =========================
+    # 🔒 SAVE DECISION LOCK
+    # =========================
+    try:
+        if decision in ["offer", "fallback"]:
+            redis_client.setex(lock_key, 300, decision)  # 5 min lock
+            print("🔒 LOCK SAVED:", decision)
+    except Exception:
+        pass
     # -------------------------------------------------
     # CLICK LOGGING
 

@@ -7,39 +7,40 @@ import { toast } from "react-hot-toast";
 
 export default function ScriptPage(){
 
-const behaviorScript = `
-<script>
-(function(){
-  let mouse=0,scroll=0,clicks=0,start=Date.now();
+// const behaviorScript = `
+// <script>
+// (function(){
+//   let mouse=0,scroll=0,clicks=0,start=Date.now();
 
-  document.addEventListener("mousemove",()=>mouse++);
-  document.addEventListener("scroll",()=>scroll++);
-  document.addEventListener("click",()=>clicks++);
+//   document.addEventListener("mousemove",()=>mouse++);
+//   document.addEventListener("scroll",()=>scroll++);
+//   document.addEventListener("click",()=>clicks++);
 
-  setInterval(()=>{
-    try{
-      fetch("${process.env.NEXT_PUBLIC_API_URL}/behavior/track",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({
-          mouse,
-          scroll,
-          click:clicks,
-          time:Math.floor((Date.now()-start)/1000)
-        })
-      });
-    }catch(e){}
-    mouse=0;scroll=0;clicks=0;
-  },4000);
-})();
-</script>
-`;
+//   setInterval(()=>{
+//     try{
+//       fetch("${process.env.NEXT_PUBLIC_API_URL}/behavior/track",{
+//         method:"POST",
+//         headers:{"Content-Type":"application/json"},
+//         body:JSON.stringify({
+//           mouse,
+//           scroll,
+//           click:clicks,
+//           time:Math.floor((Date.now()-start)/1000)
+//         })
+//       });
+//     }catch(e){}
+//     mouse=0;scroll=0;clicks=0;
+//   },4000);
+// })();
+// </script>
+// `;
 
 const params = useSearchParams();
 const slug = params.get("slug");
 
 const [scripts,setScripts] = useState(null);
 const [loading,setLoading] = useState(true);
+const [activeTab, setActiveTab] = useState("auto");
 
 useEffect(()=>{
 
@@ -93,6 +94,21 @@ const copy = async (text) => {
   }
 };
 
+
+const getScript = () => {
+
+  if(activeTab === "auto"){
+  return scripts.hybrid_script || scripts.php_script;
+}
+
+  if(activeTab === "php") return scripts.php_script;
+  if(activeTab === "js") return scripts.js_loader;
+  if(activeTab === "iframe") return scripts.iframe_cloak;
+  if(activeTab === "wp") return scripts.wordpress_snippet;
+  if(activeTab === "hybrid") return scripts.hybrid_script;
+
+};
+
 if(loading){
 
 return <div className="p-10">Loading scripts...</div>;
@@ -113,129 +129,56 @@ return(
 Script Generator
 </h1>
 
+<div className="flex gap-2 mb-6">
+
+  {["auto","hybrid","php","js","iframe","wp"].map(tab => (
+    <button
+      key={tab}
+      onClick={()=>setActiveTab(tab)}
+      className={`px-4 py-2 rounded text-sm transition ${
+  activeTab === tab 
+  ? "bg-blue-600 text-white shadow" 
+  : "bg-gray-200 hover:bg-gray-300"
+}`}
+    >
+      {tab.toUpperCase()}
+    </button>
+  ))}
+
+</div>
+
 {/* DIRECT LINK */}
 
-<div className="mb-8">
+{/* ========================= */}
+{/* 🔥 SCRIPT BOX (DYNAMIC) */}
+{/* ========================= */}
 
-<h2 className="font-semibold mb-2">
-Direct Link
-</h2>
+<div className="mb-10">
 
-<input
-className="border p-2 w-full rounded"
-value={scripts.direct_link}
-readOnly
-/>
+  <h2 className="text-lg font-semibold mb-2 flex items-center gap-2">
+    Script
 
-<button
-onClick={()=>copy(scripts.direct_link)}
-className="bg-blue-600 text-white px-4 py-2 mt-2 rounded"
->
-Copy
-</button>
+    {activeTab === "auto" && (
+      <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+        Recommended ({scripts.mode})
+      </span>
+    )}
+  </h2>
 
-</div>
+  <pre className="border p-4 w-full rounded bg-gray-50 text-sm overflow-auto max-h-[400px]">
+    <code>
+      {getScript()}
+    </code>
+  </pre>
 
-
-{/* PHP SCRIPT */}
-
-<div className="mb-8">
-
-<h2 className="font-semibold mb-2">
-PHP Script
-</h2>
-
-<textarea
-className="border p-2 w-full rounded"
-rows={5}
-value={scripts.php_script + "\n\n" + behaviorScript}
-readOnly
-/>
-
-<button
-onClick={()=>copy(scripts.php_script + "\n\n" + behaviorScript)}
-className="bg-blue-600 text-white px-4 py-2 mt-2 rounded"
->
-Copy
-</button>
+  <button
+    onClick={()=>copy(getScript())}
+    className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 mt-2 rounded transition"
+  >
+    Copy Script
+  </button>
 
 </div>
-
-
-{/* JS LOADER */}
-
-<div className="mb-8">
-
-<h2 className="font-semibold mb-2">
-JavaScript Loader
-</h2>
-
-<textarea
-className="border p-2 w-full rounded"
-rows={8}
-value={scripts.js_loader + "\n\n" + behaviorScript}
-readOnly
-/>
-
-<button
-onClick={()=>copy(scripts.js_loader + "\n\n" + behaviorScript)}
-className="bg-blue-600 text-white px-4 py-2 mt-2 rounded"
->
-Copy
-</button>
-
-</div>
-
-
-{/* IFRAME */}
-
-<div className="mb-8">
-
-<h2 className="font-semibold mb-2">
-iFrame Cloak
-</h2>
-
-<textarea
-className="border p-2 w-full rounded"
-rows={3}
-value={scripts.iframe_cloak}
-readOnly
-/>
-
-<button
-onClick={()=>copy(scripts.iframe_cloak)}
-className="bg-blue-600 text-white px-4 py-2 mt-2 rounded"
->
-Copy
-</button>
-
-</div>
-
-
-{/* WORDPRESS */}
-
-<div className="mb-8">
-
-<h2 className="font-semibold mb-2">
-WordPress Snippet
-</h2>
-
-<textarea
-className="border p-2 w-full rounded"
-rows={5}
-value={scripts.wordpress_snippet}
-readOnly
-/>
-
-<button
-onClick={()=>copy(scripts.wordpress_snippet)}
-className="bg-blue-600 text-white px-4 py-2 mt-2 rounded"
->
-Copy
-</button>
-
-</div>
-
 </div>
 
 );

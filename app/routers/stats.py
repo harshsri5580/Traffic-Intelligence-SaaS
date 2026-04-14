@@ -92,6 +92,10 @@ def traffic_logs(
                 "device_type": log.device_type,
                 "browser": log.browser,
                 "os": log.os,
+                # 🔥 ADD THESE
+                "user_agent": log.user_agent,
+                "ip_timezone": log.ip_timezone,
+                "connection_type": log.connection_type,
                 "campaign_id": campaign.id if campaign else None,
                 "campaign": campaign.name if campaign else None,
                 "offer": offer.url if offer else None,

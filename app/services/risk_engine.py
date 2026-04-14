@@ -255,6 +255,27 @@ class RiskEngine:
             self.score -= 10
 
         # ---------------------------------
+        # 🔥 JS SIGNAL BOOST (CORRECT PLACE)
+        # ---------------------------------
+        try:
+            visitor = self.visitor
+
+            if hasattr(visitor, "js_cpu"):
+                if visitor.js_cpu <= 2:
+                    self.score += 15
+
+            if hasattr(visitor, "js_screen"):
+                if "0x0" in visitor.js_screen:
+                    self.score += 25
+
+            if hasattr(visitor, "js_fingerprint"):
+                if len(visitor.js_fingerprint) < 10:
+                    self.score += 10
+
+        except Exception:
+            pass
+
+        # ---------------------------------
         # NORMALIZE
         # ---------------------------------
         self.score = max(0, min(self.score, 100))

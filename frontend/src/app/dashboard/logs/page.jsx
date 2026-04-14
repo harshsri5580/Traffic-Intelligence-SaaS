@@ -29,11 +29,13 @@ export default function LogsPage() {
     campaign: true,
     destination: true,
     os: true,
+    user_agent: true,
     bot: true,
     status: true,
     browser: true,
     risk: true,
     reason: true,
+    ip_timezone: true,
     flags: true,
     fingerprint: true,
     time: true,
@@ -303,14 +305,16 @@ transition-all duration-300 flex-1 flex flex-col">
                   <tr>
 
                     {visibleColumns.ip && <th className="p-3 border w-[160px]">IP</th>}
-                    {visibleColumns.country && <th className="p-3 border w-[260px]">Country</th>}
+                    {visibleColumns.country && <th className="p-3 border min-w-[300px] max-w-[250px]">Country</th>}
                     {visibleColumns.device && <th className="p-3 border w-[100px]">Device</th>}
                     {visibleColumns.asn && <th className="p-3 border w-[90px]">ASN</th>}
-                    {visibleColumns.isp && <th className="p-3 border w-[300px]">ISP</th>}
+                    {visibleColumns.isp && <th className="p-3 border min-w-[300px] max-w-[250px]">ISP</th>}
                     {visibleColumns.connection && <th className="p-3 border w-[120px]">Connection</th>}
                     {visibleColumns.campaign && <th className="p-3 border w-[120px]">Campaign</th>}
                     {visibleColumns.destination && <th className="p-3 border w-[300px]">Destination</th>}
                     {visibleColumns.os && <th className="p-3 border w-[90px]">OS</th>}
+                    {visibleColumns.ip_timezone && <th className="p-3 border w-[120px]">Timezone</th>}
+                    {visibleColumns.user_agent && <th className="p-3 border min-w-[300px] max-w-[400px]">Useragent</th>}
                     {visibleColumns.bot && <th className="p-3 border w-[70px]">Bot</th>}
                     {visibleColumns.status && <th className="p-3 border w-[150px]">Status</th>}
                     {visibleColumns.browser && <th className="p-3 border w-[140px]">Browser</th>}
@@ -401,7 +405,14 @@ ${log.connection_type === "datacenter" ? "bg-red-100 text-red-700" :
                       {visibleColumns.os && (
                         <td className="px-3 py-2 border-b border-gray-100">{log.os || "-"}</td>
                       )}
-
+                      {visibleColumns.ip_timezone && (
+                        <td className="px-3 py-2 border-b border-gray-100">
+                          {log.ip_timezone || "-"}
+                        </td>
+                      )}
+                      {visibleColumns.user_agent && (
+                        <td className="px-3 py-2 border-b border-gray-100 max-w-[500px] break-words">{(log.user_agent || "").slice(0, 40) + "..."}</td>
+                      )}
                       {visibleColumns.bot && (
                         <td className="px-3 py-2 border-b border-gray-100">
                           <span className={`px-2 py-1 rounded text-xs font-semibold

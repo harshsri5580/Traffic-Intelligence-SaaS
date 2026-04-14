@@ -23,6 +23,7 @@ export default function Sidebar({ collapsed, setCollapsed }) {
     { name: "Analytics", path: "/dashboard/analytics", icon: "bar" },
     { name: "Pricing", path: "/dashboard/pricing", icon: "dollar" },
     { name: "Settings", path: "/dashboard/settings", icon: "settings" },
+    { name: "Docs", path: "/dashboard/docs", icon: "book" }, // 
   ];
 
   const isActive = (path) => {
@@ -57,9 +58,17 @@ export default function Sidebar({ collapsed, setCollapsed }) {
             <path d="M19.4 15a7.97 7.97 0 0 0 .1-2l2-1.5-2-3.5-2.4.5a7.97 7.97 0 0 0-1.7-1l-.3-2.5h-4l-.3 2.5a7.97 7.97 0 0 0-1.7 1l-2.4-.5-2 3.5 2 1.5a7.97 7.97 0 0 0 0 2l-2 1.5 2 3.5 2.4-.5a7.97 7.97 0 0 0 1.7 1l.3 2.5h4l.3-2.5a7.97 7.97 0 0 0 1.7-1l2.4.5 2-3.5-2-1.5z" />
           </svg>
         );
+      case "book":
+        return (
+          <svg className={base} fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+            <path d="M20 22V6a2 2 0 0 0-2-2H6.5A2.5 2.5 0 0 0 4 6.5v13z" />
+          </svg>
+        );
       default:
         return null;
     }
+
   };
 
   return (

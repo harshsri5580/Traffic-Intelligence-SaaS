@@ -37,7 +37,9 @@ class VisitorContext:
 
         headers = request.headers
 
-        self.user_agent_string = headers.get("user-agent", "")
+        self.user_agent_string = (
+            headers.get("user-agent") or headers.get("User-Agent") or ""
+        )
         self.referrer = headers.get("referer")
         self.language = headers.get("accept-language")
         self.host = headers.get("host")
@@ -223,7 +225,7 @@ class VisitorContext:
                 self.country_code = geo.get("country_code") or "XX"
                 self.region = geo.get("region")
                 self.city = geo.get("city")
-                self.ip_timezone = geo.get("timezone")
+                self.ip_timezone = geo.get("timezone") or "Asia/Kolkata"
                 self.isp = geo.get("isp")
 
         except Exception:
