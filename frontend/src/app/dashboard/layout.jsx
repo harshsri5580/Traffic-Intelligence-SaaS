@@ -24,6 +24,7 @@ export default function DashboardLayout({ children }) {
     if (!token) {
       router.push("/login");
       return;
+
     }
 
     setAuthChecked(true);
