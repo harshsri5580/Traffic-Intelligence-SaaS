@@ -171,12 +171,27 @@ export default function PricingPage() {
                 <span className="text-sm text-gray-500"> /mo</span>
               </p>
 
-              <div className="space-y-3 text-gray-600 text-sm">
+              <div className="space-y-2 text-gray-600 text-sm">
+
                 <p>✔ {p.max_campaigns} Campaigns</p>
-                <p>✔ {p.max_monthly_clicks || "Unlimited"} Clicks</p>
-                <p>✔ Real-time Tracking</p>
-                <p>✔ Bot Filtering</p>
-                <p>✔ Analytics Dashboard</p>
+                <p>✔ {p.max_monthly_clicks || "Unlimited"} Click Tracking</p>
+
+                <p>✔ Real-time Traffic Analytics</p>
+                <p>✔ Advanced Traffic Filtering</p>
+                <p>✔ AI-based Bot Detection</p>
+
+                <p>✔ Smart Routing Engine</p>
+                <p>✔ Geo & Device Targeting</p>
+                <p>✔ IP Reputation Analysis</p>
+
+                <p>✔ VPN / Proxy Detection</p>
+                <p>✔ Secure Tracking Infrastructure</p>
+                <p>✔ High-speed Redirect System</p>
+
+                <p>✔ Campaign Performance Insights</p>
+                <p>✔ Traffic Quality Monitoring</p>
+                <p>✔ Scalable Cloud Processing</p>
+
               </div>
 
               <button

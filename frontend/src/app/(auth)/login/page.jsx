@@ -18,167 +18,176 @@ export default function LoginPage() {
   const [errorMsg, setErrorMsg] = useState("");
 
 
-    useEffect(() => {
+  useEffect(() => {
     if (errorRef.current) {
       setErrorMsg(errorRef.current);
     }
   }, []);
 
-const validate = () => {
-  if (!email || !password) {
-    return "Enter email & password";
-  }
+  const validate = () => {
+    if (!email || !password) {
+      return "Enter email & password";
+    }
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    return "Invalid email";
-  }
-
-  if (password.length < 6) {
-    return "Password too short";
-  }
-
-  return null;
-};
-
- const login = async () => {
-
-  if (loading) return;
-
-  // 🔥 VALIDATION HANDLE (NO STATE CONFLICT)
-  let error = "";
-
-  if (!email || !password) {
-    error = "Enter email & password";
-  } else {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      error = "Invalid email";
-    } else if (password.length < 6) {
-      error = "Password too short";
+      return "Invalid email";
     }
-  }
 
-  if (error) {
-    setErrorMsg(error); // ✅ UI me dikhega
-    toast.error(error, { duration: 4000 }); // ✅ toast stable
-    return;
-  }
+    if (password.length < 6) {
+      return "Password too short";
+    }
 
-  setErrorMsg(""); // ✅ sirf valid hone ke baad clear
+    return null;
+  };
 
-  try {
-    setLoading(true);
+  const login = async () => {
 
-    const res = await api.post("/auth/login", {
-      email: email.trim().toLowerCase(),
-      password: password.trim(),
-    });
+    if (loading) return;
 
-    const token = res?.data?.access_token;
-    const role = res?.data?.user?.role || "member";
+    // 🔥 VALIDATION HANDLE (NO STATE CONFLICT)
+    let error = "";
 
-    localStorage.setItem("token", token);
-    localStorage.setItem("role", role);
-
-    const sub = await api.get("/billing/my-subscription");
-
-    if (role === "admin") {
-      router.push("/admin");
-    } else if (!sub.data?.plan) {
-      router.push("/dashboard/pricing");
+    if (!email || !password) {
+      error = "Enter email & password";
     } else {
-      router.push("/dashboard");
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        error = "Invalid email";
+      } else if (password.length < 6) {
+        error = "Password too short";
+      }
     }
 
- } catch (error) {
+    if (error) {
+      setErrorMsg(error); // ✅ UI me dikhega
+      toast.error(error, { duration: 4000 }); // ✅ toast stable
+      return;
+    }
 
-  let msg = "";
+    setErrorMsg(""); // ✅ sirf valid hone ke baad clear
 
-  if (typeof error?.response?.data === "string") {
-    msg = error.response.data;
-  } else if (error?.response?.data?.detail) {
-    msg = error.response.data.detail;
-  }
+    try {
+      setLoading(true);
 
-  msg = msg.toLowerCase();
+      const res = await api.post("/auth/login", {
+        email: email.trim().toLowerCase(),
+        password: password.trim(),
+      });
 
-  let finalMsg = "Login failed ❌";
+      const token = res?.data?.access_token;
+      const role = res?.data?.user?.role || "member";
 
-  if (msg.includes("invalid")) {
-    finalMsg = "Wrong email or password ❌";
-  } else if (msg.includes("verify")) {
-    finalMsg = "Verify your email first 📩";
-  } else if (msg.includes("blocked")) {
-    finalMsg = "Account blocked 🚫";
-  }
+      localStorage.setItem("token", token);
+      localStorage.setItem("role", role);
 
-  // ✅ YAHAN ADD KARO
-  errorRef.current = finalMsg;
+      const sub = await api.get("/billing/my-subscription");
 
-  setErrorMsg(finalMsg);
-  toast.error(finalMsg, { duration: 4000 });
+      if (role === "admin") {
+        router.push("/admin");
+      } else if (!sub.data?.plan) {
+        router.push("/dashboard/pricing");
+      } else {
+        router.push("/dashboard");
+      }
 
-} finally {
-    setLoading(false);
-  }
-};
+    } catch (error) {
+
+      let msg = "";
+
+      if (typeof error?.response?.data === "string") {
+        msg = error.response.data;
+      } else if (error?.response?.data?.detail) {
+        msg = error.response.data.detail;
+      }
+
+      msg = msg.toLowerCase();
+
+      let finalMsg = "Login failed ❌";
+
+      if (msg.includes("invalid")) {
+        finalMsg = "Wrong email or password ❌";
+      } else if (msg.includes("verify")) {
+        finalMsg = "Verify your email first 📩";
+      } else if (msg.includes("blocked")) {
+        finalMsg = "Account blocked 🚫";
+      }
+
+      // ✅ YAHAN ADD KARO
+      errorRef.current = finalMsg;
+
+      setErrorMsg(finalMsg);
+      toast.error(finalMsg, { duration: 4000 });
+
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
 
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+    <div className="flex min-h-screen items-center justify-center relative overflow-hidden">
 
+      {/* BACKGROUND GLOW */}
+      <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 via-purple-600/10 to-transparent blur-3xl"></div>
+
+      {/* FORM */}
       <form
-  onSubmit={(e) => {
-    e.preventDefault(); // 🔥 STOP RELOAD
-    login();
-  }} noValidate
-  className="bg-white p-8 shadow-xl rounded-2xl w-96 border"
->
+        onSubmit={(e) => {
+          e.preventDefault();
+          login();
+        }}
+        noValidate
+        className="relative z-10 bg-white/5 backdrop-blur-xl p-8 shadow-2xl rounded-2xl w-full max-w-md border border-white/10"
+      >
 
+        {/* TITLE */}
         <h1 className="text-3xl font-bold mb-6 text-center">
-          Welcome Back
+          Welcome Back 👋
         </h1>
 
+        {/* EMAIL */}
         <input
-          className="border p-3 w-full mb-3 rounded-lg focus:ring-2 focus:ring-indigo-500"
+          className="bg-black/40 border border-white/10 p-3 w-full mb-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-white placeholder-gray-400"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
 
+        {/* PASSWORD */}
         <input
-          className="border p-3 w-full mb-2 rounded-lg focus:ring-2 focus:ring-indigo-500"
+          className="bg-black/40 border border-white/10 p-3 w-full mb-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-white placeholder-gray-400"
           type="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
 
+        {/* FORGOT */}
         <div className="text-right mb-4">
-          <Link href="/forgot-password" className="text-sm text-indigo-600 hover:underline">
+          <Link href="/forgot-password" className="text-sm text-indigo-400 hover:underline">
             Forgot Password?
           </Link>
         </div>
 
+        {/* BUTTON */}
         <button
-        type="submit"
-         
+          type="submit"
           disabled={loading}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white w-full py-3 rounded-lg font-semibold"
+          className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-90 text-white w-full py-3 rounded-lg font-semibold transition shadow-lg shadow-indigo-600/30"
         >
           {loading ? "Logging in..." : "Login"}
         </button>
 
-        <p className="text-center text-sm mt-4 text-gray-600">
+        {/* FOOTER */}
+        <p className="text-center text-sm mt-4 text-gray-400">
           Don’t have an account?
-          <Link href="/register" className="text-indigo-600 ml-1 font-medium">
+          <Link href="/register" className="text-indigo-400 ml-1 font-medium">
             Register
           </Link>
         </p>
 
       </form>
-
     </div>
   );
 }
