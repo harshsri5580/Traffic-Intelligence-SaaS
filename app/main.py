@@ -81,8 +81,11 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://127.0.0.1:3000",
-        "https://traffic-intelligence-saas.vercel.app",  # frontend
-        "https://traffic-intelligence-saas-production.up.railway.app",  # backend (🔥 add this)
+        # ✅ NEW FRONTEND
+        "https://trafficintelai.com",
+        "https://www.trafficintelai.com",
+        # ✅ NEW API (optional but safe)
+        "https://api.trafficintelai.com",
     ],
     allow_credentials=True,
     allow_methods=["*"],
