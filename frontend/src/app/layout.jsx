@@ -1,11 +1,10 @@
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
-import Header from "./components/Header";
-import Footer from "./components/Footer";
+import LayoutWrapper from "./components/LayoutWrapper"; // 👈 NEW
 
 export const metadata = {
-  title: "FlowIntel",
-  description: "Analytics Platform",
+  title: "TrafficIntel AI",
+  description: "AI-powered Traffic Intelligence Platform",
   icons: {
     icon: "/favicon.ico",
   },
@@ -14,15 +13,11 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className="bg-gray-50">
+      <body>
 
-        <Header />
-
-        <main className="min-h-[80vh]">
+        <LayoutWrapper>
           {children}
-        </main>
-
-        <Footer />
+        </LayoutWrapper>
 
         <Toaster position="top-right" />
 

@@ -37,27 +37,38 @@ export default function ResetPassword() {
   };
 
   return (
-    <div className="flex h-screen items-center justify-center">
-      <div className="bg-white p-6 shadow rounded w-96">
+    <div className="flex min-h-screen items-center justify-center relative overflow-hidden">
 
-        <h2 className="text-xl mb-4">Reset Password</h2>
+      {/* BACKGROUND GLOW */}
+      <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 via-purple-600/10 to-transparent blur-3xl"></div>
 
+      {/* CARD */}
+      <div className="relative z-10 bg-white/5 backdrop-blur-xl p-8 shadow-2xl rounded-2xl w-full max-w-md border border-white/10">
+
+        {/* TITLE */}
+        <h2 className="text-2xl font-bold mb-6 text-center">
+          Reset Password 🔐
+        </h2>
+
+        {/* OTP INPUT */}
         <input
-          className="border p-2 w-full mb-2"
-          placeholder="OTP"
-          onChange={(e)=>setOtp(e.target.value)}
+          className="bg-black/40 border border-white/10 p-3 w-full mb-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-white placeholder-gray-400 text-center tracking-widest"
+          placeholder="Enter OTP"
+          onChange={(e) => setOtp(e.target.value)}
         />
 
+        {/* PASSWORD */}
         <input
-          className="border p-2 w-full mb-3"
+          className="bg-black/40 border border-white/10 p-3 w-full mb-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-white placeholder-gray-400"
           type="password"
           placeholder="New Password"
-          onChange={(e)=>setPassword(e.target.value)}
+          onChange={(e) => setPassword(e.target.value)}
         />
 
+        {/* BUTTON */}
         <button
           onClick={reset}
-          className="bg-green-600 text-white w-full p-2 rounded"
+          className="bg-gradient-to-r from-green-500 to-emerald-600 hover:opacity-90 text-white w-full py-3 rounded-lg font-semibold transition shadow-lg shadow-green-500/30"
         >
           Reset Password
         </button>
