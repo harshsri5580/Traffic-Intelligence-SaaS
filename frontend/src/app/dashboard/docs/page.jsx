@@ -73,6 +73,7 @@ export default function DocsPage() {
                 <Section title="Analytics" id="analytics">
                     <p>Track performance</p>
                     <p>See clicks, conversions, devices</p>
+
                 </Section>
 
             </div>
