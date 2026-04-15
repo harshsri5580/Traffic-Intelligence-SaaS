@@ -14,192 +14,431 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const txn = urlParams.get("_ptxn");
-
-    if (txn) {
-      console.log("Payment success txn:", txn);
-
-      // 👉 redirect dashboard
-      router.push("/dashboard?payment=success");
-    }
+    const txn = new URLSearchParams(window.location.search).get("_ptxn");
+    if (txn) router.push("/dashboard?payment=success");
   }, []);
 
   const loadPlans = async () => {
     try {
       const res = await api.get("/billing/plans");
-      const data = Array.isArray(res.data)
-        ? res.data
-        : res.data?.plans || [];
-
-      const sorted = data.sort((a, b) => a.price - b.price);
-      setPlans(sorted);
-    } catch (err) {
-      console.log(err);
-    }
+      const data = Array.isArray(res.data) ? res.data : res.data?.plans || [];
+      setPlans(data.sort((a, b) => a.price - b.price));
+    } catch { }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="bg-black text-white min-h-screen">
+
+      {/* NAVBAR */}
+      {/* <div className="flex justify-between items-center px-8 py-5 border-b border-white/10">
+        <h1 className="text-xl font-bold">TrafficIntel AI</h1>
+        <div className="space-x-6 hidden md:block">
+          <a href="#features">Features</a>
+          <a href="#pricing">Pricing</a>
+          <Link href="/login">Login</Link>
+          <Link href="/register" className="bg-indigo-600 px-4 py-2 rounded-lg">
+            Get Started
+          </Link>
+        </div>
+      </div> */}
 
       {/* HERO */}
-      <div className="text-center py-24 px-6">
-        <h1 className="text-5xl font-extrabold mb-6">
-          Smart Traffic Analytics for Better Decisions 🚀
-        </h1>
+      <div className="relative text-center py-32 px-6 overflow-hidden">
 
-        <p className="text-gray-600 max-w-2xl mx-auto mb-8">
-          FlowIntel helps businesses understand traffic patterns, monitor user interactions,
-          and improve performance using real-time analytics and clear insights.
-        </p>
+        {/* BACKGROUND GLOW */}
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 via-purple-600/10 to-transparent blur-3xl"></div>
 
-        <Link
-          href="/register"
-          className="bg-indigo-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-indigo-700"
-        >
-          Start Free Trial
-        </Link>
+        {/* CONTENT */}
+        <div className="relative z-10 max-w-5xl mx-auto">
+
+          <h1 className="text-6xl md:text-7xl font-extrabold leading-tight">
+            <span className="bg-gradient-to-r from-indigo-400 to-purple-500 bg-clip-text text-transparent">
+              Control Your Traffic
+            </span>
+            <br />
+            Like a Pro 🚀
+          </h1>
+
+          <p className="text-gray-400 max-w-2xl mx-auto mt-6 text-lg">
+            Advanced cloaking, AI-powered bot detection, and ultra-fast routing —
+            built for marketers who demand performance and precision.
+          </p>
+
+          {/* BUTTONS */}
+          <div className="mt-10 flex justify-center gap-4 flex-wrap">
+            <Link
+              href="/register"
+              className="bg-gradient-to-r from-indigo-600 to-purple-600 px-10 py-4 rounded-xl font-semibold shadow-lg shadow-indigo-600/30 hover:scale-105 transition"
+            >
+              Start Free Trial
+            </Link>
+
+            <Link
+              href="/login"
+              className="border border-white/20 px-10 py-4 rounded-xl hover:bg-white/10 transition"
+            >
+              View Demo
+            </Link>
+          </div>
+
+          {/* TRUST BADGE */}
+          <div className="mt-10 text-sm text-gray-500">
+            Trusted by marketers & agencies worldwide
+          </div>
+
+        </div>
       </div>
 
       {/* FEATURES */}
-      <div className="grid md:grid-cols-3 gap-6 px-10 pb-20">
-        {[
-          "Real-time Traffic Monitoring",
-          "User Behavior Analysis",
-          "Campaign Performance Tracking",
-          "Geo & Device Insights",
-          "Reliable Data Processing",
-          "Simple Reporting Dashboard",
-        ].map((f, i) => (
-          <div key={i} className="bg-white p-6 rounded-xl shadow text-center">
-            <h3 className="font-semibold text-lg">{f}</h3>
-          </div>
-        ))}
-      </div>
+      <div id="features" className="py-24 relative">
 
-      {/* HOW IT WORKS */}
-      <div className="bg-white py-20 px-6">
-        <h2 className="text-3xl font-bold text-center mb-10">
-          How FlowIntel Works
-        </h2>
+        {/* BACKGROUND GLOW */}
+        <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/10 via-purple-600/10 to-transparent blur-2xl"></div>
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto text-center">
-          <div>
-            <h3 className="font-semibold mb-2">1. Create Campaign</h3>
-            <p className="text-gray-600 text-sm">
-              Set up your campaign and generate tracking links.
-            </p>
-          </div>
+        <div className="relative z-10 max-w-7xl mx-auto px-6">
 
-          <div>
-            <h3 className="font-semibold mb-2">2. Track Traffic</h3>
-            <p className="text-gray-600 text-sm">
-              Monitor incoming traffic and user activity in real-time.
-            </p>
-          </div>
+          <h2 className="text-4xl font-bold text-center mb-4">
+            Powerful Features 💎
+          </h2>
 
-          <div>
-            <h3 className="font-semibold mb-2">3. Analyze & Optimize</h3>
-            <p className="text-gray-600 text-sm">
-              Use insights to improve performance and make better decisions.
-            </p>
+          <p className="text-gray-400 text-center mb-14 max-w-2xl mx-auto">
+            Everything you need to monitor, analyze, and optimize your traffic performance at scale.
+          </p>
+
+          <div className="grid md:grid-cols-3 gap-8">
+
+            {/* FEATURE 1 */}
+            <div className="p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur hover:scale-105 transition shadow-lg">
+              <div className="text-3xl mb-4">🤖</div>
+              <h3 className="font-semibold text-lg mb-2">Fraud Detection System</h3>
+              <p className="text-gray-400 text-sm">
+                Identify and filter suspicious traffic using intelligent risk analysis.
+              </p>
+            </div>
+
+            {/* FEATURE 2 */}
+            <div className="p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur hover:scale-105 transition shadow-lg">
+              <div className="text-3xl mb-4">⚡</div>
+              <h3 className="font-semibold text-lg mb-2">High-Speed Processing</h3>
+              <p className="text-gray-400 text-sm">
+                Optimized infrastructure ensures fast request handling and minimal latency.
+              </p>
+            </div>
+
+            {/* FEATURE 3 */}
+            <div className="p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur hover:scale-105 transition shadow-lg">
+              <div className="text-3xl mb-4">🧠</div>
+              <h3 className="font-semibold text-lg mb-2">Smart Decision Engine</h3>
+              <p className="text-gray-400 text-sm">
+                Apply intelligent rules to process and manage incoming traffic effectively.
+              </p>
+            </div>
+
+            {/* FEATURE 4 */}
+            <div className="p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur hover:scale-105 transition shadow-lg">
+              <div className="text-3xl mb-4">🌍</div>
+              <h3 className="font-semibold text-lg mb-2">Geo & Device Targeting</h3>
+              <p className="text-gray-400 text-sm">
+                Customize traffic handling based on location, device, and user context.
+              </p>
+            </div>
+
+            {/* FEATURE 5 */}
+            <div className="p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur hover:scale-105 transition shadow-lg">
+              <div className="text-3xl mb-4">🛡️</div>
+              <h3 className="font-semibold text-lg mb-2">Traffic Filtering System</h3>
+              <p className="text-gray-400 text-sm">
+                Protect your campaigns by filtering unwanted or low-quality traffic.
+              </p>
+            </div>
+
+            {/* FEATURE 6 */}
+            <div className="p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur hover:scale-105 transition shadow-lg">
+              <div className="text-3xl mb-4">📊</div>
+              <h3 className="font-semibold text-lg mb-2">Real-time Analytics</h3>
+              <p className="text-gray-400 text-sm">
+                Monitor traffic performance with live insights and detailed reports.
+              </p>
+            </div>
+
           </div>
         </div>
       </div>
 
-      {/* TRUST SECTION */}
-      <div className="text-center py-20 px-6">
-        <h2 className="text-2xl font-bold mb-4">
-          Trusted Analytics Platform
-        </h2>
+      {/* USE CASES */}
+      <div id="usecases" className="py-24 relative text-center">
 
-        <p className="text-gray-600 max-w-2xl mx-auto">
-          FlowIntel is designed to provide transparent analytics and reliable insights.
-          Our system focuses on data accuracy, performance monitoring, and scalability.
-        </p>
+        {/* BACKGROUND GLOW */}
+        <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 via-indigo-600/10 to-transparent blur-2xl"></div>
+
+        <div className="relative z-10 max-w-6xl mx-auto px-6">
+
+          <h2 className="text-4xl font-bold mb-4">
+            Built For Growth 🚀
+          </h2>
+
+          <p className="text-gray-400 mb-12 max-w-2xl mx-auto">
+            Designed for professionals who need advanced traffic insights and performance optimization tools.
+          </p>
+
+          <div className="grid md:grid-cols-4 gap-8">
+
+            {/* CARD 1 */}
+            <div className="p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur hover:scale-105 transition shadow-lg">
+              <div className="text-3xl mb-4">💰</div>
+              <h3 className="font-semibold text-lg mb-2">Affiliate Marketers</h3>
+              <p className="text-gray-400 text-sm">
+                Track, analyze, and optimize campaign performance with precision.
+              </p>
+            </div>
+
+            {/* CARD 2 */}
+            <div className="p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur hover:scale-105 transition shadow-lg">
+              <div className="text-3xl mb-4">📊</div>
+              <h3 className="font-semibold text-lg mb-2">Media Buyers</h3>
+              <p className="text-gray-400 text-sm">
+                Monitor traffic quality and maximize ROI across multiple channels.
+              </p>
+            </div>
+
+            {/* CARD 3 */}
+            <div className="p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur hover:scale-105 transition shadow-lg">
+              <div className="text-3xl mb-4">🏢</div>
+              <h3 className="font-semibold text-lg mb-2">Ad Agencies</h3>
+              <p className="text-gray-400 text-sm">
+                Manage and scale campaigns efficiently for multiple clients.
+              </p>
+            </div>
+
+            {/* CARD 4 */}
+            <div className="p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur hover:scale-105 transition shadow-lg">
+              <div className="text-3xl mb-4">🚀</div>
+              <h3 className="font-semibold text-lg mb-2">SaaS Founders</h3>
+              <p className="text-gray-400 text-sm">
+                Gain actionable insights to improve traffic performance and growth.
+              </p>
+            </div>
+
+          </div>
+        </div>
       </div>
 
-      {/* SECURITY SECTION (VERY IMPORTANT FOR APPROVAL) */}
-      <div className="bg-white py-20 px-6">
-        <h2 className="text-3xl font-bold text-center mb-6">
-          Secure & Reliable
-        </h2>
+      {/* PERFORMANCE */}
+      <div className="py-24 text-center relative">
 
-        <p className="text-gray-600 max-w-3xl mx-auto text-center">
-          We prioritize user data security and platform reliability. All data is handled
-          with industry-standard practices, ensuring privacy and safe processing.
-        </p>
+        {/* BACKGROUND GLOW */}
+        <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/10 via-purple-600/10 to-transparent blur-2xl"></div>
+
+        <div className="relative z-10 max-w-6xl mx-auto px-6">
+
+          <h2 className="text-4xl font-bold mb-4">
+            High Performance Infrastructure ⚡
+          </h2>
+
+          <p className="text-gray-400 mb-12 max-w-2xl mx-auto">
+            Built for speed, reliability, and global scalability — ensuring every click is processed instantly.
+          </p>
+
+          <div className="grid md:grid-cols-3 gap-8">
+
+            {/* CARD 1 */}
+            <div className="p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur hover:scale-105 transition shadow-lg">
+              <div className="text-3xl mb-4">⚡</div>
+              <h3 className="text-xl font-semibold mb-2">
+                Ultra Fast Processing
+              </h3>
+              <p className="text-gray-400 text-sm">
+                Optimized backend ensures rapid request handling with minimal latency.
+              </p>
+            </div>
+
+            {/* CARD 2 */}
+            <div className="p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur hover:scale-105 transition shadow-lg">
+              <div className="text-3xl mb-4">🌍</div>
+              <h3 className="text-xl font-semibold mb-2">
+                Global Infrastructure
+              </h3>
+              <p className="text-gray-400 text-sm">
+                Distributed systems designed for worldwide traffic handling and reliability.
+              </p>
+            </div>
+
+            {/* CARD 3 */}
+            <div className="p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur hover:scale-105 transition shadow-lg">
+              <div className="text-3xl mb-4">🧠</div>
+              <h3 className="text-xl font-semibold mb-2">
+                Intelligent Optimization
+              </h3>
+              <p className="text-gray-400 text-sm">
+                Smart processing and caching techniques improve performance and efficiency.
+              </p>
+            </div>
+
+          </div>
+        </div>
       </div>
 
       {/* PRICING */}
-      <div className="bg-white py-20">
-        <h2 className="text-3xl font-bold text-center mb-12">
-          Simple & Transparent Pricing
-        </h2>
+      <div id="pricing" className="py-28 relative">
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto px-6">
+        {/* BACKGROUND GLOW */}
+        <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/10 via-purple-600/10 to-transparent blur-2xl"></div>
 
-          {plans.map((p) => {
-            const isPopular = p.name.toLowerCase().includes("pro");
+        <div className="relative z-10 max-w-7xl mx-auto px-6">
 
-            return (
-              <div
-                key={p.id}
-                className={`relative p-8 rounded-2xl border shadow-lg
-                ${isPopular ? "border-indigo-600 scale-105" : "bg-gray-50"}`}
-              >
-                {isPopular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-xs px-3 py-1 rounded-full">
-                    Most Popular
-                  </div>
-                )}
+          {/* HEADER */}
+          <h2 className="text-4xl font-bold text-center mb-4">
+            Simple & Transparent Pricing 💎
+          </h2>
 
-                <h2 className="text-2xl font-bold text-center">
-                  {p.name}
-                </h2>
+          <p className="text-gray-400 text-center mb-16 max-w-2xl mx-auto">
+            Choose the plan that fits your needs. No hidden fees. Cancel anytime.
+          </p>
 
-                <p className="text-center text-4xl font-extrabold my-6">
-                  ${p.price}
-                  <span className="text-sm text-gray-500"> /mo</span>
-                </p>
+          {/* CARDS */}
+          <div className="grid md:grid-cols-3 gap-10">
 
-                <div className="space-y-3 text-gray-600 text-sm">
-                  <p>✔ {p.max_campaigns} Campaigns</p>
-                  <p>✔ {p.max_monthly_clicks || "Unlimited"} Events</p>
-                  <p>✔ Real-time Analytics</p>
-                  <p>✔ Performance Insights</p>
-                  <p>✔ Reporting Dashboard</p>
-                </div>
+            {plans.map((p) => {
+              const popular = p.name.toLowerCase().includes("pro");
 
-                <Link
-                  href="/register"
-                  className="mt-8 block text-center bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700"
+              return (
+                <div
+                  key={p.id}
+                  className={`relative p-8 rounded-2xl border backdrop-blur bg-white/5 transition
+            ${popular
+                      ? "border-indigo-500 scale-105 shadow-2xl shadow-indigo-500/20"
+                      : "border-white/10 hover:scale-105"
+                    }`}
                 >
-                  Start Free Trial
-                </Link>
-              </div>
-            );
-          })}
+
+                  {/* BADGE */}
+                  {popular && (
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xs px-4 py-1 rounded-full shadow-lg">
+                      MOST POPULAR
+                    </div>
+                  )}
+
+                  {/* PLAN NAME */}
+                  <h3 className="text-2xl font-bold text-center mb-2">
+                    {p.name}
+                  </h3>
+
+                  {/* PRICE */}
+                  <p className="text-center text-5xl my-6 font-extrabold">
+                    ${p.price}
+                    <span className="text-sm text-gray-400 font-medium"> /month</span>
+                  </p>
+
+                  {/* FEATURES */}
+                  <div className="space-y-3 text-gray-300 text-sm mb-8">
+
+                    <p>✔ {p.max_campaigns} Campaigns</p>
+                    <p>✔ {p.max_monthly_clicks || "Unlimited"} Click Tracking</p>
+
+                    <p>✔ Real-time Traffic Analytics</p>
+                    <p>✔ Advanced Traffic Filtering</p>
+                    <p>✔ Smart Routing Engine</p>
+                    <p>✔ Geo & Device Targeting</p>
+                    <p>✔ IP Reputation Analysis</p>
+                    <p>✔ Fraud Detection System</p>
+                    <p>✔ Secure Tracking Infrastructure</p>
+                    <p>✔ Performance Optimization Tools</p>
+                    <p>✔ Campaign Insights Dashboard</p>
+
+                    {popular && (
+                      <>
+                        <p className="text-indigo-400">✔ Priority Processing</p>
+                        <p className="text-indigo-400">✔ Advanced Reports</p>
+                        <p className="text-indigo-400">✔ Premium Support</p>
+                      </>
+                    )}
+
+                  </div>
+
+                  {/* CTA */}
+                  <Link
+                    href="/register"
+                    className={`block text-center py-3 rounded-lg font-semibold transition
+              ${popular
+                        ? "bg-gradient-to-r from-indigo-600 to-purple-600 shadow-lg shadow-indigo-600/30 hover:opacity-90"
+                        : "bg-white/10 hover:bg-white/20"
+                      }`}
+                  >
+                    Start Free Trial
+                  </Link>
+
+                </div>
+              );
+            })}
+
+          </div>
+
+          {/* TRUST NOTE */}
+          <p className="text-center text-gray-500 text-sm mt-16">
+            Secure payments • No hidden fees • Cancel anytime
+          </p>
 
         </div>
       </div>
 
-      {/* FINAL CTA */}
-      <div className="text-center py-20 px-6">
-        <h2 className="text-3xl font-bold mb-4">
-          Ready to Get Started?
-        </h2>
+      {/* TRUST */}
+      <div className="py-24 relative text-center">
 
-        <p className="text-gray-600 mb-6">
-          Start using FlowIntel today and gain better insights into your traffic.
-        </p>
+        {/* BACKGROUND GLOW */}
+        <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/10 via-purple-600/10 to-transparent blur-2xl"></div>
 
-        <Link
-          href="/register"
-          className="bg-indigo-600 text-white px-8 py-4 rounded-xl font-semibold hover:bg-indigo-700"
-        >
-          Create Account
-        </Link>
+        <div className="relative z-10 max-w-6xl mx-auto px-6">
+
+          {/* TRUST SECTION */}
+          <h2 className="text-4xl font-bold mb-4">
+            Trusted by Professionals Worldwide 🌍
+          </h2>
+
+          <p className="text-gray-400 max-w-2xl mx-auto mb-12">
+            Built with performance, security, and scalability at its core — designed for modern traffic management.
+          </p>
+
+          {/* STATS */}
+          <div className="grid md:grid-cols-3 gap-8 mb-20">
+
+            <div className="p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur">
+              <h3 className="text-3xl font-bold text-indigo-400">99.9%</h3>
+              <p className="text-gray-400 text-sm mt-2">Uptime Reliability</p>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur">
+              <h3 className="text-3xl font-bold text-purple-400">50ms</h3>
+              <p className="text-gray-400 text-sm mt-2">Avg Response Time</p>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur">
+              <h3 className="text-3xl font-bold text-indigo-400">Global</h3>
+              <p className="text-gray-400 text-sm mt-2">Traffic Infrastructure</p>
+            </div>
+
+          </div>
+
+          {/* CTA */}
+          <div className="border-t border-white/10 pt-16">
+
+            <h2 className="text-4xl font-bold mb-6">
+              Ready to Optimize Your Traffic? 🚀
+            </h2>
+
+            <p className="text-gray-400 mb-8">
+              Start your journey with powerful analytics and intelligent traffic management tools.
+            </p>
+
+            <Link
+              href="/register"
+              className="bg-gradient-to-r from-indigo-600 to-purple-600 px-10 py-4 rounded-xl font-semibold shadow-lg shadow-indigo-600/30 hover:scale-105 transition"
+            >
+              Get Started Now
+            </Link>
+
+          </div>
+
+        </div>
       </div>
 
     </div>

@@ -56,75 +56,82 @@ export default function RegisterPage() {
 
     } catch (e) {
 
-  let msg = "Registration failed ❌";
+      let msg = "Registration failed ❌";
 
-  if (typeof e?.response?.data === "string") {
-    msg = e.response.data;
-  } else if (e?.response?.data?.detail) {
-    msg = e.response.data.detail;
-  }
+      if (typeof e?.response?.data === "string") {
+        msg = e.response.data;
+      } else if (e?.response?.data?.detail) {
+        msg = e.response.data.detail;
+      }
 
-  msg = msg.toLowerCase();
+      msg = msg.toLowerCase();
 
-  if (msg.includes("already")) {
-    msg = "Email already registered ❌";
-  } else if (msg.includes("invalid")) {
-    msg = "Invalid email ❌";
-  } else if (msg.includes("temporary")) {
-    msg = "Temporary email not allowed 🚫";
-  }
+      if (msg.includes("already")) {
+        msg = "Email already registered ❌";
+      } else if (msg.includes("invalid")) {
+        msg = "Invalid email ❌";
+      } else if (msg.includes("temporary")) {
+        msg = "Temporary email not allowed 🚫";
+      }
 
-  toast.error(msg);
-} finally {
+      toast.error(msg);
+    } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+    <div className="flex min-h-screen items-center justify-center relative overflow-hidden">
 
-      <div className="bg-white p-8 shadow-xl rounded-2xl w-96 border">
+      {/* BACKGROUND GLOW */}
+      <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 via-purple-600/10 to-transparent blur-3xl"></div>
 
+      {/* CARD */}
+      <div className="relative z-10 bg-white/5 backdrop-blur-xl p-8 shadow-2xl rounded-2xl w-full max-w-md border border-white/10">
+
+        {/* TITLE */}
         <h1 className="text-3xl font-bold mb-6 text-center">
-          Create Account
+          Create Account 🚀
         </h1>
 
         {/* NAME */}
         <input
-          className="border p-3 w-full mb-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="bg-black/40 border border-white/10 p-3 w-full mb-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-white placeholder-gray-400"
           placeholder="Full Name"
           value={name}
-          onChange={(e)=>setName(e.target.value)}
+          onChange={(e) => setName(e.target.value)}
         />
 
         {/* EMAIL */}
         <input
-          className="border p-3 w-full mb-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="bg-black/40 border border-white/10 p-3 w-full mb-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-white placeholder-gray-400"
           placeholder="Email"
           value={email}
-          onChange={(e)=>setEmail(e.target.value)}
+          onChange={(e) => setEmail(e.target.value)}
         />
 
         {/* PASSWORD */}
         <input
-          className="border p-3 w-full mb-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="bg-black/40 border border-white/10 p-3 w-full mb-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-white placeholder-gray-400"
           type="password"
           placeholder="Password"
           value={password}
-          onChange={(e)=>setPassword(e.target.value)}
+          onChange={(e) => setPassword(e.target.value)}
         />
 
+        {/* BUTTON */}
         <button
           onClick={register}
           disabled={loading}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white w-full py-3 rounded-lg font-semibold transition"
+          className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-90 text-white w-full py-3 rounded-lg font-semibold transition shadow-lg shadow-indigo-600/30"
         >
           {loading ? "Creating account..." : "Register"}
         </button>
 
-        <p className="text-center text-sm mt-4 text-gray-600">
+        {/* FOOTER */}
+        <p className="text-center text-sm mt-4 text-gray-400">
           Already have an account?
-          <Link href="/login" className="text-indigo-600 ml-1 font-medium">
+          <Link href="/login" className="text-indigo-400 ml-1 font-medium">
             Login
           </Link>
         </p>
