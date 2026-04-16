@@ -49,7 +49,7 @@ def send_email(to_email: str, otp: str):
                 "Content-Type": "application/json",
             },
             json={
-                "from": "Traffic Intelligence <no-reply@mail.trafficintelai.com>",
+                "from": "Traffic Intelligence <no-reply@trafficintelai.com>",
                 "to": to_email,
                 "subject": subject,
                 "html": html,

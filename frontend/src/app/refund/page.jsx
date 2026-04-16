@@ -5,7 +5,7 @@ export const metadata = {
 
 export default function RefundPage() {
     return (
-        <div className="min-h-screen flex justify-center relative overflow-hidden pt-24">
+        <div className="min-h-screen flex justify-center relative overflow-hidden">
 
             {/* BACKGROUND */}
             <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900 to-black"></div>

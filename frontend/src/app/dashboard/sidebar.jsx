@@ -83,10 +83,10 @@ transition-all duration-300 z-50`}>
 
         {!collapsed && (
           <div>
-            <h2 className="text-sm font-semibold tracking-wide text-white">
-              FlowIntel
+            <h2 className="text-base font-semibold tracking-wide text-white">
+              TrafficIntel AI
             </h2>
-            <p className="text-xs text-gray-500">Traffic Intelligence</p>
+            <p className="text-xs text-gray-500">Traffic Intelligence Platform</p>
           </div>
         )}
 

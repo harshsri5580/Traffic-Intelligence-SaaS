@@ -182,14 +182,14 @@ export default function DashboardLayout({ children }) {
       </div>
 
       <div className={`flex flex-1 flex-col transition-all duration-300 ${collapsed ? "ml-20" : "ml-64"}`}>
-
+        {/* 
         <header className="bg-white border-b px-6 py-4 shadow-sm flex justify-between items-center">
           <h1 className="text-lg font-semibold">
             Traffic Intelligence SaaS
           </h1>
 
 
-        </header>
+        </header> */}
 
         <main className="flex-1 overflow-y-auto overflow-x-hidden p-6">
 
