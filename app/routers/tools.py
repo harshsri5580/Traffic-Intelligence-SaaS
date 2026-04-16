@@ -10,7 +10,7 @@ router = APIRouter(prefix="/tools", tags=["Tools"])
 @router.get("/script/{slug}")
 def generate_script(slug: str, request: Request, db: Session = Depends(get_db)):
 
-    # 🔥 detect domain safely
+    #  detect domain safely
     host = (
         request.headers.get("x-forwarded-host")
         or request.headers.get("host")
@@ -20,29 +20,29 @@ def generate_script(slug: str, request: Request, db: Session = Depends(get_db)):
     proto = request.headers.get("x-forwarded-proto", "http")
     domain = f"{proto}://{host}"
 
-    # 🔥 get campaign
+    #  get campaign
     campaign = db.query(Campaign).filter(Campaign.slug == slug).first()
 
-    # 🔥 safe fallback
+    #  safe fallback
     source = "direct"
     if campaign and campaign.traffic_source:
         source = campaign.traffic_source
 
-    # 🔥 final redirect URL
+    #  final redirect URL
     redirect_url = f"{domain}/r/{slug}?utm_source={source}&utm_medium=paid"
 
     encoded = base64.b64encode(redirect_url.encode()).decode()
     encoded = encoded[::-1]  # reverse
 
     # =========================
-    # 🔥 AUTO MODE LOGIC
+    #  AUTO MODE LOGIC
     # =========================
     mode = "hybrid"  # default
 
     try:
         ua = request.headers.get("user-agent", "").lower()
 
-        # 🔥 suspicious → JS
+        #  suspicious → JS
         if "facebook" in ua or "headless" in ua or "bot" in ua or "preview" in ua:
             mode = "hybrid"
 
@@ -53,7 +53,7 @@ def generate_script(slug: str, request: Request, db: Session = Depends(get_db)):
         "mode": mode,
         "hybrid_script": f"""<?php
 // =============================
-// ⚡ REAL HYBRID (FAST + STRONG)
+// REAL HYBRID (FAST + STRONG)
 // =============================
 
 function _r() {{
@@ -69,7 +69,7 @@ if (!empty($query)) {{
     $final .= (strpos($url, "?") !== false ? "&" : "?") . $query;
 }}
 
-// 🔥 BOT FILTER (FAST)
+//  BOT FILTER (FAST)
 $ua = $_SERVER["HTTP_USER_AGENT"] ?? "";
 $is_bot = false;
 
@@ -80,7 +80,7 @@ elseif (preg_match('/bot|crawl|spider|facebook|preview|headless|curl|wget/i', $u
     $is_bot = true;
 }}
 
-// 🔥 SEND SIGNAL (NON-BLOCKING)
+//  SEND SIGNAL (NON-BLOCKING)
 echo "<script>
 try {{
   fetch(window.location.href, {{
@@ -95,42 +95,30 @@ try {{
 }} catch(e){{}}
 </script>";
 
-// 🔥 FINAL REDIRECT (FAST)
+//  FINAL REDIRECT (FAST)
 header("Location: " . ($is_bot ? "https://www.google.com" : $final), true, 302);
 exit;
 ?>""",
-        # =========================
-        # 🔥 PHP SCRIPT
-        # =========================
         "php_script": f"""<?php
-// =============================
-// ⚡ ULTRA FAST REDIRECT ENGINE (FIXED)
-// =============================
+
 
 date_default_timezone_set("UTC");
 ini_set("display_errors", 0);
 
-// -----------------------------
-// CONFIG
-// -----------------------------
+
 function _r() {{
     return base64_decode(strrev("{encoded}"));
 }}
 
 $url = _r();
 
-// -----------------------------
-// REQUEST DATA
-// -----------------------------
 $query = $_SERVER["QUERY_STRING"] ?? "";
 $ua = $_SERVER["HTTP_USER_AGENT"] ?? "";
 $ip = $_SERVER["HTTP_CF_CONNECTING_IP"]
     ?? $_SERVER["HTTP_X_FORWARDED_FOR"]
     ?? $_SERVER["REMOTE_ADDR"] ?? "";
 
-// -----------------------------
-// ⚡ FAST BOT DETECTION (IMPROVED)
-// -----------------------------
+
 $is_bot = false;
 
 // empty UA
@@ -153,48 +141,37 @@ elseif (strpos($ip, "66.") === 0 || strpos($ip, "34.") === 0 || strpos($ip, "35.
     $is_bot = true;
 }}
 
-// -----------------------------
-// ⚡ DUPLICATE CLICK PROTECTION
-// -----------------------------
+
 $hash = md5($ip . $ua);
 
 if (!isset($_COOKIE["_ti"])) {{
     setcookie("_ti", $hash, time()+3600, "/", "", false, true);
 }}
 
-// -----------------------------
-// ⚡ BUILD FINAL URL
-// -----------------------------
+
 $final = $url;
 
 if (!empty($query)) {{
     $final .= (strpos($url, "?") !== false ? "&" : "?") . $query;
 }}
 
-// -----------------------------
-// ⚡ PERFORMANCE HEADERS
-// -----------------------------
+
 header("Cache-Control: no-store, no-cache, must-revalidate");
 header("Pragma: no-cache");
 header("Referrer-Policy: no-referrer");
 header("X-Frame-Options: SAMEORIGIN");
 
-// -----------------------------
-// ⚡ ULTRA FAST REDIRECT
-// -----------------------------
+
 if ($is_bot) {{
     header("Location: https://www.google.com", true, 302);
     exit;
 }}
 
-// 🔥 FAST REDIRECT
+//  FAST REDIRECT
 header("Location: " . $final, true, 302);
 exit;
 
 ?>""",
-        # =========================
-        # 🔥 JS LOADER
-        # =========================
         "js_loader": f"""<script>
 (function() {{
   try {{
@@ -204,17 +181,13 @@ exit;
     var base = atob("{encoded}".split("").reverse().join(""));
     var q = location.search ? location.search.substring(1) : "";
 
-    // -----------------------------
-    // ⚡ BUILD FINAL URL
-    // -----------------------------
+ 
     var finalUrl = base;
     if (q) {{
       finalUrl += (base.indexOf("?") !== -1 ? "&" : "?") + q;
     }}
 
-    // -----------------------------
-    // ⚡ ADVANCED BOT DETECTION
-    // -----------------------------
+   
     var ua = navigator.userAgent.toLowerCase();
 
     var isBotUA = /bot|crawl|spider|preview|facebookexternalhit|headless|phantom|selenium|puppeteer/.test(ua);
@@ -236,9 +209,7 @@ exit;
 
     var isBot = isBotUA || isHeadless || isLowHardware || isSuspiciousScreen;
 
-    // -----------------------------
-    // ⚡ COOKIE / SESSION CHECK
-    // -----------------------------
+  
     function hasCookie(name) {{
       return document.cookie.split(";").some(c => c.trim().startsWith(name + "="));
     }}
@@ -247,9 +218,7 @@ exit;
       document.cookie = "_ti_js=1; path=/";
     }}
 
-    // -----------------------------
-    // ⚡ PERFORMANCE REDIRECT
-    // -----------------------------
+    
     if (isBot || devtools) {{
 
   try {{
@@ -268,9 +237,7 @@ exit;
   return;
 }}
 
-    // -----------------------------
-    // ⚡ DELAY (ANTI BOT TRICK)
-    // -----------------------------
+   
     var delay = isBot ? 10 : 30;
 
     setTimeout(function() {{
@@ -286,9 +253,6 @@ exit;
   }}
         }});
 </script>""",
-        # =========================
-        # 🔥 IFRAME
-        # =========================
         "iframe_cloak": f"""
 <style>
 html, body {{
@@ -308,9 +272,7 @@ html, body {{
 
     var ua = navigator.userAgent.toLowerCase();
 
-    // -----------------------------
-    // ⚡ ADVANCED BOT DETECTION
-    // -----------------------------
+  
     var isBotUA = /bot|crawl|spider|preview|facebookexternalhit|headless|phantom|selenium|puppeteer/.test(ua);
 
     var isHeadless = (
@@ -326,16 +288,11 @@ html, body {{
 
     var isBot = isBotUA || isHeadless || isLowHardware || isWeirdScreen;
 
-    // -----------------------------
-    // 🔥 SAFE URL
-    // -----------------------------
+   
     var finalUrl = atob("{encoded}".split("").reverse().join(""));
-    // 🔥 DEFINE THIS (IMPORTANT)
+  
     var isCloak = finalUrl.includes("/r/");
 
-    // -----------------------------
-    // ⚡ ANTI-DEVTOOLS
-    // -----------------------------
     var devtools = false;
     setInterval(function() {{
       if (window.outerWidth - window.innerWidth > 200 ||
@@ -344,20 +301,13 @@ html, body {{
       }}
     }}, 500);
 
-    // -----------------------------
-    // ⚡ BOT HANDLING
-    // -----------------------------
+   
     if (isBot || devtools) {{
       window.location.replace("https://www.google.com");
       return;
     }}
 
-    // -----------------------------
-    // 🔥 MAIN FIX: FULL PAGE REWRITE
-    // -----------------------------
-    // -----------------------------
-    // 🔥 MAIN LOGIC
-    // -----------------------------
+   
     if (isCloak) {{
       // ✅ OFFER → iframe (NO URL CHANGE)
       document.open();
@@ -381,33 +331,25 @@ html, body {{
 </script>
 """,
         # =========================
-        # 🔥 WORDPRESS
+        #  WORDPRESS
         # =========================
         "wordpress_snippet": f"""add_action('template_redirect', function() {{
 
-    // -----------------------------
-    // ⚡ BASIC SAFETY
-    // -----------------------------
+   
     if (is_admin() || wp_doing_ajax() || wp_doing_cron()) return;
 
     if (strpos($_SERVER['REQUEST_URI'], '/r/') !== false) return;
 
-    // -----------------------------
-    // ⚡ CONFIG
-    // -----------------------------
+   
     $url = '{redirect_url}';
 
-    // -----------------------------
-    // ⚡ REQUEST DATA
-    // -----------------------------
+    
     $ua = $_SERVER['HTTP_USER_AGENT'] ?? '';
     $ip = $_SERVER['HTTP_CF_CONNECTING_IP']
         ?? $_SERVER['HTTP_X_FORWARDED_FOR']
         ?? $_SERVER['REMOTE_ADDR'] ?? '';
 
-    // -----------------------------
-    // ⚡ ADVANCED BOT DETECTION
-    // -----------------------------
+    
     $is_bot = false;
 
     // empty / short UA
@@ -430,35 +372,27 @@ html, body {{
         $is_bot = true;
     }}
 
-    // -----------------------------
-    // ⚡ QUERY STRING PRESERVE
-    // -----------------------------
+   
     if (!empty($_SERVER['QUERY_STRING'])) {{
         $url .= (strpos($url, '?') !== false ? '&' : '?') . $_SERVER['QUERY_STRING'];
     }}
 
-    // -----------------------------
-    // ⚡ COOKIE (SESSION CONTROL)
-    // -----------------------------
+ 
     if (!isset($_COOKIE['_ti_wp'])) {{
         setcookie('_ti_wp', md5($ip.$ua), time()+3600, '/', '', false, true);
     }}
 
-    // -----------------------------
-    // ⚡ PERFORMANCE HEADERS
-    // -----------------------------
+  
     nocache_headers();
     header("Referrer-Policy: no-referrer");
 
-    // -----------------------------
-    // ⚡ REDIRECT LOGIC
-    // -----------------------------
+  
     if ($is_bot) {{
         wp_safe_redirect('https://www.google.com', 302);
         exit;
     }}
 
-    // 🔥 FAST REDIRECT
+    //  FAST REDIRECT
     wp_safe_redirect($url, 302);
     exit;
 
