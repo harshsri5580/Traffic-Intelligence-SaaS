@@ -386,7 +386,7 @@ html, body {{
     nocache_headers();
     header("Referrer-Policy: no-referrer");
 
-  
+  cls
     if ($is_bot) {{
         wp_safe_redirect('https://www.google.com', 302);
         exit;
