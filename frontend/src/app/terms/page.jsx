@@ -21,6 +21,7 @@ export default function TermsOfService() {
                     </p>
 
                     <p className="text-gray-300 mb-8 leading-relaxed">
+                        This website is operated by Traffic Intelligence SaaS. <br /><br />
                         By accessing or using TrafficIntel AI, you agree to comply with these Terms of Service.
                     </p>
 
