@@ -112,6 +112,13 @@ export default function RulesPage() {
 
   }, []);
 
+  useEffect(() => {
+    if (formData.campaign_id) {
+      fetchRules();
+      loadOffers(formData.campaign_id);
+    }
+  }, [formData.campaign_id]);
+
   const loadCampaigns = async () => {
 
     try {
@@ -405,18 +412,24 @@ export default function RulesPage() {
 
   return (
 
-    <div className="p-8">
+    <div className="p-8 min-h-screen 
+bg-gradient-to-br from-gray-50 via-white to-gray-100 space-y-8">
 
       <div className="flex justify-between items-center mb-6">
 
-        <h1 className="text-3xl font-bold">
+        <h1 className="text-3xl font-semibold tracking-tight flex items-center gap-2">
           Rule Engine
         </h1>
 
-        <div className="flex gap-3 items-center">
+        <div className="flex flex-wrap gap-3 items-center 
+bg-white/80 backdrop-blur-xl 
+border border-gray-200/50 
+rounded-2xl p-4 shadow-sm">
 
           <select
-            className="border rounded px-3 py-2"
+            className="px-3 py-2 rounded-lg border border-gray-300 
+bg-white text-sm shadow-sm 
+focus:ring-2 focus:ring-blue-500 outline-none"
             value={formData.campaign_id}
             disabled={editingRuleId !== null}
             onChange={(e) => {
@@ -437,16 +450,13 @@ export default function RulesPage() {
 
           </select>
 
-          <button
-            onClick={fetchRules}
-            className="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded"
-          >
-            Load Rules
-          </button>
+
 
           <button
             onClick={() => { resetForm(); setShowForm(true); }}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+            className="px-4 py-2 rounded-lg text-white text-sm font-medium
+bg-gradient-to-r from-blue-500 to-indigo-600
+hover:shadow-lg hover:scale-[1.03] transition-all duration-200"
           >
             Create Rule
           </button>
@@ -468,14 +478,18 @@ export default function RulesPage() {
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
 
             <input
-              className="border p-2 rounded"
+              className="px-3 py-2 rounded-lg border border-gray-300 
+text-sm shadow-sm 
+focus:ring-2 focus:ring-blue-500 outline-none"
               placeholder="Rule Name"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             />
 
             <select
-              className="border p-2 rounded"
+              className="px-3 py-2 rounded-lg border border-gray-300 
+text-sm shadow-sm 
+focus:ring-2 focus:ring-blue-500 outline-none"
               value={formData.priority}
               onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
             >
@@ -627,7 +641,9 @@ export default function RulesPage() {
             />
 
             <input
-              className="border p-2 rounded"
+              className="px-3 py-2 rounded-lg border border-gray-300 
+text-sm shadow-sm 
+focus:ring-2 focus:ring-blue-500 outline-none"
               placeholder="Referrer"
               value={formData.referrer}
               onChange={(e) => setFormData({ ...formData, referrer: e.target.value })}
@@ -654,7 +670,7 @@ export default function RulesPage() {
                       bot_score: Number(e.target.value)
                     })
                   }
-                  className="w-full accent-blue-600"
+                  className="w-full accent-indigo-600 cursor-pointer"
                 />
 
                 <span className="text-xs text-gray-500">100</span>
@@ -668,21 +684,27 @@ export default function RulesPage() {
             </div>
 
             <input
-              className="border p-2 rounded"
+              className="px-3 py-2 rounded-lg border border-gray-300 
+text-sm shadow-sm 
+focus:ring-2 focus:ring-blue-500 outline-none"
               placeholder="Timezone"
               value={formData.timezone}
               onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
             />
 
             <input
-              className="border p-2 rounded"
+              className="px-3 py-2 rounded-lg border border-gray-300 
+text-sm shadow-sm 
+focus:ring-2 focus:ring-blue-500 outline-none"
               placeholder="Language"
               value={formData.language}
               onChange={(e) => setFormData({ ...formData, language: e.target.value })}
             />
 
             <select
-              className="border p-2 rounded"
+              className="px-3 py-2 rounded-lg border border-gray-300 
+text-sm shadow-sm 
+focus:ring-2 focus:ring-blue-500 outline-none"
               value={formData.action}
               onChange={(e) => setFormData({ ...formData, action: e.target.value })}
             >
@@ -691,7 +713,9 @@ export default function RulesPage() {
             </select>
 
             <select
-              className="border p-2 rounded"
+              className="px-3 py-2 rounded-lg border border-gray-300 
+text-sm shadow-sm 
+focus:ring-2 focus:ring-blue-500 outline-none"
               value={formData.match_type}
               onChange={(e) => setFormData({ ...formData, match_type: e.target.value })}
             >
@@ -725,7 +749,9 @@ export default function RulesPage() {
 
             <button
               onClick={saveRule}
-              className="bg-green-600 text-white px-4 py-2 rounded"
+              className="px-4 py-2 rounded-lg text-white text-sm font-medium
+bg-gradient-to-r from-green-500 to-emerald-600
+hover:shadow-lg hover:scale-[1.03] transition-all duration-200"
             >
               {editingRuleId ? "Update Rule" : "Save Rule"}
             </button>
@@ -753,7 +779,7 @@ export default function RulesPage() {
 
             <thead className="bg-gray-100 text-xs uppercase tracking-wide text-gray-600">
 
-              <tr className="text-center hover:bg-gray-50">
+              <tr className="text-center hover:bg-gray-100/70 transition-all duration-200">
                 {/* <th className="p-3 border">ID</th> */}
                 <th className="p-3 border">Name</th>
                 <th className="p-3 border">Priority</th>
@@ -784,7 +810,7 @@ export default function RulesPage() {
                 </tr>
               ) : (rules.map(rule => (
 
-                <tr key={rule.id} className="text-center hover:bg-gray-50 transition">
+                <tr key={rule.id} className="text-center hover:bg-gray-100/70 transition-all duration-200 transition">
 
                   {/* <td className="p-3 border">{rule.id}</td> */}
                   <td className="p-3 border">{rule.name}</td>
@@ -812,7 +838,7 @@ export default function RulesPage() {
 
                     <button
                       onClick={() => toggleRule(rule)}
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${rule.is_active
+                      className={`px-3 py-1 rounded-full text-xs font-medium shadow-sm tracking-wide font-medium ${rule.is_active
                         ? "bg-green-100 text-green-700 hover:bg-green-200"
                         : "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
                         }`}

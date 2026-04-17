@@ -19,7 +19,7 @@ export default function OffersPage() {
   async fetch(request) {
 
     const url = new URL(request.url)
-    const backend = "https://traffic-intelligence-saas.onrender.com"
+    const backend = "https://api.trafficintelai.com"
 
     // =========================
     // 🔥 ONLY /r ROUTE → BACKEND
@@ -121,6 +121,13 @@ export default function OffersPage() {
     fetchData();
 
   }, []);
+
+
+  useEffect(() => {
+    if (selectedCampaign) {
+      loadOffers();
+    }
+  }, [selectedCampaign]);
 
   const fetchData = async () => {
 
@@ -312,18 +319,24 @@ export default function OffersPage() {
 
   return (
 
-    <div className="p-8">
+    <div className="p-8 min-h-screen 
+bg-gradient-to-br from-gray-50 via-white to-gray-100 space-y-8">
 
       <div className="flex justify-between items-center mb-6">
 
-        <h1 className="text-3xl font-bold">
+        <h1 className="text-3xl font-semibold tracking-tight flex items-center gap-2">
           Offer Manager
         </h1>
 
-        <div className="flex gap-3 items-center">
+        <div className="flex flex-wrap gap-3 items-center 
+bg-white/80 backdrop-blur-xl 
+border border-gray-200/50 
+rounded-2xl p-4 shadow-sm">
 
           <select
-            className="border rounded px-3 py-2"
+            className="px-3 py-2 rounded-lg border border-gray-300 
+bg-white text-sm shadow-sm 
+focus:ring-2 focus:ring-blue-500 outline-none"
             value={selectedCampaign}
             onChange={(e) => setSelectedCampaign(e.target.value)}
           >
@@ -335,16 +348,18 @@ export default function OffersPage() {
             ))}
           </select>
 
-          <button
+          {/* <button
             onClick={loadOffers}
             className="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded"
           >
             Load Offers
-          </button>
+          </button> */}
 
           <button
             onClick={() => setShowForm(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+            className="px-4 py-2 rounded-lg text-white text-sm font-medium
+bg-gradient-to-r from-blue-500 to-indigo-600
+hover:shadow-lg hover:scale-[1.03] transition-all duration-200"
           >
             Create Offer
           </button>
@@ -364,7 +379,9 @@ export default function OffersPage() {
           <div className="grid md:grid-cols-5 gap-3">
 
             <select
-              className="border p-2 rounded"
+              className="px-3 py-2 rounded-lg border border-gray-300 
+text-sm shadow-sm 
+focus:ring-2 focus:ring-blue-500 outline-none"
               value={formData.campaign_id}
               onChange={(e) =>
                 setFormData({ ...formData, campaign_id: e.target.value })
@@ -383,7 +400,9 @@ export default function OffersPage() {
 
             <input
               placeholder="Offer Name *"
-              className="border p-2 rounded"
+              className="px-3 py-2 rounded-lg border border-gray-300 
+text-sm shadow-sm 
+focus:ring-2 focus:ring-blue-500 outline-none"
               value={formData.name}
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
@@ -392,7 +411,9 @@ export default function OffersPage() {
 
             <input
               placeholder="Offer URL"
-              className="border p-2 rounded"
+              className="px-3 py-2 rounded-lg border border-gray-300 
+text-sm shadow-sm 
+focus:ring-2 focus:ring-blue-500 outline-none"
               value={formData.url}
               onChange={(e) =>
                 setFormData({ ...formData, url: e.target.value })
@@ -403,7 +424,9 @@ export default function OffersPage() {
               type="number"
               min="1"
               max="100"
-              className="border p-2 rounded"
+              className="px-3 py-2 rounded-lg border border-gray-300 
+text-sm shadow-sm 
+focus:ring-2 focus:ring-blue-500 outline-none"
               value={formData.weight}
               onChange={(e) => {
                 let value = Number(e.target.value);
@@ -416,7 +439,9 @@ export default function OffersPage() {
             />
 
             <select
-              className="border p-2 rounded"
+              className="px-3 py-2 rounded-lg border border-gray-300 
+text-sm shadow-sm 
+focus:ring-2 focus:ring-blue-500 outline-none"
               value={formData.redirect_mode}
               onChange={(e) =>
                 setFormData({ ...formData, redirect_mode: e.target.value })
@@ -449,7 +474,9 @@ export default function OffersPage() {
             <button
               onClick={saveOffer}
               disabled={creating}
-              className="bg-green-600 text-white px-4 py-2 rounded"
+              className="px-4 py-2 rounded-lg text-white text-sm font-medium
+bg-gradient-to-r from-green-500 to-emerald-600
+hover:shadow-lg hover:scale-[1.03] transition-all duration-200"
             >
               {creating ? "Saving..." : "Save"}
             </button>
@@ -471,7 +498,7 @@ export default function OffersPage() {
 
         <table className="w-full">
 
-          <thead className="bg-gray-100">
+          <thead className="bg-gray-100/70 backdrop-blur">
 
             <tr>
 
@@ -491,7 +518,7 @@ export default function OffersPage() {
 
             {offers.map(offer => (
 
-              <tr key={offer.id} className="text-center hover:bg-gray-50 transition">
+              <tr key={offer.id} className="text-center hover:bg-gray-100/70 transition-all duration-200 transition">
 
                 {/* <td className="p-3 border">
                   {offer.id}
@@ -517,8 +544,8 @@ export default function OffersPage() {
 
                   <button
                     onClick={() => toggleOffer(offer.id)}
-                    className={`px-3 py-1 text-sm rounded-full ${offer.is_active
-                      ? "bg-green-100 text-green-700 hover:bg-green-200"
+                    className={`px-3 py-1 text-xs rounded-full font-medium shadow-sm tracking-wide ${offer.is_active
+                      ? "bg-green-100 text-green-600 hover:bg-green-200"
                       : "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
                       }`}
                   >
@@ -533,7 +560,8 @@ export default function OffersPage() {
 
                     <button
                       onClick={() => editOffer(offer)}
-                      className="px-3 py-1 text-sm rounded bg-blue-100 text-blue-700 hover:bg-blue-200"
+                      className="px-3 py-1 text-xs rounded-lg 
+bg-blue-100 text-blue-600 hover:bg-blue-200 transition"
                     >
                       Edit
                     </button>
@@ -561,7 +589,9 @@ export default function OffersPage() {
         {showProxyModal && (
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
 
-            <div className="bg-white w-[800px] max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl p-6">
+            <div className="bg-white/90 backdrop-blur-xl 
+w-[820px] max-h-[90vh] overflow-y-auto 
+rounded-3xl shadow-[0_20px_80px_rgba(0,0,0,0.25)] p-6">
 
               {/* HEADER */}
               <div className="flex justify-between items-center mb-4">

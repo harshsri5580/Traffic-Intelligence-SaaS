@@ -294,7 +294,7 @@ export default function Campaigns() {
 
       {/* CREATE CAMPAIGN */}
 
-      <div className="bg-white shadow p-6 rounded mb-10">
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-10 hover:shadow-md transition">
 
         <h2 className="font-semibold mb-4">
           Create Campaign
@@ -305,39 +305,51 @@ export default function Campaigns() {
         <div className="grid grid-cols-3 gap-3">
 
           <input
-            className="border p-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2.5 rounded-lg border border-gray-300 
+text-sm shadow-sm bg-white
+focus:ring-2 focus:ring-indigo-500 outline-none"
             placeholder="Campaign Name"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
           />
 
           <input
-            className="border p-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2.5 rounded-lg border border-gray-300 
+text-sm shadow-sm bg-white
+focus:ring-2 focus:ring-indigo-500 outline-none"
             placeholder="Fallback URL"
             value={form.fallback_url}
             onChange={(e) => setForm({ ...form, fallback_url: e.target.value })}
           />
 
           <input
-            className="border p-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2.5 rounded-lg border border-gray-300 
+text-sm shadow-sm bg-white
+focus:ring-2 focus:ring-indigo-500 outline-none"
             placeholder="Safe Page URL"
             value={form.safe_page_url}
             onChange={(e) => setForm({ ...form, safe_page_url: e.target.value })}
           />
           <input
-            className="border p-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2.5 rounded-lg border border-gray-300 
+text-sm shadow-sm bg-white
+focus:ring-2 focus:ring-indigo-500 outline-none"
             placeholder="Tracking Domain (https://yourdomain.com)"
             value={form.tracking_domain}
             onChange={(e) => setForm({ ...form, tracking_domain: e.target.value })}
           />
           <input
-            className="border p-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2.5 rounded-lg border border-gray-300 
+text-sm shadow-sm bg-white
+focus:ring-2 focus:ring-indigo-500 outline-none"
             placeholder="Bot URL"
             value={form.bot_url}
             onChange={(e) => setForm({ ...form, bot_url: e.target.value })}
           />
 
           <select
+            className="px-3 py-2.5 rounded-lg border border-gray-300 text-sm shadow-sm 
+focus:ring-2 focus:ring-indigo-500 outline-none"
             value={form.traffic_source || "direct"}  // ✅ ensure
             onChange={(e) => setForm({ ...form, traffic_source: e.target.value })}
           >
@@ -368,11 +380,14 @@ export default function Campaigns() {
             <div>
               <label className="text-sm">Enable Auto Optimize</label>
               <div className="mt-1">
-                <input
-                  type="checkbox"
-                  checked={autoOptimize}
-                  onChange={(e) => setAutoOptimize(e.target.checked)}
-                />
+                <button
+                  onClick={() => setAutoOptimize(!autoOptimize)}
+                  className={`relative w-12 h-6 flex items-center rounded-full p-1 transition
+${autoOptimize ? "bg-green-500" : "bg-gray-300"}`}
+                >
+                  <div className={`bg-white w-4 h-4 rounded-full shadow transform transition
+  ${autoOptimize ? "translate-x-6" : ""}`} />
+                </button>
               </div>
             </div>
 
@@ -444,7 +459,9 @@ export default function Campaigns() {
         <button
           onClick={createCampaign}
           disabled={creating}
-          className="mt-4 bg-blue-600 hover:bg-blue-700 transition text-white px-5 py-2 rounded-lg shadow"
+          className="mt-5 px-6 py-2.5 rounded-lg text-white text-sm font-medium
+bg-gradient-to-r from-indigo-500 to-blue-600
+hover:shadow-lg hover:scale-[1.03] transition-all duration-200"
         >
           {creating ? "Creating..." : "Create Campaign"}
         </button>
@@ -453,11 +470,11 @@ export default function Campaigns() {
 
       {/* CAMPAIGN TABLE */}
 
-      <div className="bg-white shadow rounded overflow-x-auto">
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-x-auto">
 
         <table className="w-full text-sm">
 
-          <thead className="bg-gray-100">
+          <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
 
             <tr>
 
@@ -475,7 +492,7 @@ export default function Campaigns() {
 
           </thead>
 
-          <tbody>
+          <tbody className="divide-y">
 
             {campaigns.map(c => (
 
@@ -483,11 +500,11 @@ export default function Campaigns() {
 
                 <td className="p-3 border">
 
-                  <div className="font-semibold">
+                  <div className="font-semibold text-gray-800 truncate max-w-[180px]">
                     {c.name}
                   </div>
 
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-gray-400 truncate">
                     {c.slug}
                   </div>
 
@@ -497,10 +514,11 @@ export default function Campaigns() {
 
                   <button
                     onClick={() => toggleCampaign(c.id)}
-                    className={`px-3 py-1 rounded-full text-xs font-medium transition ${c.is_active
-                      ? "bg-green-100 text-green-700 hover:bg-green-200"
-                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                      }`}
+                    className={`w-[90px] h-[30px] flex items-center justify-center
+rounded-full text-xs font-medium transition
+${c.is_active
+                        ? "bg-green-100 text-green-700"
+                        : "bg-gray-200 text-gray-700"}`}
                   >
                     {c.is_active ? "Active" : "Paused"}
                   </button>
@@ -510,12 +528,12 @@ export default function Campaigns() {
 
                 <td className="p-3 border">
 
-                  <span className={`px-2 py-1 rounded text-xs font-semibold
-${c.traffic_source === "facebook" ? "bg-blue-100 text-blue-700" :
-                      c.traffic_source === "google" ? "bg-green-100 text-green-700" :
-                        c.traffic_source === "push" ? "bg-purple-100 text-purple-700" :
-                          c.traffic_source === "adult" ? "bg-red-100 text-red-700" :
-                            "bg-gray-100 text-gray-700"}`}>
+                  <span className={`px-2 py-1 rounded-md text-xs font-medium capitalize
+${c.traffic_source === "facebook" ? "bg-blue-50 text-blue-600" :
+                      c.traffic_source === "google" ? "bg-green-50 text-green-600" :
+                        c.traffic_source === "push" ? "bg-purple-50 text-purple-600" :
+                          c.traffic_source === "adult" ? "bg-red-50 text-red-600" :
+                            "bg-gray-100 text-gray-600"}`}>
 
                     {c.traffic_source || "Direct"}
 
@@ -632,7 +650,7 @@ ${c.traffic_source === "facebook" ? "bg-blue-100 text-blue-700" :
         {showDeleteModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
 
-            <div className="bg-white rounded-xl p-6 w-96 shadow-xl">
+            <div className="bg-white rounded-2xl p-6 w-[380px] shadow-2xl border border-gray-200">
 
               <h2 className="text-lg font-semibold mb-2">
                 Delete Campaign

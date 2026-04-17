@@ -95,15 +95,38 @@ export default function SettingsPage() {
   // ================= API KEY =================
 
   const generateAPIKey = async () => {
-    if (!confirm("Generate new API key?")) return;
 
-    try {
-      const res = await api.post("/user/api-key");
-      setProfile({ ...profile, api_key: res.data.api_key });
-      toast.success("New API key generated");
-    } catch (err) {
-      toast.error("Failed to generate key");
-    }
+    toast((t) => (
+      <div className="flex flex-col gap-3">
+        <span className="font-medium">Generate new API key?</span>
+
+        <div className="flex gap-2">
+          <button
+            onClick={async () => {
+              toast.dismiss(t.id);
+
+              try {
+                const res = await api.post("/user/api-key");
+                setProfile({ ...profile, api_key: res.data.api_key });
+                toast.success("New API key generated 🚀");
+              } catch {
+                toast.error("Failed to generate key");
+              }
+            }}
+            className="px-3 py-1 bg-green-600 text-white rounded"
+          >
+            Yes
+          </button>
+
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="px-3 py-1 bg-gray-300 rounded"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    ));
   };
 
   const copyKey = () => {
@@ -140,15 +163,39 @@ export default function SettingsPage() {
   };
 
   const deleteSource = async (id) => {
-    if (!confirm("Delete source?")) return;
 
-    try {
-      await api.delete(`/sources/${id}`);
-      loadSources();
-      toast.success("Deleted");
-    } catch (err) {
-      toast.error("Delete failed");
-    }
+    toast((t) => (
+      <div className="flex flex-col gap-3">
+        <span className="font-medium">Delete this source?</span>
+
+        <div className="flex gap-2">
+          <button
+            onClick={async () => {
+              toast.dismiss(t.id);
+
+              try {
+                await api.delete(`/sources/${id}`);
+                loadSources();
+                toast.success("Deleted 🗑️");
+              } catch {
+                toast.error("Delete failed");
+              }
+            }}
+            className="px-3 py-1 bg-red-600 text-white rounded"
+          >
+            Delete
+          </button>
+
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="px-3 py-1 bg-gray-300 rounded"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    ));
+
   };
 
   // ================= UI =================

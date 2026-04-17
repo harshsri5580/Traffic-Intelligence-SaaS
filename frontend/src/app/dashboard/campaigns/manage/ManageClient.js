@@ -226,28 +226,29 @@ return(
 Manage Campaign
 </h1>
 
-<div className="bg-white border shadow-sm rounded-lg p-6 flex justify-between items-center">
+<div className="bg-gradient-to-r from-indigo-500 to-blue-600 
+text-white rounded-2xl p-6 shadow-lg flex justify-between items-center">
 
-<div>
-<div className="text-3xl font-bold mt-1">
-{campaign?.name}
-</div>
+  <div>
+    <div className="text-2xl font-semibold">
+      {campaign?.name}
+    </div>
 
-<div className="text-gray-500 text-sm mt-1">
-Slug: {campaign?.slug}
-</div>
-</div>
+    <div className="text-white/80 text-sm mt-1">
+      Slug: {campaign?.slug}
+    </div>
+  </div>
 
-<button
-onClick={toggleCampaign}
-className={`px-4 py-2 rounded-md text-sm font-medium transition ${
-campaign?.is_active
-? "bg-green-500 hover:bg-green-600 text-white"
-: "bg-gray-500 hover:bg-gray-600 text-white"
-}`}
->
-{campaign?.is_active ? "Active" : "Paused"}
-</button>
+  <button
+    onClick={toggleCampaign}
+    className={`px-5 py-2 rounded-full text-sm font-medium shadow
+    ${campaign?.is_active
+      ? "bg-green-400 text-black"
+      : "bg-gray-800 text-white"}
+    transition`}
+  >
+    {campaign?.is_active ? "Active" : "Paused"}
+  </button>
 
 </div>
 
@@ -264,191 +265,224 @@ campaign?.is_active
 
 {/* OFFERS SECTION */}
 
-<div className="bg-white border shadow-sm rounded-lg p-6 hover:shadow-md transition">
+<div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 hover:shadow-md transition">
 
-<div className="flex justify-between items-center mb-4">
+  {/* HEADER */}
+  <div className="flex justify-between items-center mb-5">
+    <h2 className="text-lg font-semibold text-gray-800">
+      Offers
+    </h2>
+  </div>
 
-<h2 className="text-lg font-semibold text-gray-700">
-Offers
-</h2>
+  {/* TABLE */}
+  <div className="overflow-x-auto">
 
+    <table className="w-full text-sm">
 
+      {/* HEAD */}
+      <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
+        <tr>
+          <th className="px-4 py-3 text-left">URL</th>
+          <th className="px-4 py-3 text-center">Weight</th>
+          <th className="px-4 py-3 text-center">Mode</th>
+          <th className="px-4 py-3 text-center">Status</th>
+          <th className="px-4 py-3 text-center">Actions</th>
+        </tr>
+      </thead>
 
-</div>
+      {/* BODY */}
+      <tbody className="divide-y">
 
-<div className="overflow-x-auto">
+        {offers.length === 0 ? (
+          <tr>
+            <td colSpan="5" className="py-6 text-center text-gray-400">
+              No offers yet
+            </td>
+          </tr>
+        ) : (
+          offers.map(o => (
 
-<table className="w-full text-sm">
+            <tr key={o.id} className="hover:bg-gray-50 transition-all duration-200">
 
-<thead className="bg-gray-50 text-gray-600 text-xs uppercase tracking-wide">
+              {/* URL */}
+              <td className="px-4 py-3 max-w-[220px]">
+                <div className="truncate font-medium text-gray-700">
+                  {o.url}
+                </div>
+              </td>
 
-<tr>
-{/* <th className="p-3 border">ID</th> */}
-<th className="p-3 border text-left max-w-[50px] truncate">URL</th>
-<th className="p-3 border">Weight</th>
-<th className="p-3 border">Mode</th>
-<th className="p-3 border">Status</th>
-<th className="p-3 border">Actions</th>
-</tr>
+              {/* WEIGHT */}
+              <td className="px-4 py-3 text-center">
+                <span className="px-2 py-1 text-xs rounded-md bg-gray-100">
+                  {o.weight}%
+                </span>
+              </td>
 
-</thead>
+              {/* MODE */}
+              <td className="px-4 py-3 text-center">
+                <span className="text-xs px-2 py-1 rounded-md bg-blue-50 text-blue-600 capitalize">
+                  {o.redirect_mode || "-"}
+                </span>
+              </td>
 
-<tbody>
+              {/* STATUS */}
+              <td className="px-4 py-3 text-center">
+                <button
+                  onClick={() => toggleOffer(o.id, o.is_active)}
+                  className={`w-[90px] h-[30px] flex items-center justify-center
+                  rounded-full text-xs font-medium transition-all duration-200
+                  ${o.is_active
+                    ? "bg-green-100 text-green-700 hover:bg-green-200"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
+                >
+                  {o.is_active ? "Active" : "Paused"}
+                </button>
+              </td>
 
-{offers.length === 0 ? (
-<tr>
-<td colSpan="6" className="p-4 text-center text-gray-500">
-No offers yet
-</td>
-</tr>
-) : (
-offers.map(o=>(
+              {/* ACTIONS */}
+              <td className="px-4 py-3">
 
-<tr key={o.id} className="text-center hover:bg-gray-50 transition">
+                <div className="flex justify-center gap-2">
 
-{/* <td className="p-3 border">{o.id}</td> */}
+                  <button
+                    onClick={() => !o.is_active && deleteOffer(o.id)}
+                    disabled={o.is_active}
+                    title={o.is_active ? "Deactivate first" : "Delete offer"}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition
+                    ${o.is_active
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : "bg-red-50 text-red-600 hover:bg-red-100"}`}
+                  >
+                    Delete
+                  </button>
 
-<td className="p-3 border text-left max-w-[130px] truncate">
-{o.url}
-</td>
+                </div>
 
-<td className="p-3 border">
-{o.weight}
-</td>
+              </td>
 
-<td className="p-3 border">
-{o.redirect_mode || "-"}
-</td>
+            </tr>
 
-<td className="p-3 border">
-<button
-onClick={()=>toggleOffer(o.id,o.is_active)}
-className={`px-3 py-1 rounded-full text-xs font-medium transition ${
-o.is_active
-? "bg-green-100 text-green-700 hover:bg-green-200"
-: "bg-gray-200 text-gray-700 hover:bg-gray-300"
-}`}
->
-{o.is_active ? "Active" : "Paused"}
-</button>
-</td>
+          ))
+        )}
 
-<td className="p-3 border flex justify-center gap-2 flex-wrap">
+      </tbody>
 
-<button
-onClick={()=>!o.is_active && deleteOffer(o.id)}
-disabled={o.is_active}
-title={o.is_active ? "Deactivate offer first" : "Delete offer"}
-className={`px-3 py-1 rounded-full text-xs font-medium transition
-${o.is_active
-? "bg-gray-200 text-gray-400 cursor-not-allowed"
-: "bg-red-100 text-red-700 hover:bg-red-200"}
-`}
->
-Delete
-</button>
-</td>
+    </table>
 
-</tr>
-
-))
-)}
-
-</tbody>
-
-</table>
-
-</div>
+  </div>
 
 </div>
 
 {/* RULES SECTION */}
 
-<div className="bg-white border shadow-sm rounded-lg p-6 hover:shadow-md transition">
+<div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 hover:shadow-md transition">
 
-<div className="flex justify-between items-center mb-4">
+  {/* HEADER */}
+  <div className="flex justify-between items-center mb-5">
+    <h2 className="text-lg font-semibold text-gray-800">
+      Rules
+    </h2>
+  </div>
 
-<h2 className="text-lg font-semibold text-gray-700">
-Rules
-</h2>
+  {/* TABLE */}
+  <div className="overflow-x-auto">
 
+    <table className="w-full text-sm">
 
-</div>
+      {/* HEAD */}
+      <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
+        <tr>
+          <th className="px-4 py-3 text-left">Name</th>
+          <th className="px-4 py-3 text-center">Country</th>
+          <th className="px-4 py-3 text-center">Action</th>
+          <th className="px-4 py-3 text-center">Status</th>
+          <th className="px-4 py-3 text-center">Actions</th>
+        </tr>
+      </thead>
 
-<div className="overflow-x-auto">
+      {/* BODY */}
+      <tbody className="divide-y">
 
-<table className="w-full text-sm">
+        {rules.length === 0 ? (
+          <tr>
+            <td colSpan="5" className="py-6 text-center text-gray-400">
+              No rules yet
+            </td>
+          </tr>
+        ) : (
+          rules.map(r => (
 
-<thead className="bg-gray-50 text-gray-600 text-xs uppercase tracking-wide">
+            <tr key={r.id} className="hover:bg-gray-50 transition-all duration-200">
 
-<tr>
-{/* <th className="p-3 border">ID</th> */}
-<th className="p-3 border">Name</th>
-<th className="p-3 border">Country</th>
-<th className="p-3 border">Action</th>
-<th className="p-3 border">Status</th>
-<th className="p-3 border">Actions</th>
-</tr>
+              {/* NAME */}
+              <td className="px-4 py-3 text-left max-w-[180px]">
+                <div className="truncate font-medium text-gray-700">
+                  {r.name}
+                </div>
+              </td>
 
-</thead>
+              {/* COUNTRY */}
+              <td className="px-4 py-3 text-center">
+                <span className="px-2 py-1 text-xs rounded-md bg-gray-100">
+                  {r.conditions?.find(c => c.field === "country")?.value || "-"}
+                </span>
+              </td>
 
-<tbody>
+              {/* ACTION */}
+              <td className="px-4 py-3 text-center">
+                <span className={`text-xs px-2 py-1 rounded-md capitalize
+                  ${r.action_type === "block"
+                    ? "bg-red-50 text-red-600"
+                    : "bg-blue-50 text-blue-600"}`}
+                >
+                  {r.action_type}
+                </span>
+              </td>
 
-{rules.length === 0 ? (
-<tr>
-<td colSpan="5" className="p-4 text-center text-gray-500">
-No rules yet
-</td>
-</tr>
-) : (
-rules.map(r=>(
+              {/* STATUS */}
+              <td className="px-4 py-3 text-center">
+                <button
+                  onClick={() => toggleRule(r.id, r.is_active)}
+                  className={`w-[90px] h-[30px] flex items-center justify-center
+                  rounded-full text-xs font-medium transition-all duration-200
+                  ${r.is_active
+                    ? "bg-green-100 text-green-700 hover:bg-green-200"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
+                >
+                  {r.is_active ? "Active" : "Paused"}
+                </button>
+              </td>
 
-<tr key={r.id} className="text-center">
+              {/* ACTIONS */}
+              <td className="px-4 py-3">
 
-{/* <td className="p-3 border">{r.id}</td> */}
+                <div className="flex justify-center gap-2">
 
-<td className="p-3 border">{r.name}</td>
-<td className="p-3 border">
-{r.conditions?.find(c=>c.field==="country")?.value || "-"}
-</td>
-<td className="p-3 border">{r.action_type}</td>
+                  <button
+                    onClick={() => !r.is_active && deleteRule(r.id)}
+                    disabled={r.is_active}
+                    title={r.is_active ? "Deactivate first" : "Delete rule"}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition
+                    ${r.is_active
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : "bg-red-50 text-red-600 hover:bg-red-100"}`}
+                  >
+                    Delete
+                  </button>
 
-<td className="p-3 border">
-<button
-onClick={()=>toggleRule(r.id,r.is_active)}
-className={`px-3 py-1 rounded-full text-xs font-medium transition ${
-r.is_active ? "bg-green-100 text-green-700 hover:bg-green-200" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-}`}
->
-{r.is_active ? "Active" : "Paused"}
-</button>
-</td>
+                </div>
 
-<td className="p-3 border flex justify-center gap-2 flex-wrap">
+              </td>
 
-<button
-onClick={()=>!r.is_active && deleteRule(r.id)}
-disabled={r.is_active}
-title={r.is_active ? "Deactivate rule first" : "Delete rule"}
-className={`px-3 py-1 rounded-full text-xs font-medium transition
-${r.is_active
-? "bg-gray-200 text-gray-400 cursor-not-allowed"
-: "bg-red-100 text-red-700 hover:bg-red-200"}
-`}
->
-Delete
-</button>
+            </tr>
 
-</td>
+          ))
+        )}
 
-</tr>
+      </tbody>
 
-))
-)}
+    </table>
 
-</tbody>
-
-</table>
 
 <div className="bg-white shadow rounded p-6 mt-8">
 
@@ -456,61 +490,44 @@ Delete
 Traffic Protection
 </h2>
 
-<div className="grid grid-cols-2 gap-3">
+<div className="grid sm:grid-cols-2 gap-4">
 
-<label className="flex items-center gap-2">
-<input
-type="checkbox"
-checked={protection.block_vpn}
-onChange={()=>toggleProtection("block_vpn")}
-/>
-VPN Detection
-</label>
+  {[
+    { key: "block_vpn", label: "VPN Detection" },
+    { key: "block_proxy", label: "Proxy Detection" },
+    { key: "block_tor", label: "Tor Network Block" },
+    { key: "block_datacenter", label: "Datacenter ASN Block" },
+    { key: "block_automation", label: "Headless Browser Detection" },
+    { key: "block_canvas", label: "Canvas Fingerprint Detection" },
+  ].map((item) => (
 
-<label className="flex items-center gap-2">
-<input
-type="checkbox"
-checked={protection.block_proxy}
-onChange={()=>toggleProtection("block_proxy")}
-/>
-Proxy Detection
-</label>
+    <div
+      key={item.key}
+      className="flex items-center justify-between 
+      bg-white border border-gray-200 rounded-xl px-4 py-3
+      hover:shadow-sm transition"
+    >
 
-<label className="flex items-center gap-2">
-<input
-type="checkbox"
-checked={protection.block_tor}
-onChange={()=>toggleProtection("block_tor")}
-/>
-Tor Network Block
-</label>
+      {/* LABEL */}
+      <span className="text-sm font-medium text-gray-700">
+        {item.label}
+      </span>
 
-<label className="flex items-center gap-2">
-<input
-type="checkbox"
-checked={protection.block_datacenter}
-onChange={()=>toggleProtection("block_datacenter")}
-/>
-Datacenter ASN Block
-</label>
+      {/* SWITCH */}
+      <button
+        onClick={() => toggleProtection(item.key)}
+        className={`relative w-12 h-6 flex items-center rounded-full p-1 transition-all duration-300
+        ${protection[item.key] ? "bg-green-500" : "bg-gray-300"}`}
+      >
+        <div
+          className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-all duration-300
+          ${protection[item.key] ? "translate-x-6" : "translate-x-0"}`}
+        />
+      </button>
 
-<label className="flex items-center gap-2">
-<input
-type="checkbox"
-checked={protection.block_automation}
-onChange={()=>toggleProtection("block_automation")}
-/>
-Headless Browser Detection
-</label>
+    </div>
 
-<label className="flex items-center gap-2">
-<input
-type="checkbox"
-checked={protection.block_canvas}
-onChange={()=>toggleProtection("block_canvas")}
-/>
-Canvas Fingerprint Detection
-</label>
+  ))}
 
 </div>
 
@@ -529,16 +546,16 @@ Canvas Fingerprint Detection
 function StatCard({title,value}){
 
 return(
+<div className="bg-white/70 backdrop-blur-xl 
+border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition">
 
-<div className="bg-white shadow rounded p-6">
+  <div className="text-gray-500 text-xs uppercase tracking-wide">
+    {title}
+  </div>
 
-<div className="text-gray-500 text-sm">
-{title}
-</div>
-
-<div className="text-3xl font-bold mt-1">
-{value || 0}
-</div>
+  <div className="text-2xl font-semibold mt-2">
+    {value || 0}
+  </div>
 
 </div>
 

@@ -379,13 +379,14 @@ export default function Dashboard() {
 
   return (
 
-    <div className="p-8 space-y-10 bg-gray-50 min-h-screen">
+    <div className="p-8 space-y-10 min-h-screen 
+bg-gradient-to-br from-gray-50 via-white to-gray-100">
 
-      <h1 className="text-3xl font-bold flex items-center gap-3">
+      <h1 className="text-3xl font-semibold flex items-center gap-3 tracking-tight">
 
         Dashboard
 
-        <span className="flex items-center gap-1 text-sm text-green-600">
+        <span className="flex items-center gap-2 text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
 
           <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
 
@@ -434,9 +435,12 @@ export default function Dashboard() {
 
       </div>
 
-      <div className="bg-white shadow rounded p-6">
+      <div className="bg-white/80 backdrop-blur-xl 
+rounded-2xl p-6 
+border border-gray-200/50 
+shadow-[0_8px_30px_rgba(0,0,0,0.06)]">
 
-        <h2 className="text-xl font-semibold mb-4">
+        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
           Usage
         </h2>
 
@@ -459,7 +463,7 @@ export default function Dashboard() {
             <div
               className={`h-3 rounded ${stats.active_campaigns >= plan?.plan?.max_campaigns
                 ? "bg-red-500"
-                : "bg-blue-500"
+                : "bg-gradient-to-r from-blue-500 to-indigo-500"
                 }`}
               style={{
                 width: `${plan?.plan?.max_campaigns
@@ -500,9 +504,12 @@ export default function Dashboard() {
 
       </div>
 
-      <div className="bg-white shadow rounded p-6">
+      <div className="bg-white/80 backdrop-blur-xl 
+rounded-2xl p-6 
+border border-gray-200/50 
+shadow-[0_8px_30px_rgba(0,0,0,0.06)]">
 
-        <h2 className="text-xl font-semibold mb-4">
+        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
           Live World Traffic
         </h2>
 
@@ -561,7 +568,7 @@ transition-all duration-300">
 
           <table className="w-full text-sm">
 
-            <thead className="bg-gray-50">
+            <thead className="bg-gray-100/70 backdrop-blur">
               <tr>
                 <th className="p-3 border-b">IP</th>
                 <th className="p-3 border-b">Country</th>
@@ -620,7 +627,9 @@ transition-all duration-300">
           <button
             disabled={page === 1}
             onClick={() => setPage(page - 1)}
-            className="px-3 py-1 rounded-md bg-gray-100 hover:bg-gray-200 disabled:opacity-50 transition"
+            className="px-3 py-1 rounded-md bg-white border border-gray-200 
+hover:bg-gray-100 hover:shadow-md 
+transition-all duration-200 disabled:opacity-50 transition"
           >
             Prev
           </button>
@@ -632,7 +641,9 @@ transition-all duration-300">
           <button
             disabled={page >= Math.ceil(recent.length / rowsPerPage)}
             onClick={() => setPage(page + 1)}
-            className="px-3 py-1 rounded-md bg-gray-100 hover:bg-gray-200 disabled:opacity-50 transition"
+            className="px-3 py-1 rounded-md bg-white border border-gray-200 
+hover:bg-gray-100 hover:shadow-md 
+transition-all duration-200 disabled:opacity-50 transition"
           >
             Next
           </button>
@@ -741,7 +752,7 @@ transition-all duration-300">
 
           <table className="w-full text-sm">
 
-            <thead className="bg-gray-50">
+            <thead className="bg-gray-100/70 backdrop-blur">
               <tr>
                 <th className="p-3 border-b">Campaign</th>
                 <th className="p-3 border-b">Total</th>
@@ -1091,7 +1102,11 @@ function StatCard({ title, value }) {
 
   return (
 
-    <div className="bg-gradient-to-br from-gray-900 to-gray-700 text-white shadow-xl rounded-xl p-6">
+    <div className="relative overflow-hidden 
+bg-gradient-to-br from-gray-900 via-gray-800 to-gray-700 
+text-white rounded-2xl p-6 
+shadow-[0_10px_40px_rgba(0,0,0,0.25)] 
+hover:scale-[1.03] transition duration-300">
 
       <p className="text-gray-300 text-sm mb-2">
         {title}
