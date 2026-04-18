@@ -518,14 +518,20 @@ def campaign_traffic(
         db.query(
             Campaign.name.label("campaign"),
             func.count(ClickLog.id).label("total"),
+            # ✅ PASSED (offer hit)
             func.sum(case((ClickLog.status == "offer", 1), else_=0)).label("passed"),
+            # ❌ BLOCKED
             func.sum(case((ClickLog.status == "blocked", 1), else_=0)).label("blocked"),
+            # 🟡 FALLBACK (NO RULE MATCH)
+            func.sum(case((ClickLog.status == "fallback", 1), else_=0)).label(
+                "fallback"
+            ),
         )
         .join(Campaign, Campaign.id == ClickLog.campaign_id)
         .filter(ClickLog.user_id == current_user.id)
     )
 
-    # 🔥 DATE FILTER (SAFE)
+    # 🔥 DATE FILTER
     if range == "today":
         query = query.filter(func.date(ClickLog.created_at) == func.current_date())
 
@@ -540,8 +546,6 @@ def campaign_traffic(
             ClickLog.created_at >= func.now() - text("interval '7 days'")
         )
 
-    # all = no filter
-
     rows = query.group_by(Campaign.name).all()
 
     return [
@@ -550,6 +554,7 @@ def campaign_traffic(
             "total": int(r.total or 0),
             "passed": int(r.passed or 0),
             "blocked": int(r.blocked or 0),
+            "fallback": int(r.fallback or 0),  # ✅ NEW
         }
         for r in rows
     ]

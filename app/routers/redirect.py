@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse, Response
 from sqlalchemy.orm import Session
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 import random
 import httpx
 import urllib.parse
@@ -147,6 +147,14 @@ async def redirect_campaign(
     # is_duplicate = False
 
     visitor = VisitorContext(request)
+
+    # ✅ DEBUG + FIX (yahi jagah correct hai)
+    # print("🌍 REFERER HEADER:", request.headers.get("referer"))
+    # print("🌍 ORIGIN HEADER:", request.headers.get("origin"))
+    # ✅ FIX: Capture real referrer
+    visitor.referrer = (
+        request.headers.get("referer") or request.headers.get("origin") or ""
+    )
 
     # =========================
     # 🔥 JS SIGNALS (HYBRID)
@@ -393,6 +401,7 @@ async def redirect_campaign(
             destination_url = redirect_url
             decision = "blocked"
             reason = "challenge_redirect"
+            return RedirectResponse(redirect_url)
 
     query = request.query_params
 
@@ -1031,7 +1040,7 @@ async def redirect_campaign(
                 reason = "decision_engine_challenge"
 
                 redirect_url = f"/challenge/{slug}"
-                return RedirectResponse(redirect_url)
+                return RedirectResponse(redirect_url, status_code=302)
 
     except Exception:
         pass
@@ -1165,7 +1174,7 @@ async def redirect_campaign(
         decision = "fallback"
         reason = "no_rule_match"
 
-        redirect_url = campaign.safe_page_url or campaign.fallback_url or "/decoy"
+        redirect_url = campaign.fallback_url or campaign.safe_page_url or "/decoy"
         destination_url = redirect_url
     # -------------------------------------------------
     # FALLBACK (only if no offer selected)
@@ -1250,7 +1259,7 @@ async def redirect_campaign(
                 is_bot=visitor.is_bot,
                 risk_score=risk_score,
                 fingerprint=fingerprint,
-                referrer=visitor.referrer,
+                referrer=visitor.referrer or request.headers.get("referer") or "-",
                 query_string=visitor.query_string,
                 status=decision,
                 reason=reason,

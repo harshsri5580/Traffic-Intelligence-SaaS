@@ -757,6 +757,7 @@ transition-all duration-200 disabled:opacity-50 transition"
                 <th className="p-3 border-b">Campaign</th>
                 <th className="p-3 border-b">Total</th>
                 <th className="p-3 border-b">Passed</th>
+                <th className="p-3 border-b">Fallback</th>
                 <th className="p-3 border-b">Blocked</th>
               </tr>
             </thead>
@@ -768,7 +769,7 @@ transition-all duration-200 disabled:opacity-50 transition"
                 const total = c.total || 0;
                 const passed = c.passed || 0;
                 const blocked = c.blocked || 0;
-
+                const fallback = c.fallback ?? (total - passed - blocked);
                 return (
                   <tr
                     key={i}
@@ -781,6 +782,9 @@ transition-all duration-200 disabled:opacity-50 transition"
 
                     <td className="p-3 border-b text-green-600 font-semibold">
                       {passed}
+                    </td>
+                    <td className="p-3 border-b text-yellow-500 font-semibold">
+                      {fallback}
                     </td>
 
                     <td className="p-3 border-b text-red-600 font-semibold">
