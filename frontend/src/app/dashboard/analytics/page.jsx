@@ -116,6 +116,7 @@ export default function AnalyticsPage() {
         trafficByHour[hour] = {
           passed: 0,
           blocked: 0,
+          fallback: 0,
           bot: 0
         };
       }
@@ -129,7 +130,10 @@ export default function AnalyticsPage() {
       if (log.status === "blocked") {
         trafficByHour[hour].blocked++;
       }
-
+      // fallback (SAFE PAGE)
+      if (log.status === "fallback") {
+        trafficByHour[hour].fallback++;
+      }
       // ✅ bot
       if (log.bot_score >= 70) {
         trafficByHour[hour].bot++;
@@ -173,6 +177,7 @@ export default function AnalyticsPage() {
         hour: `${h}:00`,
         passed: trafficByHour[h]?.passed || 0,
         blocked: trafficByHour[h]?.blocked || 0,
+        fallback: trafficByHour[h]?.fallback || 0, // ✅ ADD
         bot: trafficByHour[h]?.bot || 0
       }))
     );
@@ -318,6 +323,15 @@ export default function AnalyticsPage() {
               stroke="#ef4444"
               strokeWidth={3}
               name="Blocked"
+            />
+
+            {/* 🔥 Fallback (Safe Page) */}
+            <Line
+              type="monotone"
+              dataKey="fallback"
+              stroke="#eac408" // yellow
+              strokeWidth={3}
+              name="Fallback"
             />
 
             {/* 🔥 Bots */}
