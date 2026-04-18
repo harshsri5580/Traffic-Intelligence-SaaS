@@ -442,7 +442,9 @@ export default function AnalyticsPage() {
                     {/* <td className="p-3 font-mono text-xs text-gray-400 max-w-[250px] truncate">
                       {log.click_id || "-"}
                     </td> */}
-                    <td className="p-3">{log.ip_address || "-"}</td>
+                    <td className="p-3 max-w-[140px] truncate hover:whitespace-normal">
+                      {log.ip_address || "-"}
+                    </td>
 
                     <td className="p-3">{getCountryName(log.country)}</td>
 
