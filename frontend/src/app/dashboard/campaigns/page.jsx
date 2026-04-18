@@ -288,7 +288,7 @@ export default function Campaigns() {
 
     <div className="p-8">
 
-      <h1 className="text-3xl font-bold mb-8">
+      <h1 className="text-3xl font-semibold tracking-tight text-gray-800 mb-6">
         Campaign Manager
       </h1>
 

@@ -222,8 +222,8 @@ return(
 
 <div className="p-8 space-y-8">
 
-<h1 className="text-3xl font-bold">
-Manage Campaign
+<h1 className="text-2xl font-semibold text-gray-800 tracking-tight">
+  Manage Campaign
 </h1>
 
 <div className="bg-gradient-to-r from-indigo-500 to-blue-600 

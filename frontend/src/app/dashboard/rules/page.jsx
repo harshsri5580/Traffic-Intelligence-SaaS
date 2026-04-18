@@ -355,7 +355,7 @@ export default function RulesPage() {
       asn: getCondition(rule.conditions, "asn"),
       isp: getCondition(rule.conditions, "isp"),
       referrer: getCondition(rule.conditions, "referrer"),
-      bot_score: getCondition(rule.conditions, "bot_score") || 40,
+      bot_score: getCondition(rule.conditions, "bot_score") || 50,
       timezone: getCondition(rule.conditions, "timezone"),
       language: getCondition(rule.conditions, "language"),
       action: rule.action_type,
@@ -651,9 +651,15 @@ focus:ring-2 focus:ring-blue-500 outline-none"
 
             <div className="col-span-2">
 
-              <label className="text-sm font-medium mb-1 block">
-                Bot Score Threshold
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-sm font-medium">
+                  Bot Score Threshold
+                </label>
+
+                <span className="text-xs text-green-600 font-medium">
+                  Recommended: 50
+                </span>
+              </div>
 
               <div className="flex items-center gap-3">
 
@@ -677,9 +683,16 @@ focus:ring-2 focus:ring-blue-500 outline-none"
 
               </div>
 
-              <div className="mt-2 text-sm text-blue-600 font-semibold">
-                Current: {formData.bot_score}
+              <div className="mt-2 text-sm font-semibold">
+                Current:
+                <span className="text-indigo-600 ml-1">
+                  {formData.bot_score}
+                </span>
               </div>
+
+              <p className="text-xs text-gray-500 mt-1">
+                Lower value = stricter bot filtering • Higher value = more relaxed
+              </p>
 
             </div>
 

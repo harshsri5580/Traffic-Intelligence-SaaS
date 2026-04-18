@@ -243,7 +243,7 @@ export default function AnalyticsPage() {
 
     <div className="p-8 space-y-10 bg-gray-50 min-h-screen w-full overflow-x-hidden">
 
-      <h1 className="text-3xl font-bold mb-8">
+      <h1 className="text-3xl font-semibold tracking-tight text-gray-800 mb-6">
         Traffic Analytics
       </h1>
 

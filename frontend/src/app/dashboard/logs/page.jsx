@@ -220,12 +220,30 @@ export default function LogsPage() {
 
     <div className="mx-auto space-y-6 h-screen overflow-hidden flex flex-col">
 
+      {/* HEADER */}
+      <div className="flex flex-col gap-1 mb-2">
+
+        <h1 className="text-3xl font-semibold tracking-tight">
+          Traffic Logs
+        </h1>
+
+        <p className="text-sm text-gray-500">
+          Monitor and analyze incoming traffic, detect bots, and manage IP blocks
+        </p>
+
+      </div>
+
       {/* FILTERS */}
 
-      <div className="flex flex-wrap items-center gap-3 mb-6 bg-white border border-gray-200 rounded-xl p-4 shadow-lg">
+      <div className="flex flex-wrap items-center gap-3 mb-6 
+bg-white/80 backdrop-blur-xl 
+border border-gray-200/50 
+rounded-2xl p-4 shadow-sm">
 
         <select
-          className="border-b border-gray-200 p-2 rounded"
+          className="px-3 py-2 rounded-lg border border-gray-300 
+bg-white text-sm shadow-sm 
+focus:ring-2 focus:ring-indigo-500 outline-none"
           value={filters.campaign_id}
           onChange={(e) => setFilters({ ...filters, campaign_id: e.target.value })}
         >
@@ -242,21 +260,27 @@ export default function LogsPage() {
 
         <input
           placeholder="Search IP"
-          className="border-b border-gray-200 p-2 rounded"
+          className="px-3 py-2 rounded-lg border border-gray-300 
+bg-white text-sm shadow-sm 
+focus:ring-2 focus:ring-indigo-500 outline-none"
           value={filters.ip}
           onChange={(e) => setFilters({ ...filters, ip: e.target.value })}
         />
 
         <input
           type="date"
-          className="border-b border-gray-200 p-2 rounded"
+          className="px-3 py-2 rounded-lg border border-gray-300 
+bg-white text-sm shadow-sm 
+focus:ring-2 focus:ring-indigo-500 outline-none"
           value={filters.date}
           onChange={(e) => setFilters({ ...filters, date: e.target.value })}
         />
 
         <button
           onClick={exportCSV}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded"
+          className="px-4 py-2 rounded-lg text-white text-sm font-medium
+bg-gradient-to-r from-indigo-500 to-blue-600
+hover:shadow-lg hover:scale-[1.03] transition-all duration-200"
         >
           Export CSV
         </button>
@@ -274,11 +298,11 @@ export default function LogsPage() {
                 [col]: !prev[col],
               }))
             }
-            className={`px-3 py-1 rounded-full text-xs border transition
+            className={`px-3 py-1 rounded-full text-xs font-medium transition-all duration-200
 ${visibleColumns[col]
-                ? "bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 border-indigo-500"
-                : "bg-transparent text-gray-800 border-gray-700 hover:border-gray-500"
-              }`}
+                ? "bg-indigo-100 text-indigo-700 border border-indigo-200 shadow-sm"
+                : "bg-white text-gray-500 border border-gray-200 hover:bg-gray-50"}
+`}
           >
             {col}
           </button>
@@ -300,7 +324,7 @@ transition-all duration-300 flex-1 flex flex-col">
 
               <table className="w-full min-w-[1100px] text-sm table-auto">
 
-                <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wide sticky top-0 z-10 backdrop-blur-sm">
+                <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider sticky top-0 z-10">
 
                   <tr>
 
@@ -516,8 +540,10 @@ shadow-sm hover:shadow transition "
                           ) : (
                             <button
                               onClick={() => blockIP(log.ip_address)}
-                              className="px-3 py-1.5 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 text-xs font-semibold transition px-3 py-1.5 rounded-lg text-xs font-semibold 
-shadow-sm hover:shadow transition"
+                              className="px-3 py-1.5 rounded-lg text-xs font-semibold
+bg-red-50 text-red-600 
+hover:bg-red-100 
+transition shadow-sm hover:shadow"
                             >
                               Block
                             </button>

@@ -211,34 +211,36 @@ export default function SettingsPage() {
 
   return (
 
-    <div className="p-8 max-w-5xl space-y-8">
+    <div className="p-8 max-w-6xl mx-auto space-y-10">
 
-      <h1 className="text-3xl font-bold">Settings</h1>
+      {/* HEADER */}
+      <div>
+        <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
+          Settings
+        </h1>
+        <p className="text-gray-500 text-sm mt-1">
+          Manage your account, API access and integrations
+        </p>
+      </div>
 
       {/* PROFILE */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-5">
 
-      <div className="bg-white shadow-lg rounded-xl p-6 border">
+        <h2 className="text-lg font-medium text-gray-800">Profile</h2>
 
-        <h2 className="text-xl font-semibold mb-4">Profile</h2>
+        <div className="grid md:grid-cols-2 gap-4">
 
-        <div className="grid gap-4">
-
-          <input
-            className="input"
-            placeholder="Name"
+          <input className="input" placeholder="Full Name"
             value={profile.name || ""}
             onChange={(e) => setProfile({ ...profile, name: e.target.value })}
           />
 
-          <input
-            className="input"
-            placeholder="Email"
+          <input className="input" placeholder="Email Address"
             value={profile.email || ""}
             onChange={(e) => setProfile({ ...profile, email: e.target.value })}
           />
 
-          <select
-            className="input"
+          <select className="input"
             value={profile.timezone || "UTC"}
             onChange={(e) => setProfile({ ...profile, timezone: e.target.value })}
           >
@@ -248,86 +250,92 @@ export default function SettingsPage() {
             <option value="Europe/London">UK</option>
           </select>
 
-          <input
-            className="input"
-            placeholder="Webhook URL"
+          <input className="input" placeholder="Webhook URL"
             value={profile.webhook_url || ""}
             onChange={(e) => setProfile({ ...profile, webhook_url: e.target.value })}
           />
 
-          <button
-            onClick={updateProfile}
-            disabled={saving}
-            className="btn-primary"
-          >
-            {saving ? "Saving..." : "Update Profile"}
-          </button>
-
         </div>
+
+        <button
+          onClick={updateProfile}
+          disabled={saving}
+          className="px-5 py-2 rounded-lg text-white text-sm font-medium
+      bg-gradient-to-r from-blue-500 to-indigo-600
+      hover:shadow-md transition"
+        >
+          {saving ? "Saving..." : "Save Changes"}
+        </button>
 
       </div>
 
-      {/* TRAFFIC SOURCES (UNCHANGED LOGIC) */}
+      {/* TRAFFIC SOURCES */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-5">
 
-      <div className="bg-white shadow-lg rounded-xl p-6 border">
+        <h2 className="text-lg font-medium text-gray-800">Traffic Sources</h2>
 
-        <h2 className="text-xl font-semibold mb-4">Traffic Sources</h2>
-
-        <div className="flex gap-2 mb-4">
+        <div className="flex gap-3">
 
           <input
             className="input flex-1"
-            placeholder="New Source"
+            placeholder="Add new source..."
             value={newSource}
             onChange={(e) => setNewSource(e.target.value)}
           />
 
-          <button onClick={addSource} className="btn-primary">
+          <button
+            onClick={addSource}
+            className="px-4 py-2 rounded-lg text-white text-sm
+        bg-blue-600 hover:bg-blue-700 transition"
+          >
             Add
           </button>
 
         </div>
 
-        <table className="w-full text-sm border rounded overflow-hidden">
+        <div className="rounded-xl border overflow-hidden">
 
-          <thead className="bg-gray-100">
-            <tr>
-              {/* <th className="p-2 border">ID</th> */}
-              <th className="p-2 border">Name</th>
-              <th className="p-2 border">Action</th>
-            </tr>
-          </thead>
+          <table className="w-full text-sm">
 
-          <tbody>
-
-            {sources.map(s => (
-              <tr key={s.id} className="text-center hover:bg-gray-50">
-                {/* <td className="p-2 border">{s.id}</td> */}
-                <td className="p-2 border">{s.name}</td>
-                <td className="p-2 border">
-                  <button
-                    onClick={() => deleteSource(s.id)}
-                    className="text-red-600 font-semibold hover:underline"
-                  >
-                    Delete
-                  </button>
-                </td>
+            <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
+              <tr>
+                <th className="p-3 text-left">Source Name</th>
+                <th className="p-3 text-center w-[120px]">Action</th>
               </tr>
-            ))}
+            </thead>
 
-          </tbody>
+            <tbody>
+              {sources.map(s => (
+                <tr key={s.id} className="border-t hover:bg-gray-50 transition">
 
-        </table>
+                  <td className="p-3">{s.name}</td>
+
+                  <td className="p-3 text-center">
+                    <button
+                      onClick={() => deleteSource(s.id)}
+                      className="px-3 py-1 rounded-lg text-xs
+                  bg-red-50 text-red-600 hover:bg-red-100 transition"
+                    >
+                      Delete
+                    </button>
+                  </td>
+
+                </tr>
+              ))}
+            </tbody>
+
+          </table>
+
+        </div>
 
       </div>
 
       {/* PASSWORD */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-5">
 
-      <div className="bg-white shadow-lg rounded-xl p-6 border">
+        <h2 className="text-lg font-medium text-gray-800">Security</h2>
 
-        <h2 className="text-xl font-semibold mb-4">Change Password</h2>
-
-        <div className="grid gap-4">
+        <div className="grid md:grid-cols-2 gap-4">
 
           <input
             type="password"
@@ -345,36 +353,34 @@ export default function SettingsPage() {
             onChange={(e) => setPassword({ ...password, new_password: e.target.value })}
           />
 
-          <button
-            onClick={changePassword}
-            className="bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg"
-          >
-            Change Password
-          </button>
-
         </div>
+
+        <button
+          onClick={changePassword}
+          className="px-5 py-2 rounded-lg text-white text-sm
+      bg-green-600 hover:bg-green-700 transition"
+        >
+          Update Password
+        </button>
 
       </div>
 
       {/* API KEY */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-5">
 
-      <div className="bg-white shadow-lg rounded-xl p-6 border">
-
-        <h2 className="text-xl font-semibold mb-4">API Key</h2>
+        <h2 className="text-lg font-medium text-gray-800">API Access</h2>
 
         <div className="flex gap-3">
 
-          <input
-            className="input flex-1"
-            value={profile.api_key || ""}
-            readOnly
-          />
+          <input className="input flex-1" value={profile.api_key || ""} readOnly />
 
-          <button onClick={copyKey} className="btn-dark">
+          <button onClick={copyKey}
+            className="px-4 py-2 rounded-lg bg-gray-900 text-white text-sm">
             Copy
           </button>
 
-          <button onClick={generateAPIKey} className="btn-danger">
+          <button onClick={generateAPIKey}
+            className="px-4 py-2 rounded-lg bg-red-600 text-white text-sm">
             Generate
           </button>
 
@@ -382,11 +388,10 @@ export default function SettingsPage() {
 
       </div>
 
-      {/* POSTBACK URL */}
+      {/* POSTBACK */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-5">
 
-      <div className="bg-white shadow-lg rounded-xl p-6 border">
-
-        <h2 className="text-xl font-semibold mb-4">Postback URL</h2>
+        <h2 className="text-lg font-medium text-gray-800">Postback URL</h2>
 
         <div className="flex gap-3">
 
@@ -397,11 +402,8 @@ export default function SettingsPage() {
           />
 
           <button
-            onClick={() => {
-              navigator.clipboard.writeText(`${BASE_URL}/api/postback?api_key=${profile.api_key}&click_id={clickid}&payout={payout}`);
-              toast.success("Copied!");
-            }}
-            className="btn-dark"
+            onClick={copyPostback}
+            className="px-4 py-2 rounded-lg bg-gray-900 text-white text-sm"
           >
             Copy
           </button>
