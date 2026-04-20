@@ -162,15 +162,17 @@ async def redirect_campaign(
     visitor = VisitorContext(request)
 
     # ✅ DEBUG + FIX (yahi jagah correct hai)
-    # print("🌍 REFERER HEADER:", request.headers.get("referer"))
-    # print("🌍 ORIGIN HEADER:", request.headers.get("origin"))
+    print("🔥 HEADER REFERER:", request.headers.get("referer"))
+    print("🔥 SAVED REF:", visitor.referrer)
     # ✅ FIX: Capture real referrer
-    visitor.referrer = (
-        request.headers.get("referer")
-        or request.headers.get("origin")
-        or request.headers.get("referrer")
-        or "-"
-    )
+    # 🔥 ALWAYS CAPTURE FIRST HIT
+    raw_ref = request.headers.get("referer") or request.headers.get("origin")
+
+    # 🔥 IF EMPTY → DON'T FORCE "-"
+    if raw_ref:
+        visitor.referrer = raw_ref
+    else:
+        visitor.referrer = None  # 🔥 important change
 
     # =========================
     # 🔥 JS SIGNALS (HYBRID)
@@ -1278,7 +1280,7 @@ async def redirect_campaign(
                 is_bot=visitor.is_bot,
                 risk_score=risk_score,
                 fingerprint=fingerprint,
-                referrer=visitor.referrer or request.headers.get("referer") or "-",
+                referrer=visitor.referrer,
                 query_string=visitor.query_string,
                 status=decision,
                 reason=reason,
