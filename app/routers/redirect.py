@@ -166,7 +166,11 @@ async def redirect_campaign(
     print("🔥 SAVED REF:", visitor.referrer)
     # ✅ FIX: Capture real referrer
     # 🔥 ALWAYS CAPTURE FIRST HIT
-    raw_ref = request.headers.get("referer") or request.headers.get("origin")
+    raw_ref = (
+        request.headers.get("referer")
+        or request.headers.get("origin")
+        or request.query_params.get("ref")
+    )
 
     # 🔥 IF EMPTY → DON'T FORCE "-"
     if raw_ref:
@@ -516,7 +520,7 @@ async def redirect_campaign(
         cached_score = redis_client.get(bot_key)
 
         if cached_score:
-            visitor.bot_score = int(cached_score)
+            visitor.bot_score = min(visitor.bot_score, int(cached_score))
             print("🔒 BOT SCORE LOCKED:", visitor.bot_score)
         else:
             redis_client.setex(bot_key, 10, int(visitor.bot_score or 0))
@@ -1073,7 +1077,7 @@ async def redirect_campaign(
             if campaign.block_datacenter:
                 decision = set_decision(decision, "blocked")
                 reason = "datacenter_block"
-                redirect_url = "/decoy"
+                redirect_url = campaign.bot_url or campaign.safe_page_url or "/decoy"
                 destination_url = redirect_url
     except Exception:
         pass

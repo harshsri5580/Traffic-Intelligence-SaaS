@@ -400,6 +400,7 @@ class VisitorContext:
             "Starcat Cable",
             "Zenlayer",
             "HostHatch",
+            "Celeste",
         ]
 
         org = (self.org or "").lower()
