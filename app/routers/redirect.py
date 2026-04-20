@@ -47,6 +47,19 @@ from app.services.redis_client import redis_client
 from app.services.session_engine import evaluate_session
 
 router = APIRouter(tags=["Redirect"])
+from fastapi.responses import HTMLResponse
+
+
+def safe_redirect(url: str):
+    return HTMLResponse(
+        f"""
+    <html>
+      <head>
+        <meta http-equiv="refresh" content="0;url={url}">
+      </head>
+    </html>
+    """
+    )
 
 
 def set_decision(current, new):
@@ -504,7 +517,7 @@ async def redirect_campaign(
             visitor.bot_score = int(cached_score)
             print("🔒 BOT SCORE LOCKED:", visitor.bot_score)
         else:
-            redis_client.setex(bot_key, 10, visitor.bot_score)
+            redis_client.setex(bot_key, 10, int(visitor.bot_score or 0))
     except Exception:
         pass
 
@@ -1442,4 +1455,4 @@ async def redirect_campaign(
             final_url = campaign.bot_url or campaign.safe_page_url or "/decoy"
 
         return RedirectResponse(final_url)
-    return RedirectResponse(redirect_url or campaign.fallback_url or "/decoy")
+    return safe_redirect(redirect_url or campaign.fallback_url or "/decoy")
