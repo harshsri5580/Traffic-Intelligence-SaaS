@@ -1243,7 +1243,7 @@ async def redirect_campaign(
         # print("DECISION:", decision)
         # print("REASON:", reason)
         # print("DESTINATION:", destination_url)
-        if should_log_final and request.method == "GET":
+        if should_log_final and request.method == "GET" and visitor.referrer:
 
             print("🔥 REAL CLICK LOGGED")
 
@@ -1280,7 +1280,7 @@ async def redirect_campaign(
                 is_bot=visitor.is_bot,
                 risk_score=risk_score,
                 fingerprint=fingerprint,
-                referrer=visitor.referrer,
+                referrer=visitor.referrer if visitor.referrer else None,
                 query_string=visitor.query_string,
                 status=decision,
                 reason=reason,
@@ -1340,7 +1340,7 @@ async def redirect_campaign(
         # 🔥 ALWAYS FORCE SAFE URL (NO LEAK)
         safe_url = campaign.safe_page_url or "/decoy"
 
-        if is_bot_traffic:
+        if is_bot_traffic or visitor.is_datacenter:
             return RedirectResponse(campaign.bot_url or safe_url)
 
         return RedirectResponse(safe_url)
