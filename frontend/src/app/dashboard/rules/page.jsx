@@ -6,55 +6,55 @@ import { countries } from "../../../data/countries";
 import Select from "react-select";
 import CreatableSelect from "react-select/creatable";
 import toast from "react-hot-toast";
-const SUSPICIOUS_ISPS = [
-  "Amazon AWS",
-  "Amazon Technologies",
-  "Google Cloud",
-  "Microsoft Azure",
-  "DigitalOcean",
-  "OVH",
-  "Hetzner",
-  "Vultr",
-  "Linode",
-  "Scaleway",
-  "Alibaba Cloud",
-  "Tencent Cloud",
-  "Leaseweb",
-  "Contabo",
-  "M247",
-  "Choopa",
-  "Psychz",
-  "DataCamp",
-  "Server Hosting",
-  "Hostinger",
-  "Namecheap",
-  "Oracle Cloud",
-  "IBM Cloud",
-  "Cloudflare",
-  "Fastly",
-  "Akamai"
-];
+// const SUSPICIOUS_ISPS = [
+//   "Amazon AWS",
+//   "Amazon Technologies",
+//   "Google Cloud",
+//   "Microsoft Azure",
+//   "DigitalOcean",
+//   "OVH",
+//   "Hetzner",
+//   "Vultr",
+//   "Linode",
+//   "Scaleway",
+//   "Alibaba Cloud",
+//   "Tencent Cloud",
+//   "Leaseweb",
+//   "Contabo",
+//   "M247",
+//   "Choopa",
+//   "Psychz",
+//   "DataCamp",
+//   "Server Hosting",
+//   "Hostinger",
+//   "Namecheap",
+//   "Oracle Cloud",
+//   "IBM Cloud",
+//   "Cloudflare",
+//   "Fastly",
+//   "Akamai"
+// ];
 
-const SUSPICIOUS_ASNS = [
-  14061, // DigitalOcean
-  16509, // AWS
-  14618, // AWS
-  15169, // Google
-  8075,  // Microsoft
-  16276, // OVH
-  24940, // Hetzner
-  20473, // Vultr
-  63949, // Linode
-  12876, // Scaleway
-  45102, // Alibaba
-  132203,// Tencent
-  20454, // Leaseweb
-  51167, // Contabo
-  9009,  // M247
-  36351, // SoftLayer
-  13335, // Cloudflare
-  20940  // Akamai
-];
+// const SUSPICIOUS_ASNS = [
+//   14061, // DigitalOcean
+//   16509, // AWS
+//   14618, // AWS
+//   15169, // Google
+//   8075,  // Microsoft
+//   16276, // OVH
+//   24940, // Hetzner
+//   20473, // Vultr
+//   63949, // Linode
+//   12876, // Scaleway
+//   45102, // Alibaba
+//   132203,// Tencent
+//   20454, // Leaseweb
+//   51167, // Contabo
+//   9009,  // M247
+//   36351, // SoftLayer
+//   13335, // Cloudflare
+//   20940  // Akamai
+// ];
 
 export default function RulesPage() {
 
@@ -600,11 +600,8 @@ focus:ring-2 focus:ring-blue-500 outline-none"
 
             <CreatableSelect
               isMulti
-              options={SUSPICIOUS_ASNS.map(a => ({
-                value: a,
-                label: `AS${a}`
-              }))}
               placeholder="Select or type ASN..."
+              noOptionsMessage={() => "Type to add ASN"}
               value={(formData.asn || "")
                 .split(",")
                 .filter(Boolean)
@@ -621,23 +618,30 @@ focus:ring-2 focus:ring-blue-500 outline-none"
 
             <CreatableSelect
               isMulti
-              options={SUSPICIOUS_ISPS.map(i => ({ value: i, label: i }))}
               placeholder="Select or type ISP..."
+
               value={(formData.isp || "")
                 .split(",")
                 .filter(Boolean)
                 .map(v => ({ value: v, label: v }))
               }
+
               onChange={(selected) => {
                 const values = selected ? selected.map(s => s.value) : [];
                 setFormData({
                   ...formData,
-                  isp: values.join(",")   // ✅ store as string
+                  isp: values.join(",")
                 });
               }}
+
               isClearable
               isSearchable
-              isCreatable   // 🔥 allow custom add
+              isCreatable
+
+              // 🔥 CUSTOM MESSAGE
+              noOptionsMessage={({ inputValue }) =>
+                inputValue ? `Add ISP: ${inputValue}` : "Type ISP..."
+              }
             />
 
             <input

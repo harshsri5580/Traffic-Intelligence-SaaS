@@ -269,122 +269,15 @@ class VisitorContext:
         except Exception:
             pass
         # ================================
-        # DATACENTER DETECTION
+        # 🔥 FINAL DATACENTER DETECTION (CLEAN + STRONG)
         # ================================
 
-        if self.org:
+        org_lower = (self.org or "").lower()
+        isp_lower = (self.isp or "").lower()
 
-            org_lower = self.org.lower()
-
-            dc_keywords = [
-                # 🌐 CLOUD / BIG PROVIDERS
-                "amazon",
-                "aws",
-                "google",
-                "gcp",
-                "microsoft",
-                "azure",
-                "oracle",
-                "cloudflare",
-                "akamai",
-                "fastly",
-                # 🏢 HOSTING / VPS
-                "digitalocean",
-                "linode",
-                "vultr",
-                "ovh",
-                "hetzner",
-                "contabo",
-                "scaleway",
-                "leaseweb",
-                "colo",
-                "datacenter",
-                "hosting",
-                "server",
-                "dedicated",
-                # 🌍 CDN / EDGE
-                "cdn",
-                "edge",
-                "cache",
-                "anycast",
-                # 🧠 PROXY / VPN
-                "vpn",
-                "proxy",
-                "anonymous",
-                "hide",
-                "tunnel",
-                "nordvpn",
-                "expressvpn",
-                "surfshark",
-                "ipvanish",
-                # 🧪 RESIDENTIAL PROXY NETWORKS (IMPORTANT)
-                "datacamp",
-                "packetstream",
-                "honeygain",
-                "luminati",
-                "brightdata",
-                "smartproxy",
-                "oxylabs",
-                "soax",
-                "netnut",
-                "proxyline",
-                # 🌏 ASIA / MIXED CLOUD
-                "alibaba",
-                "tencent",
-                "huawei",
-                "baidu",
-                # 🇪🇺 EU HOSTING
-                "worldstream",
-                "m247",
-                "psychz",
-                "online.net",
-                # ⚠️ GENERIC SUSPICIOUS WORDS
-                "cloud",
-                "compute",
-                "virtual",
-                "vps",
-                "instance",
-                "Open Computer Network",
-                "ARTERIA Networks Corporation",
-                "Community Network Center Incorporated",
-                "Community Network Center",
-                "K-Opticom Corporation",
-                "Biglobe",
-                "Latitude.sh",
-                "SoftEther Telecommunication Research Institute",
-                "GSL Networks",
-                "Proton",
-                "Societe Electrique des Forces de l'Aubonne",
-                "F3 Netze e.V.",
-                "Cogent Communications",
-                "ProtonVPN",
-                "M247 Europe",
-                "Tencent cloud computing",
-                "Lycamobile",
-                "QuxLabs",
-                "Itec Hankyu Hanshin",
-                "Skyspark Hosting",
-                "Hydra Communications",
-                "ARTERIA Networks",
-                "Back Waves",
-                "Starcat Cable",
-                "Zenlayer",
-                "HostHatch",
-                "Celeste",
-            ]
-
-            if any(k in org_lower for k in dc_keywords):
-
-                self.ip_type = "datacenter"
-                self.connection_type = "datacenter"
-                self.is_datacenter = True
-                self.bot_score += 40
-
-        # =========================================
-        # 🔥 EXTRA DATACENTER DETECTION (ADD HERE)
-        # =========================================
-        extra_dc_keywords = [
-            # 🌐 CLOUD / BIG PROVIDERS
+        # 🔥 MASTER KEYWORDS (SHORT + MATCHABLE)
+        dc_keywords = [
+            # 🌐 BIG CLOUD
             "amazon",
             "aws",
             "google",
@@ -395,7 +288,7 @@ class VisitorContext:
             "cloudflare",
             "akamai",
             "fastly",
-            # 🏢 HOSTING / VPS
+            # 🏢 VPS / HOSTING
             "digitalocean",
             "linode",
             "vultr",
@@ -414,17 +307,16 @@ class VisitorContext:
             "edge",
             "cache",
             "anycast",
-            # 🧠 PROXY / VPN
+            # 🧠 VPN / PROXY NETWORKS
             "vpn",
             "proxy",
             "anonymous",
-            "hide",
             "tunnel",
             "nordvpn",
             "expressvpn",
             "surfshark",
             "ipvanish",
-            # 🧪 RESIDENTIAL PROXY NETWORKS (IMPORTANT)
+            # 🧪 RESIDENTIAL PROXY NETWORKS
             "datacamp",
             "packetstream",
             "honeygain",
@@ -434,60 +326,63 @@ class VisitorContext:
             "oxylabs",
             "soax",
             "netnut",
-            "proxyline",
-            # 🌏 ASIA / MIXED CLOUD
+            # 🌏 ASIA CLOUD / MIXED
             "alibaba",
             "tencent",
             "huawei",
             "baidu",
-            # 🇪🇺 EU HOSTING
-            "worldstream",
+            # 🇪🇺 EU HOSTING / DC
             "m247",
+            "worldstream",
             "psychz",
-            "online.net",
-            # ⚠️ GENERIC SUSPICIOUS WORDS
+            "online",
+            # ⚠️ HARD TARGETS (IMPORTANT)
+            "biglobe",
+            "arteria",
+            "k-opticom",
+            "softether",
+            "cogent",
+            "zenlayer",
+            "hosthatch",
+            "hydra",
+            "gsl",
+            "quxlabs",
+            "skyspark",
+            "celeste",
+            "community",
+            "latitude",
+            "starcat",
+            # ⚠️ GENERIC INFRA
             "cloud",
             "compute",
             "virtual",
             "vps",
             "instance",
-            "Open Computer Network",
-            "ARTERIA Networks Corporation",
-            "Community Network Center Incorporated",
-            "Community Network Center",
-            "K-Opticom Corporation",
-            "Biglobe",
-            "Latitude.sh",
-            "SoftEther Telecommunication Research Institute",
-            "GSL Networks",
-            "Proton",
-            "Societe Electrique des Forces de l'Aubonne",
-            "F3 Netze e.V.",
-            "Cogent Communications",
-            "ProtonVPN",
-            "M247 Europe",
-            "Tencent cloud computing",
-            "Lycamobile",
-            "QuxLabs",
-            "Itec Hankyu Hanshin",
-            "Skyspark Hosting",
-            "Hydra Communications",
-            "ARTERIA Networks",
-            "Back Waves",
-            "Starcat Cable",
-            "Zenlayer",
-            "HostHatch",
-            "Celeste",
         ]
 
-        org = (self.org or "").lower()
-        isp = (self.isp or "").lower()
+        # 🔥 NORMALIZE FIRST WORD (SUPER IMPORTANT)
+        def normalize_word(text):
+            if not text:
+                return ""
+            return text.lower().replace(".", "").replace(",", "").split()[0]
 
-        if any(k in org or k in isp for k in extra_dc_keywords):
+        org_first = normalize_word(self.org)
+        isp_first = normalize_word(self.isp)
+
+        # 🔥 FINAL MATCH LOGIC (BOTH FULL + FIRST WORD)
+        is_dc_match = (
+            any((k in org_lower) or (k in isp_lower) for k in dc_keywords)
+            or org_first in dc_keywords
+            or isp_first in dc_keywords
+        )
+
+        if is_dc_match:
             self.is_datacenter = True
             self.connection_type = "datacenter"
             self.ip_type = "datacenter"
-            self.bot_score += 30
+
+            # 🔥 SAFE SCORE (NO OVERFLOW)
+            self.bot_score = max(self.bot_score, 70)
 
         # ================================
         # VPN DETECTION

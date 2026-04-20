@@ -1,9 +1,9 @@
 import ipaddress
+import re
 
 
 # =========================================
-# KNOWN TOR EXIT NODE SAMPLE
-# (real system me external feed use hota hai)
+# TOR EXIT NODES (extendable)
 # =========================================
 
 TOR_EXIT_NODES = {
@@ -14,7 +14,7 @@ TOR_EXIT_NODES = {
 
 
 # =========================================
-# KNOWN VPN PROVIDER KEYWORDS
+# VPN / PROXY KEYWORDS (CLEAN + STRONG)
 # =========================================
 
 VPN_KEYWORDS = [
@@ -24,13 +24,12 @@ VPN_KEYWORDS = [
     "mullvad",
     "protonvpn",
     "purevpn",
-    "private internet access",
+    "pia",
+    "private internet",
+    "ipvanish",
+    "windscribe",
+    "tunnelbear",
 ]
-
-
-# =========================================
-# KNOWN PROXY / HOSTING KEYWORDS
-# =========================================
 
 PROXY_KEYWORDS = [
     "proxy",
@@ -39,11 +38,15 @@ PROXY_KEYWORDS = [
     "server",
     "cloud",
     "datacenter",
+    "colo",
+    "vps",
+    "virtual",
+    "instance",
 ]
 
 
 # =========================================
-# ASN DATACENTER LIST (COMMON)
+# ASN DATACENTER (EXTENDED)
 # =========================================
 
 DATACENTER_ASN = {
@@ -54,11 +57,41 @@ DATACENTER_ASN = {
     "AS24940",  # Hetzner
     "AS8075",  # Microsoft
     "AS13335",  # Cloudflare
+    "AS9009",  # M247
+    "AS20473",  # Choopa / Vultr
+    "AS63949",  # Linode
 }
 
 
 # =========================================
-# MAIN VPN DETECTION
+# SAFE ISP (FALSE POSITIVE PROTECTION)
+# =========================================
+
+SAFE_ISP = [
+    "jio",
+    "airtel",
+    "vodafone",
+    "bsnl",
+    "comcast",
+    "verizon",
+    "att",
+    "t-mobile",
+]
+
+
+# =========================================
+# NORMALIZER
+# =========================================
+
+
+def normalize(text):
+    if not text:
+        return ""
+    return re.sub(r"[^\w\s]", "", text.lower())
+
+
+# =========================================
+# MAIN DETECTION
 # =========================================
 
 
@@ -69,72 +102,87 @@ def detect_vpn(ip, org=None, asn=None):
         "is_proxy": False,
         "is_tor": False,
         "is_residential_proxy": False,
+        "confidence": 0,  # 🔥 NEW
     }
 
     try:
 
-        # ----------------------
-        # TOR EXIT NODE
-        # ----------------------
-
-        if ip in TOR_EXIT_NODES:
-            result["is_tor"] = True
-            result["is_proxy"] = True
-
-        # ----------------------
-        # IP VALIDATION
-        # ----------------------
-
         ip_obj = ipaddress.ip_address(ip)
 
-        # Private IPs skip
-        if ip_obj.is_private:
+        # ----------------------
+        # PRIVATE / LOCAL SAFE
+        # ----------------------
+        if ip_obj.is_private or ip_obj.is_loopback:
             return result
-
-        # ----------------------
-        # DATACENTER ASN CHECK
-        # ----------------------
-
-        if asn and asn in DATACENTER_ASN:
-
-            result["is_proxy"] = True
-
-        # ----------------------
-        # ORG / ISP KEYWORD CHECK
-        # ----------------------
-
-        if org:
-
-            org_lower = org.lower()
-
-            for keyword in VPN_KEYWORDS:
-
-                if keyword in org_lower:
-
-                    result["is_vpn"] = True
-                    result["is_proxy"] = True
-                    break
-
-            for keyword in PROXY_KEYWORDS:
-
-                if keyword in org_lower:
-
-                    result["is_proxy"] = True
-                    break
-
-        # ----------------------
-        # HEURISTIC CHECK
-        # ----------------------
 
         ip_str = str(ip)
 
-        # suspicious IP ranges example
-        if ip_str.startswith("45.") or ip_str.startswith("104."):
-            result["is_proxy"] = True
+        org_norm = normalize(org)
+        asn_str = str(asn or "").upper()
 
-        # residential proxy heuristic
+        # ----------------------
+        # TOR CHECK
+        # ----------------------
+        if ip_str in TOR_EXIT_NODES:
+            result["is_tor"] = True
+            result["is_proxy"] = True
+            result["confidence"] += 80
+
+        # ----------------------
+        # ASN CHECK (STRONG SIGNAL)
+        # ----------------------
+        if asn_str in DATACENTER_ASN:
+            result["is_proxy"] = True
+            result["confidence"] += 50
+
+        # ----------------------
+        # ISP SAFE OVERRIDE
+        # ----------------------
+        if any(safe in org_norm for safe in SAFE_ISP):
+            return result  # 🔥 EXIT SAFE
+
+        # ----------------------
+        # VPN KEYWORD MATCH
+        # ----------------------
+        for keyword in VPN_KEYWORDS:
+            if keyword in org_norm:
+                result["is_vpn"] = True
+                result["is_proxy"] = True
+                result["confidence"] += 60
+                break
+
+        # ----------------------
+        # PROXY / HOSTING MATCH
+        # ----------------------
+        for keyword in PROXY_KEYWORDS:
+            if keyword in org_norm:
+                result["is_proxy"] = True
+                result["confidence"] += 30
+                break
+
+        # ----------------------
+        # IP HEURISTICS (SMART)
+        # ----------------------
+
+        # cloud ranges (common)
+        if ip_str.startswith(("45.", "104.", "172.", "192.168")):
+            result["is_proxy"] = True
+            result["confidence"] += 15
+
+        # suspicious pattern
         if ip_str.endswith(".1") or ip_str.endswith(".254"):
             result["is_residential_proxy"] = True
+            result["confidence"] += 20
+
+        # ----------------------
+        # FINAL DECISION LOGIC
+        # ----------------------
+
+        if result["confidence"] >= 70:
+            result["is_proxy"] = True
+
+        if result["confidence"] >= 90:
+            result["is_vpn"] = True
 
     except Exception:
         pass
