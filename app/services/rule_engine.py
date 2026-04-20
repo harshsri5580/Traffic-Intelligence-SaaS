@@ -72,6 +72,9 @@ class RuleEngine:
                 )
 
                 if final_threshold is not None:
+                    # 🔥 ADD THIS
+                    if self.visitor.bot_score < (final_threshold or 70):
+                        return rule
                     if self.visitor.bot_score >= final_threshold:
                         print("BOT THRESHOLD MATCH:", final_threshold)
                         return rule

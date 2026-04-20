@@ -675,7 +675,7 @@ async def redirect_campaign(
 
         # BOT FILTER
 
-        if is_bot_traffic:
+        if is_bot_traffic and visitor.bot_score >= 80:
 
             print("🤖 BOT → DECOY")
 
@@ -959,7 +959,8 @@ async def redirect_campaign(
         classifier = BotClassifier(visitor)
         bot_type = classifier.classify()
 
-        if bot_type == "bot":
+        # 🔥 ONLY HARD BLOCK HIGH BOT
+        if bot_type == "bot" and visitor.bot_score >= 80:
             is_bot_traffic = True
             decision = set_decision(decision, "blocked")
             reason = "ai_bot_detected"
@@ -1227,7 +1228,7 @@ async def redirect_campaign(
         # print("DECISION:", decision)
         # print("REASON:", reason)
         # print("DESTINATION:", destination_url)
-        if should_log_final and is_real_navigation and request.method == "GET":
+        if should_log_final and request.method == "GET":
 
             print("🔥 REAL CLICK LOGGED")
 
