@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import cast, func
 
 from app.database import get_db
 from app.models.click_log import ClickLog
@@ -16,6 +16,7 @@ from fastapi import HTTPException
 from datetime import date, timedelta
 from sqlalchemy import case
 from sqlalchemy import Float
+from sqlalchemy import cast, Float
 
 
 router = APIRouter(prefix="/api/analytics", tags=["Analytics"])
@@ -558,3 +559,211 @@ def campaign_traffic(
         }
         for r in rows
     ]
+
+
+# ================================
+# 🔥 ADVANCED PROFIT API (SAFE)
+# ================================
+
+
+@router.get("/profit-advanced")
+def advanced_profit(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    check_active_subscription(db, current_user.id)
+
+    # =====================
+    # TOTALS
+    # =====================
+    total_clicks = (
+        db.query(func.count(ClickLog.id))
+        .filter(ClickLog.user_id == current_user.id)
+        .scalar()
+    ) or 0
+
+    total_cost = (
+        db.query(
+            func.sum(
+                case(
+                    (ClickLog.sub2.op("~")("^[0-9.]+$"), cast(ClickLog.sub2, Float)),
+                    else_=0.0,
+                )
+            )
+        )
+        .filter(ClickLog.user_id == current_user.id)
+        .scalar()
+    ) or 0
+
+    total_revenue = (
+        db.query(func.sum(cast(Conversion.payout, Float)))
+        .join(ClickLog, ClickLog.click_id == Conversion.click_id)
+        .filter(ClickLog.user_id == current_user.id)
+        .scalar()
+    ) or 0
+
+    # ✅ ADD THIS (CONVERSIONS)
+    total_conversions = (
+        db.query(func.count(Conversion.id))
+        .join(ClickLog, Conversion.click_id == ClickLog.click_id)
+        .filter(ClickLog.user_id == current_user.id)
+        .scalar()
+    ) or 0
+
+    # ✅ ADD THIS (BOTS)
+    total_bots = (
+        db.query(func.count(ClickLog.id))
+        .filter(ClickLog.user_id == current_user.id, ClickLog.bot_score >= 70)
+        .scalar()
+    ) or 0
+
+    profit = float(total_revenue) - float(total_cost)
+    roi = (profit / total_cost * 100) if total_cost > 0 else 0
+    epc = (total_revenue / total_clicks) if total_clicks > 0 else 0
+
+    # =====================
+    # DAILY GRAPH
+    # =====================
+    graph = (
+        db.query(
+            func.date(ClickLog.created_at).label("date"),
+            func.count(ClickLog.id).label("clicks"),
+            func.sum(
+                case(
+                    (ClickLog.sub2.op("~")("^[0-9.]+$"), cast(ClickLog.sub2, Float)),
+                    else_=0.0,
+                )
+            ).label("cost"),
+            func.sum(cast(Conversion.payout, Float)).label("revenue"),
+        )
+        .outerjoin(Conversion, Conversion.click_id == ClickLog.click_id)
+        .filter(ClickLog.user_id == current_user.id)
+        .group_by(func.date(ClickLog.created_at))
+        .order_by(func.date(ClickLog.created_at))
+        .all()
+    )
+
+    graph_data = [
+        {
+            "date": str(r.date),
+            "clicks": int(r.clicks or 0),
+            "cost": float(r.cost or 0),
+            "revenue": float(r.revenue or 0),
+        }
+        for r in graph
+    ]
+
+    # =====================
+    # GEO ROI
+    # =====================
+    geo_rows = (
+        db.query(
+            ClickLog.country,
+            func.count(ClickLog.id).label("clicks"),
+            func.sum(
+                case(
+                    (ClickLog.sub2.op("~")("^[0-9.]+$"), cast(ClickLog.sub2, Float)),
+                    else_=0.0,
+                )
+            ).label("cost"),
+            func.sum(cast(Conversion.payout, Float)).label("revenue"),
+        )
+        .outerjoin(Conversion, Conversion.click_id == ClickLog.click_id)
+        .filter(ClickLog.user_id == current_user.id)
+        .group_by(ClickLog.country)
+        .all()
+    )
+
+    geo_roi = []
+
+    for g in geo_rows:
+        cost = float(g.cost or 0)
+        revenue = float(g.revenue or 0)
+        profit_g = revenue - cost
+        roi_g = (profit_g / cost * 100) if cost > 0 else 0
+
+        geo_roi.append(
+            {
+                "country": g.country or "Unknown",
+                "roi": round(roi_g, 2),
+            }
+        )
+    # =====================
+    # TOP OFFERS
+    # =====================
+    offers = (
+        db.query(
+            ClickLog.offer_id,
+            func.count(ClickLog.id).label("clicks"),
+            func.sum(Conversion.payout).label("revenue"),
+        )
+        .outerjoin(Conversion, Conversion.click_id == ClickLog.click_id)
+        .filter(ClickLog.user_id == current_user.id)
+        .group_by(ClickLog.offer_id)
+        .all()
+    )
+
+    offer_data = []
+
+    for o in offers:
+        cost = 0  # safe (no crash)
+        revenue = float(o.revenue or 0)
+        profit_o = revenue - cost
+        roi_o = (profit_o / cost * 100) if cost > 0 else 0
+
+        offer_data.append(
+            {
+                "offer_id": o.offer_id,
+                "clicks": int(o.clicks or 0),
+                "revenue": revenue,
+                "profit": profit_o,
+                "roi": roi_o,
+            }
+        )
+
+    total_clicks = total_clicks or 0
+    total_cost = total_cost or 0
+    total_revenue = total_revenue or 0
+    total_conversions = total_conversions or 0
+    total_bots = total_bots or 0
+
+    profit = total_revenue - total_cost
+    roi = (profit / total_cost * 100) if total_cost > 0 else 0
+    epc = total_revenue / total_clicks if total_clicks > 0 else 0
+    cpa = total_cost / total_conversions if total_conversions > 0 else 0
+    bot_percent = (total_bots / total_clicks * 100) if total_clicks > 0 else 0
+    # ✅ CVR (Conversion Rate)
+    cvr = (total_conversions / total_clicks * 100) if total_clicks > 0 else 0
+
+    # =====================
+    # AUTO ALERTS
+    # =====================
+    alerts = []
+
+    if total_clicks > 100 and total_conversions == 0:
+        alerts.append("🚨 No conversions — stop campaign")
+
+    if roi < 0:
+        alerts.append("❌ Losing money")
+
+    if roi > 50:
+        alerts.append(f"🚀 Scale campaigns aggressively (ROI: {round(roi, 1)}%)")
+
+    if bot_percent > 30:
+        alerts.append("⚠️ High bot traffic")
+
+    return {
+        "profit": profit,
+        "roi": roi,
+        "epc": epc,
+        "cpa": cpa,
+        "cvr": cvr,  # ✅ NEW
+        "bot_percent": bot_percent,
+        "clicks": total_clicks,
+        "conversions": total_conversions,
+        "revenue": total_revenue,
+        "cost": total_cost,
+        "alerts": alerts,  # ✅ NEW
+        "geo_roi": geo_roi,  # ✅ NEW
+        "graph": graph_data,
+    }

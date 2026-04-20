@@ -136,8 +136,8 @@ def log_raw_hit(visitor: VisitorContext, request: Request, db: Session):
 # =====================================================
 
 
-@router.api_route("/r/{slug}", methods=["GET", "POST"])
-@router.api_route("/r/{slug}/{token}", methods=["GET", "POST"])
+@router.get("/r/{slug}")
+@router.get("/r/{slug}/{token}")
 async def redirect_campaign(
     slug: str,
     request: Request,
@@ -196,7 +196,11 @@ async def redirect_campaign(
     sec_fetch = request.headers.get("sec-fetch-dest", "")
     sec_mode = request.headers.get("sec-fetch-mode", "")
 
-    is_real_navigation = sec_fetch == "document" and sec_mode in ["navigate", ""]
+    is_real_navigation = (
+        request.method == "GET"
+        and not request.headers.get("x-requested-with")
+        and ("text/html" in request.headers.get("accept", ""))
+    )
 
     is_bot_traffic = (
         visitor.is_bot or visitor.bot_score >= 80 or visitor.device_type == "bot"
@@ -1201,7 +1205,7 @@ async def redirect_campaign(
             # ❌ DO NOT BLOCK FLOW
             should_log_final = False
         else:
-            redis_client.setex(log_key, 3, "1")
+            redis_client.setex(log_key, 10, "1")
     except Exception:
         should_log_final = True
 
@@ -1222,7 +1226,7 @@ async def redirect_campaign(
         # print("DECISION:", decision)
         # print("REASON:", reason)
         # print("DESTINATION:", destination_url)
-        if should_log_final and is_real_navigation:
+        if should_log_final and is_real_navigation and request.method == "GET":
 
             print("🔥 REAL CLICK LOGGED")
 

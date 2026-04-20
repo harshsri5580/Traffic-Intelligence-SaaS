@@ -62,3 +62,8 @@ body {
 html, body {
   overflow-x: hidden;
 }
+canvas {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
