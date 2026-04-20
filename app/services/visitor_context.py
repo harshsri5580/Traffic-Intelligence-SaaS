@@ -358,6 +358,14 @@ class VisitorContext:
             "virtual",
             "vps",
             "instance",
+            "proton",
+            "big data host",
+            "Hydra",
+            "protonVPN",
+            "ipxo",
+            "virgin",
+            "datasource",
+            "dmzhost",
         ]
 
         # 🔥 NORMALIZE FIRST WORD (SUPER IMPORTANT)
