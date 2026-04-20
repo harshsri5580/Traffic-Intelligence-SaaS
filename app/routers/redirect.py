@@ -1243,7 +1243,7 @@ async def redirect_campaign(
         # print("DECISION:", decision)
         # print("REASON:", reason)
         # print("DESTINATION:", destination_url)
-        if should_log_final and request.method == "GET" and visitor.referrer:
+        if should_log_final and request.method == "GET":
 
             print("🔥 REAL CLICK LOGGED")
 
