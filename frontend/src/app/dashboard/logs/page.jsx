@@ -145,36 +145,61 @@ export default function LogsPage() {
   const exportCSV = () => {
 
     const headers = [
-      "IP", "Country", "Device", "ASN", "ISP",
-      "Campaign", "Destination", "Bot Score",
-      "Risk Score", "Reason", "Flags", "Fingerprint", "Status", "Time"
+      "IP",
+      "Country",
+      "Device",
+      "ASN",
+      "ISP",
+      "Campaign",
+      "Destination",
+      "OS",
+      "Timezone",
+      "User Agent",
+      "Bot Score",
+      "Risk Score",
+      "Status",
+      "Reason",
+      "Referrer",
+      "Time"
     ];
 
     const rows = logs.map(l => [
-      l.ip_address,
-      l.country,
-      l.device_type,
-      l.asn,
-      l.isp,
-      l.campaign_id,
-      l.offer_id,
-      l.rule_id,
-      l.bot_score,
-      l.status,
-      l.created_at
+      l.ip_address || "-",
+      l.country || "-",
+      l.device_type || "-",
+      l.asn || "-",
+      l.isp || "-",
+
+      l.campaign || "-",        // ✅ FIX
+      l.destination || "-",     // ✅ FIX
+
+      l.os || "-",
+      l.ip_timezone || "-",
+      (l.user_agent || "").replace(/,/g, " "), // CSV break fix
+
+      l.bot_score ?? 0,
+      l.risk_score ?? 0,        // ✅ FIX
+
+      l.status || "-",
+      l.reason || "-",
+
+      l.referrer || "-",        // ✅ FIX (IMPORTANT)
+
+      l.created_at || "-"
     ]);
 
-    let csv = [headers, ...rows].map(r => r.join(",")).join("\n");
+    const csvContent =
+      [headers, ...rows]
+        .map(row => row.map(v => `"${v}"`).join(","))
+        .join("\n");
 
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
 
     const a = document.createElement("a");
-
     a.href = url;
     a.download = "traffic_logs.csv";
     a.click();
-
   };
 
   const filteredLogs = logs.filter((l) => {

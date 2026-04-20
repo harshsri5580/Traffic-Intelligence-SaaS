@@ -153,7 +153,10 @@ async def redirect_campaign(
     # print("🌍 ORIGIN HEADER:", request.headers.get("origin"))
     # ✅ FIX: Capture real referrer
     visitor.referrer = (
-        request.headers.get("referer") or request.headers.get("origin") or ""
+        request.headers.get("referer")
+        or request.headers.get("origin")
+        or request.headers.get("referrer")
+        or "-"
     )
 
     # =========================
@@ -196,10 +199,8 @@ async def redirect_campaign(
     sec_fetch = request.headers.get("sec-fetch-dest", "")
     sec_mode = request.headers.get("sec-fetch-mode", "")
 
-    is_real_navigation = (
-        request.method == "GET"
-        and not request.headers.get("x-requested-with")
-        and ("text/html" in request.headers.get("accept", ""))
+    is_real_navigation = request.method == "GET" and not request.headers.get(
+        "x-requested-with"
     )
 
     is_bot_traffic = (

@@ -40,7 +40,12 @@ class VisitorContext:
         self.user_agent_string = (
             headers.get("user-agent") or headers.get("User-Agent") or ""
         )
-        self.referrer = headers.get("referer")
+        self.referrer = (
+            headers.get("referer")
+            or headers.get("origin")
+            or headers.get("referrer")
+            or ""
+        )
         self.language = headers.get("accept-language")
         self.host = headers.get("host")
 
@@ -359,7 +364,7 @@ class VisitorContext:
             if "utm_medium" in query_params:
                 self.traffic_medium = query_params.get("utm_medium")[0]
 
-        elif self.referrer:
+        elif self.referrer and len(self.referrer) > 5:
 
             ref = self.referrer.lower()
 

@@ -74,7 +74,7 @@ class RiskEngine:
                 if not self.campaign or getattr(
                     self.campaign, "block_proxy_rotation", True
                 ):
-                    self.score += 70
+                    self.score += 40
         except Exception:
             pass
 
@@ -90,8 +90,8 @@ class RiskEngine:
         elif bot_score >= 75:
             self.score += 70
 
-        elif bot_score >= 50:
-            self.score += 30
+        elif bot_score >= 60:
+            self.score += 15
         # ---------------------------------
         # TRAFFIC QUALITY
         # ---------------------------------
@@ -284,8 +284,8 @@ class RiskEngine:
         # CACHE HIGH RISK
         # ---------------------------------
         try:
-            if self.score >= 90:
-                redis_client.setex(f"blocked_ip:{ip}", 120, "1")
+            if self.score >= 95:
+                redis_client.setex(f"blocked_ip:{ip}", 60, "1")
         except Exception:
             pass
 
@@ -297,8 +297,8 @@ class RiskEngine:
 
             if self.score >= 80:
                 new_score = min(current + 20, 100)
-            elif self.score >= 50:
-                new_score = min(current + 10, 100)
+            elif self.score >= 60:
+                new_score = min(current + 5, 100)
             elif self.score < 20:
                 new_score = max(current - 5, 0)
             else:
