@@ -19,7 +19,7 @@ class RiskEngine:
 
     def calculate(self):
         self.score = 0  # 🔥 MUST FIX (no side effect)
-        self.score = max(self.score, visitor.bot_score * 0.5)
+        self.score = max(self.score, self.visitor.bot_score * 0.8)
 
         ip = getattr(self.visitor, "ip", None)
 
@@ -40,8 +40,8 @@ class RiskEngine:
                 not getattr(self.visitor, "is_proxy", False)
                 and not getattr(self.visitor, "is_datacenter", False)
                 and not getattr(self.visitor, "is_vpn", False)
-                and getattr(self.visitor, "bot_score", 0) < 25
-                and getattr(self.visitor, "traffic_quality", "") != "fraud"
+                and getattr(self.visitor, "bot_score", 0) < 15
+                and getattr(self.visitor, "traffic_quality", "") == "clean"
             ):
                 return getattr(self.visitor, "bot_score", 0)
         except Exception:
@@ -109,7 +109,7 @@ class RiskEngine:
         # DATACENTER
         # ---------------------------------
         if getattr(self.visitor, "is_datacenter", False):
-            self.score += 25
+            self.score += 60
 
         # ---------------------------------
         # VPN / PROXY (SAFE CACHE)
@@ -127,11 +127,11 @@ class RiskEngine:
 
             if vpn_info:
                 if vpn_info.get("is_tor"):
-                    self.score += 60
+                    self.score += 80
                 if vpn_info.get("is_vpn"):
-                    self.score += 25
+                    self.score += 40
                 if vpn_info.get("is_proxy"):
-                    self.score += 30
+                    self.score += 40
                 if vpn_info.get("is_residential_proxy"):
                     self.score += 20
 

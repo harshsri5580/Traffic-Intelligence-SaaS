@@ -50,12 +50,16 @@ router = APIRouter(tags=["Redirect"])
 from fastapi.responses import HTMLResponse
 
 
-def safe_redirect(url: str):
+def smart_redirect(url: str):
     return HTMLResponse(
         f"""
     <html>
       <head>
-        <meta http-equiv="refresh" content="0;url={url}">
+        <meta name="referrer" content="unsafe-url">
+        <meta http-equiv="refresh" content="0; url={url}">
+        <script>
+          window.location.href = "{url}";
+        </script>
       </head>
     </html>
     """
@@ -520,8 +524,8 @@ async def redirect_campaign(
         cached_score = redis_client.get(bot_key)
 
         if cached_score:
-            visitor.bot_score = min(visitor.bot_score, int(cached_score))
-            print("🔒 BOT SCORE LOCKED:", visitor.bot_score)
+            print("🔒 BOT CACHE FOUND:", cached_score)
+            # ❌ DO NOT OVERRIDE REAL SCORE
         else:
             redis_client.setex(bot_key, 10, int(visitor.bot_score or 0))
     except Exception:
@@ -666,6 +670,11 @@ async def redirect_campaign(
     # -------------------------------------------------
     # LOAD CAMPAIGN
     # -------------------------------------------------
+    # 🔥 HARD BLOCK (TOP PRIORITY)
+    if visitor.is_datacenter or visitor.is_vpn or visitor.is_proxy or visitor.is_tor:
+        print("🚫 HARD BLOCK: BAD NETWORK")
+
+        return RedirectResponse(campaign.bot_url or campaign.safe_page_url or "/decoy")
 
     if not campaign:
         decision = set_decision(decision, "blocked")
@@ -1015,13 +1024,16 @@ async def redirect_campaign(
         risk_score = visitor.bot_score
 
     # 🔥 HIGH RISK BLOCK
-    if risk_score >= 80 and (
-        visitor.bot_score < 40 or visitor.is_proxy or visitor.is_datacenter
-    ):
+    # 🔥 HIGH RISK BLOCK
+    if risk_score >= 70 or visitor.bot_score >= 80:
+        print("🚫 HIGH RISK BLOCK")
+
         decision = set_decision(decision, "blocked")
         reason = "fraud_traffic"
 
         is_bot_traffic = True
+        is_blocked_final = True  # 🔥 MOST IMPORTANT
+
         redirect_url = campaign.safe_page_url or "/decoy"
         destination_url = redirect_url
 
@@ -1086,7 +1098,7 @@ async def redirect_campaign(
     # RULE ENGINE
     # ==============================
 
-    if decision != "blocked" and not proxied_url:
+    if decision != "blocked" and not proxied_url and not is_bot_traffic:
 
         try:
 
@@ -1461,4 +1473,4 @@ async def redirect_campaign(
             final_url = campaign.bot_url or campaign.safe_page_url or "/decoy"
 
         return RedirectResponse(final_url)
-    return safe_redirect(redirect_url or campaign.fallback_url or "/decoy")
+    return smart_redirect(redirect_url or campaign.fallback_url or "/decoy")

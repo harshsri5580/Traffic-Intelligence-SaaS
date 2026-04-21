@@ -56,6 +56,46 @@ import toast from "react-hot-toast";
 //   20940  // Akamai
 // ];
 
+const timezoneOptions = [
+  { value: "Asia/Kolkata", label: "India (Asia/Kolkata)" },
+  { value: "Asia/Dubai", label: "UAE (Asia/Dubai)" },
+  { value: "Asia/Singapore", label: "Singapore" },
+  { value: "Asia/Tokyo", label: "Japan (Tokyo)" },
+
+  { value: "Europe/London", label: "UK (London)" },
+  { value: "Europe/Berlin", label: "Germany (Berlin)" },
+  { value: "Europe/Paris", label: "France (Paris)" },
+
+  { value: "America/New_York", label: "USA (New York)" },
+  { value: "America/Los_Angeles", label: "USA (Los Angeles)" },
+  { value: "America/Chicago", label: "USA (Chicago)" },
+
+  { value: "Australia/Sydney", label: "Australia (Sydney)" },
+  { value: "Pacific/Auckland", label: "New Zealand" },
+
+  { value: "UTC", label: "UTC (Universal)" },
+];
+
+const languageOptions = [
+  { value: "en-US", label: "English (US)" },
+  { value: "en-IN", label: "English (India)" },
+  { value: "en-GB", label: "English (UK)" },
+
+  { value: "hi-IN", label: "Hindi" },
+  { value: "bn-IN", label: "Bengali" },
+  { value: "ta-IN", label: "Tamil" },
+
+  { value: "fr-FR", label: "French" },
+  { value: "de-DE", label: "German" },
+  { value: "es-ES", label: "Spanish" },
+  { value: "pt-BR", label: "Portuguese (Brazil)" },
+
+  { value: "ru-RU", label: "Russian" },
+  { value: "zh-CN", label: "Chinese (Simplified)" },
+  { value: "ja-JP", label: "Japanese" },
+  { value: "ko-KR", label: "Korean" },
+];
+
 export default function RulesPage() {
 
   const [rules, setRules] = useState([]);
@@ -84,10 +124,10 @@ export default function RulesPage() {
     os: [],
     asn: "",
     isp: "",
-    referrer: "",
+    referrer: [],
     bot_score: 40,
-    timezone: "",
-    language: "",
+    timezone: [],
+    language: [],
     action: "rotate",
     match_type: "AND",   // 🔥 ADD
     selected_offers: [],
@@ -184,10 +224,10 @@ export default function RulesPage() {
       os: [],
       asn: "",
       isp: "",
-      referrer: "",
+      referrer: [],
       bot_score: 40,
-      timezone: "",
-      language: "",
+      timezone: [],
+      language: [],
       action: "rotate",
       match_type: "AND",   // 🔥 ADD
       priority: 1,
@@ -291,8 +331,17 @@ export default function RulesPage() {
           value: formData.isp
         });
 
-      if (formData.referrer)
-        conditions.push({ field: "referrer", value: formData.referrer });
+      (formData.timezone || []).forEach(t => {
+        conditions.push({ field: "timezone", value: t });
+      });
+
+      (formData.language || []).forEach(l => {
+        conditions.push({ field: "language", value: l });
+      });
+
+      (formData.referrer || []).forEach(r => {
+        conditions.push({ field: "referrer", value: r });
+      });
 
       conditions.push({ field: "bot_score", value: formData.bot_score });
 
@@ -354,10 +403,18 @@ export default function RulesPage() {
         .map(c => c.value) || [],
       asn: getCondition(rule.conditions, "asn"),
       isp: getCondition(rule.conditions, "isp"),
-      referrer: getCondition(rule.conditions, "referrer"),
       bot_score: getCondition(rule.conditions, "bot_score") || 50,
-      timezone: getCondition(rule.conditions, "timezone"),
-      language: getCondition(rule.conditions, "language"),
+      timezone: rule.conditions
+        ?.filter(c => c.field === "timezone")
+        .map(c => c.value) || [],
+
+      language: rule.conditions
+        ?.filter(c => c.field === "language")
+        .map(c => c.value) || [],
+
+      referrer: rule.conditions
+        ?.filter(c => c.field === "referrer")
+        .map(c => c.value) || [],
       action: rule.action_type,
       selected_offers: (rule.offers || []).map(o => Number(o.offer_id)),
       rule_offer_ids: (rule.offers || []).map(o => Number(o.rule_offer_id)),
@@ -644,13 +701,18 @@ focus:ring-2 focus:ring-blue-500 outline-none"
               }
             />
 
-            <input
-              className="px-3 py-2 rounded-lg border border-gray-300 
-text-sm shadow-sm 
-focus:ring-2 focus:ring-blue-500 outline-none"
-              placeholder="Referrer"
-              value={formData.referrer}
-              onChange={(e) => setFormData({ ...formData, referrer: e.target.value })}
+            <CreatableSelect
+              isMulti
+              placeholder="Add Referrers..."
+              noOptionsMessage={() => "Type to add Referrers"}
+              value={(formData.referrer || []).map(v => ({ value: v, label: v }))}
+              onChange={(selected) => {
+                const values = selected ? selected.map(s => s.value) : [];
+                setFormData({
+                  ...formData,
+                  referrer: values
+                });
+              }}
             />
 
             <div className="col-span-2">
@@ -700,22 +762,34 @@ focus:ring-2 focus:ring-blue-500 outline-none"
 
             </div>
 
-            <input
-              className="px-3 py-2 rounded-lg border border-gray-300 
-text-sm shadow-sm 
-focus:ring-2 focus:ring-blue-500 outline-none"
-              placeholder="Timezone"
-              value={formData.timezone}
-              onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
+            <CreatableSelect
+              isMulti
+              options={timezoneOptions}
+              placeholder="Select Timezones..."
+              value={timezoneOptions.filter(o =>
+                formData.timezone.includes(o.value)
+              )}
+              onChange={(selected) => {
+                setFormData({
+                  ...formData,
+                  timezone: selected ? selected.map(s => s.value) : []
+                });
+              }}
             />
 
-            <input
-              className="px-3 py-2 rounded-lg border border-gray-300 
-text-sm shadow-sm 
-focus:ring-2 focus:ring-blue-500 outline-none"
-              placeholder="Language"
-              value={formData.language}
-              onChange={(e) => setFormData({ ...formData, language: e.target.value })}
+            <CreatableSelect
+              isMulti
+              options={languageOptions}
+              placeholder="Select Languages..."
+              value={languageOptions.filter(o =>
+                formData.language.includes(o.value)
+              )}
+              onChange={(selected) => {
+                setFormData({
+                  ...formData,
+                  language: selected ? selected.map(s => s.value) : []
+                });
+              }}
             />
 
             <select

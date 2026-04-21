@@ -151,6 +151,7 @@ export default function LogsPage() {
       "ASN",
       "ISP",
       "Campaign",
+      "Browser",
       "Destination",
       "OS",
       "Timezone",
@@ -163,14 +164,15 @@ export default function LogsPage() {
       "Time"
     ];
 
-    const rows = logs.map(l => [
+    const rows = filteredLogs.map(l => [
       l.ip_address || "-",
       l.country || "-",
       l.device_type || "-",
       l.asn || "-",
       l.isp || "-",
 
-      l.campaign || "-",        // ✅ FIX
+      l.campaign || "-",
+      l.browser || "-",       // ✅ FIX
       l.destination || "-",     // ✅ FIX
 
       l.os || "-",
@@ -198,7 +200,7 @@ export default function LogsPage() {
 
     const a = document.createElement("a");
     a.href = url;
-    a.download = "traffic_logs.csv";
+    a.download = `logs_${filters.date || "all"}_${filters.campaign_id || "all"}.csv`;
     a.click();
   };
 
@@ -215,8 +217,9 @@ export default function LogsPage() {
       return false;
     }
 
-    if (filters.date && !l.created_at?.startsWith(filters.date)) {
-      return false;
+    if (filters.date) {
+      const logDate = new Date(l.created_at).toISOString().slice(0, 10);
+      if (logDate !== filters.date) return false;
     }
 
     return true;
@@ -243,7 +246,7 @@ export default function LogsPage() {
 
   return (
 
-    <div className="mx-auto space-y-6 h-screen overflow-hidden flex flex-col">
+    <div className="mx-auto space-y-6 min-h-screen flex flex-col">
 
       {/* HEADER */}
       <div className="flex flex-col gap-1 mb-2">
@@ -342,7 +345,7 @@ shadow-[0_10px_25px_rgba(0,0,0,0.06)]
 border border-gray-100
 hover:shadow-[0_15px_40px_rgba(0,0,0,0.10)]
 transition-all duration-300 flex-1 flex flex-col">
-        <div className="overflow-auto flex-1 rounded-xl border border-gray-100 bg-white">
+        <div className="overflow-auto flex-1 max-h-[85vh] rounded-xl border border-gray-100 bg-white">
           <div className="w-full flex-shrink-0"> {/* ✅ prevent shrinking when table is wider than container */}
 
             <div className="w-full max-w-[1180px]">
@@ -533,7 +536,10 @@ ${log.risk_score >= 70 ? "bg-red-500/10 text-red-400 border border-red-500/20" :
 
                       {visibleColumns.time && (
                         <td className="p-2 border text-xs whitespace-nowrap">
-                          {new Date(log.created_at).toLocaleString()}
+                          {new Date(log.created_at + "Z").toLocaleString("en-US", {
+                            timeZone: log.ip_timezone || "UTC",
+                            hour12: true
+                          })}
                         </td>
                       )}
 

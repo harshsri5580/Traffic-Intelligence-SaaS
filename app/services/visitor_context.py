@@ -230,7 +230,13 @@ class VisitorContext:
                 self.country_code = geo.get("country_code") or "XX"
                 self.region = geo.get("region")
                 self.city = geo.get("city")
-                self.ip_timezone = geo.get("timezone") or "Asia/Kolkata"
+                tz = geo.get("timezone")
+
+                # 🔥 VALIDATE TIMEZONE
+                if tz and "/" in tz:
+                    self.ip_timezone = tz
+                else:
+                    self.ip_timezone = "UTC"
                 self.isp = geo.get("isp")
 
         except Exception:
@@ -252,6 +258,33 @@ class VisitorContext:
 
         except Exception:
             pass
+
+        dc_asn_keywords = [
+            "amazon",
+            "google",
+            "microsoft",
+            "azure",
+            "cloudflare",
+            "digitalocean",
+            "linode",
+            "vultr",
+            "ovh",
+            "hetzner",
+            "contabo",
+            "scaleway",
+            "leaseweb",
+            "oracle",
+            "alibaba",
+            "tencent",
+            "huawei",
+        ]
+
+        if self.org:
+            org_lower = self.org.lower()
+
+            if any(k in org_lower for k in dc_asn_keywords):
+                self.is_datacenter = True
+                self.bot_score = max(self.bot_score, 90)
         # =========================================
         # 🔥 GEO-ASN CONSISTENCY CHECK
         # =========================================
@@ -389,8 +422,7 @@ class VisitorContext:
             self.connection_type = "datacenter"
             self.ip_type = "datacenter"
 
-            # 🔥 SAFE SCORE (NO OVERFLOW)
-            self.bot_score = max(self.bot_score, 70)
+            self.bot_score = max(self.bot_score, 85)  # 🔥 increase
 
         # ================================
         # VPN DETECTION
@@ -414,11 +446,15 @@ class VisitorContext:
 
         vpn_info = detect_vpn(self.ip, org=self.org, asn=self.asn)
 
-        self.is_vpn = vpn_info.get("is_vpn", False)
-        self.is_proxy = vpn_info.get("is_proxy", False)
-        self.is_tor = vpn_info.get("is_tor", False)
-        self.vpn_info = vpn_info
+        self.is_vpn = self.is_vpn or vpn_info.get("is_vpn", False)
+        self.is_proxy = self.is_proxy or vpn_info.get("is_proxy", False)
+        self.is_tor = self.is_tor or vpn_info.get("is_tor", False)
+        # ================================
+        # 🔥 UNKNOWN NETWORK BOOST (ADD HERE)
+        # ================================
 
+        if self.connection_type == "unknown" and self.bot_score > 40:
+            self.bot_score += 20
         # ================================
         # DEFAULT IP TYPE
         # ================================
@@ -481,8 +517,8 @@ class VisitorContext:
         # HEADER ANOMALY
         # ================================
 
-        if not self.language:
-            self.bot_score += 10
+        if not self.language and not self.is_datacenter:
+            self.bot_score += 5
 
         if not self.browser:
             self.bot_score += 10
@@ -541,8 +577,8 @@ class VisitorContext:
             if trust:
                 trust = int(trust)
 
-                if trust > 5:
-                    self.bot_score -= 20
+                if trust > 5 and self.traffic_quality == "clean":
+                    self.bot_score -= 10
 
             else:
                 redis_client.setex(trust_key, 3600, 1)
