@@ -29,11 +29,11 @@ def track_conversion(
         from app.models.click_log import ClickLog
 
         click = db.query(ClickLog).filter(ClickLog.click_id == click_id).first()
+        if not click:
+            return {"status": "invalid_click"}
         print("CLICK FOUND:", click_id)
         print("SUB1 (ZONE):", click.sub1)
         print("COST:", click.cost)
-        if not click:
-            return {"status": "invalid_click"}
 
         # ✅ 2. prevent duplicate conversion
         exists = db.query(Conversion).filter(Conversion.click_id == click_id).first()
@@ -45,7 +45,7 @@ def track_conversion(
             click_id=click_id,
             offer_id=click.offer_id,
             campaign_id=click.campaign_id,
-            payout=payout,
+            payout=float(payout),
         )
 
         # 🔥 update click
