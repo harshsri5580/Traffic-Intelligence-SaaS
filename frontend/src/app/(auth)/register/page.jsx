@@ -12,6 +12,7 @@ export default function RegisterPage() {
 
   const [name, setName] = useState(""); // ✅ NEW
   const [email, setEmail] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -111,13 +112,24 @@ export default function RegisterPage() {
         />
 
         {/* PASSWORD */}
-        <input
-          className="bg-black/40 border border-white/10 p-3 w-full mb-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-white placeholder-gray-400"
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+        <div className="relative mb-4">
+          <input
+            className="bg-black/40 border border-white/10 p-3 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-white placeholder-gray-400"
+            type={showPassword ? "text" : "password"}
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+
+          {/* 👁 Eye Icon */}
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-3 text-gray-400 hover:text-white"
+          >
+            {showPassword ? "🙈" : "👁"}
+          </button>
+        </div>
 
         {/* BUTTON */}
         <button

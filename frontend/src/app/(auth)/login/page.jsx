@@ -11,18 +11,18 @@ import toast from "react-hot-toast";
 export default function LoginPage() {
 
   const router = useRouter();
-  const errorRef = useRef("");
   const [email, setEmail] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
 
-  useEffect(() => {
-    if (errorRef.current) {
-      setErrorMsg(errorRef.current);
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (errorRef.current) {
+  //     setErrorMsg(errorRef.current);
+  //   }
+  // }, []);
 
   const validate = () => {
     if (!email || !password) {
@@ -113,9 +113,6 @@ export default function LoginPage() {
         finalMsg = "Account blocked 🚫";
       }
 
-      // ✅ YAHAN ADD KARO
-      errorRef.current = finalMsg;
-
       setErrorMsg(finalMsg);
       toast.error(finalMsg, { duration: 4000 });
 
@@ -155,13 +152,24 @@ export default function LoginPage() {
         />
 
         {/* PASSWORD */}
-        <input
-          className="bg-black/40 border border-white/10 p-3 w-full mb-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-white placeholder-gray-400"
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+        <div className="relative mb-2">
+          <input
+            className="bg-black/40 border border-white/10 p-3 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-white placeholder-gray-400"
+            type={showPassword ? "text" : "password"}
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+
+          {/* 👁 ICON */}
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-3 text-gray-400 hover:text-white"
+          >
+            {showPassword ? "🙈" : "👁"}
+          </button>
+        </div>
 
         {/* FORGOT */}
         <div className="text-right mb-4">

@@ -743,8 +743,8 @@ def advanced_profit(
     if total_clicks > 100 and total_conversions == 0:
         alerts.append("🚨 No conversions — stop campaign")
 
-    if roi < 0:
-        alerts.append("❌ Losing money")
+    elif roi < -30:
+        alerts.append("❌ Losing money badly")
 
     if roi > 50:
         alerts.append(f"🚀 Scale campaigns aggressively (ROI: {round(roi, 1)}%)")

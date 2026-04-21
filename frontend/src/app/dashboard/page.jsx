@@ -88,7 +88,6 @@ export default function Dashboard() {
 
 
   useEffect(() => {
-
     const token = localStorage.getItem("token");
 
     if (!token) {
@@ -98,53 +97,67 @@ export default function Dashboard() {
 
     loadDashboard();
 
-    const ws = new WebSocket("ws://localhost:8000/api/dashboard/live");
-
+    let ws;
     let buffer = [];
 
-    ws.onopen = () => {
-      console.log("Realtime connected");
-    };
+    // 🔥 delayed connection
+    const connectWS = () => {
+      ws = new WebSocket("wss://api.trafficintelai.com/api/dashboard/live");
 
-    ws.onmessage = (event) => {
-
-      const data = JSON.parse(event.data);
-
-      const mapped = {
-        ip_address: data.ip,
-        country: data.country,
-        device_type: data.device,
-        campaign_name: data.campaign,
-        status: data.status,
-        created_at: data.time
+      ws.onopen = () => {
+        console.log("Realtime connected");
       };
 
-      buffer.push(mapped);
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
 
-      // ✅ batch update (performance boost)
-      if (buffer.length >= 5) {
-        setRecent(prev => [...buffer, ...prev].slice(0, 20));
-        buffer = [];
-      }
+          const mapped = {
+            ip_address: data.ip,
+            country: data.country,
+            device_type: data.device,
+            campaign_name: data.campaign,
+            status: data.status,
+            created_at: data.time,
+          };
+
+          buffer.push(mapped);
+
+          if (buffer.length >= 5) {
+            setRecent((prev) => [...buffer, ...prev].slice(0, 20));
+            buffer = [];
+          }
+        } catch (e) {
+          console.log("WS parse error");
+        }
+      };
+
+      ws.onerror = (err) => {
+        console.log("WS error", err);
+      };
+
+      ws.onclose = () => {
+        console.log("Disconnected... retrying");
+        setTimeout(connectWS, 3000); // 🔥 auto reconnect (NO reload)
+      };
     };
 
-    setTimeout(() => {
+    const timeout = setTimeout(connectWS, 1500);
+
+    // 🔥 buffer flush
+    const interval = setInterval(() => {
       if (buffer.length > 0) {
-        setRecent(prev => [...buffer, ...prev].slice(0, 20));
+        setRecent((prev) => [...buffer, ...prev].slice(0, 20));
         buffer = [];
       }
     }, 2000);
 
-    ws.onerror = (err) => {
-      console.log("WS error", err);
+    // 🔥 CLEANUP (ONLY ONE RETURN)
+    return () => {
+      clearTimeout(timeout);
+      clearInterval(interval);
+      if (ws) ws.close();
     };
-
-    ws.onclose = () => {
-      console.log("Realtime disconnected");
-    };
-
-    return () => ws.close();
-
   }, []);
 
 
@@ -165,40 +178,8 @@ export default function Dashboard() {
     }
   }, [stats, plan]);
 
-
-
-  const loadDashboard = async () => {
-
+  const loadRestData = async () => {
     try {
-
-      const statsRes = await api.get("/dashboard/stats");
-
-      setStats(statsRes.data || {});
-      const planRes = await api.get("/billing/my-subscription");
-      const data = planRes.data || {};
-
-      setPlan(data);
-
-      // ✅ HAS SUBSCRIPTION
-      const hasSub = !!data?.id;
-      setHasSubscription(hasSub);
-
-      // ✅ DAYS LEFT CALC
-      let days = 0;
-
-      if (data?.expire_date) {
-        const expiry = new Date(data.expire_date);
-        const now = new Date();
-
-        const diff = expiry - now;
-        days = Math.ceil(diff / (1000 * 60 * 60 * 24));
-      }
-
-      setDaysLeft(days);
-
-      // ✅ EXPIRED
-      setExpired(days <= 0);
-
       await Promise.all([
         loadRecent(),
         loadSources(range),
@@ -206,17 +187,34 @@ export default function Dashboard() {
         loadCampaigns(),
         loadZones(),
         loadCampaignTraffic(trafficRange),
-        // loadCampaignProfit(profitRange) // ✅ ADD THIS
-      ]);  // 👈 ADD THIS
-      loadAdvancedProfit();
-      setLoading(false);
+        loadAdvancedProfit()
+      ]);
+    } catch (e) {
+      console.log("Background load error");
+    }
+  };
 
+
+
+  const loadDashboard = async () => {
+    try {
+
+      const [statsRes, planRes] = await Promise.all([
+        api.get("/dashboard/stats"),
+        api.get("/billing/my-subscription"),
+      ]);
+
+      setStats(statsRes.data || {});
+      setPlan(planRes.data || {});
+
+      setLoading(false); // 🔥 FAST SHOW UI
+
+      // 👇 बाकी data background में लोड होगा
+      loadRestData();
 
     } catch (err) {
-      console.error("Dashboard load error", err);
-      setLoading(false); // 🔥 MUST
+      setLoading(false);
     }
-
   };
 
   const loadAdvancedProfit = async () => {
@@ -847,8 +845,6 @@ shadow-[0_10px_40px_rgba(0,0,0,0.08)]">
                 style={{ width: "100%", height: "320px" }}
               >
 
-
-
                 {/* 🌍 MAP BASE */}
                 <Geographies geography={geoUrl}>
                   {({ geographies }) =>
@@ -856,11 +852,23 @@ shadow-[0_10px_40px_rgba(0,0,0,0.08)]">
                       <Geography
                         key={geo.rsmKey}
                         geography={geo}
-                        fill="#f8fafc"
-                        stroke="#e5e7eb"
+                        fill="#e2e8f0"              // 🔥 better visible base color
+                        stroke="#94a3b8"            // 🔥 clear borders
+                        strokeWidth={0.4}
                         style={{
-                          default: { outline: "none" },
-                          hover: { fill: "#dbeafe", outline: "none" },
+                          default: {
+                            outline: "none",
+                            transition: "all 0.2s ease-in-out",
+                          },
+                          hover: {
+                            fill: "#60a5fa",        // 🔥 blue highlight on hover
+                            outline: "none",
+                            cursor: "pointer",
+                          },
+                          pressed: {
+                            fill: "#3b82f6",
+                            outline: "none",
+                          },
                         }}
                       />
                     ))
