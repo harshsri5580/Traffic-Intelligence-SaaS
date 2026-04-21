@@ -186,7 +186,8 @@ export default function PricingPage() {
                 <p>
                   ✔ {formatNumber(p.max_monthly_clicks)} Clicks / month
                 </p>
-
+                <p>✔ Unlimited Rules</p>
+                <p>✔ Unlimited Offers</p>
                 <p>✔ Real-time Traffic Analytics</p>
                 <p>✔ Advanced Traffic Filtering</p>
                 <p>✔ AI-based Bot Detection</p>
@@ -195,7 +196,10 @@ export default function PricingPage() {
                 <p>✔ Geo & Device Targeting</p>
                 <p>✔ IP Reputation Analysis</p>
 
-                <p>✔ VPN / Proxy Detection</p>
+                {p.enable_vpn_detection && <p>✔ VPN Detection</p>}
+                {p.enable_proxy && <p>✔ Proxy Detection</p>}
+                {p.enable_cloaker && <p>✔ Traffic Cloaking</p>}
+
                 <p>✔ Secure Tracking Infrastructure</p>
                 <p>✔ High-speed Redirect System</p>
 

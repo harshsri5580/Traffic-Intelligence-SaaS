@@ -345,25 +345,26 @@ export default function Home() {
                     <p>
                       ✔ {formatNumber(p.max_monthly_clicks)} Clicks / month
                     </p>
-
+                    <p>✔ Unlimited Rules</p>
+                    <p>✔ Unlimited Offers</p>
                     <p>✔ Real-time Traffic Analytics</p>
                     <p>✔ Advanced Traffic Filtering</p>
+                    <p>✔ AI-based Bot Detection</p>
+
                     <p>✔ Smart Routing Engine</p>
                     <p>✔ Geo & Device Targeting</p>
                     <p>✔ IP Reputation Analysis</p>
-                    <p>✔ Fraud Detection System</p>
+
+                    {p.enable_vpn_detection && <p>✔ VPN Detection</p>}
+                    {p.enable_proxy && <p>✔ Proxy Detection</p>}
+                    {p.enable_cloaker && <p>✔ Traffic Cloaking</p>}
+
                     <p>✔ Secure Tracking Infrastructure</p>
-                    <p>✔ Performance Optimization Tools</p>
-                    <p>✔ Campaign Insights Dashboard</p>
+                    <p>✔ High-speed Redirect System</p>
 
-                    {popular && (
-                      <>
-                        <p className="text-indigo-400">✔ Priority Processing</p>
-                        <p className="text-indigo-400">✔ Advanced Reports</p>
-                        <p className="text-indigo-400">✔ Premium Support</p>
-                      </>
-                    )}
-
+                    <p>✔ Campaign Performance Insights</p>
+                    <p>✔ Traffic Quality Monitoring</p>
+                    <p>✔ Scalable Cloud Processing</p>
                   </div>
 
                   {/* CTA */}
