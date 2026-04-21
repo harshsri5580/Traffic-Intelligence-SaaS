@@ -61,6 +61,15 @@ const countryCoords = {
   China: [104.1954, 35.8617]
 };
 
+const formatNumber = (num) => {
+  if (!num) return 0;
+
+  if (num >= 1000000) return (num / 1000000).toFixed(1) + "M";
+  if (num >= 1000) return (num / 1000).toFixed(1) + "K";
+
+  return num;
+};
+
 export default function Dashboard() {
   const [page, setPage] = useState(1);
   const rowsPerPage = 10;
@@ -568,14 +577,18 @@ shadow-[0_8px_30px_rgba(0,0,0,0.06)]">
             </div>
           </div>
 
+          {stats.monthly_clicks >= plan.plan.max_monthly_clicks && (
+            <div className="mt-3 text-sm text-red-600 font-medium">
+              🚫 Monthly limit reached — campaigns paused
+            </div>
+          )}
+
           {/* Clicks */}
           <div>
             <div className="flex justify-between text-sm mb-1">
               <span>Clicks</span>
               <span>
-                {plan?.plan?.max_monthly_clicks
-                  ? `${stats.total_clicks} / ${plan.plan.max_monthly_clicks}`
-                  : "Unlimited"}
+                {formatNumber(stats?.monthly_clicks || 0)} / {formatNumber(plan?.plan?.max_monthly_clicks || 0)}
               </span>
             </div>
 
@@ -584,8 +597,7 @@ shadow-[0_8px_30px_rgba(0,0,0,0.06)]">
                 <div
                   className="bg-green-500 h-3 rounded"
                   style={{
-                    width: `${(stats.total_clicks / plan.plan.max_monthly_clicks) * 100
-                      }%`,
+                    width: `${((stats.monthly_clicks || 0) / plan.plan.max_monthly_clicks) * 100}%`,
                   }}
                 />
               </div>
@@ -800,7 +812,7 @@ shadow-[0_8px_30px_rgba(0,0,0,0.06)]">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
 
 
-          <StatCard title="Total Clicks" value={stats.total_clicks} />
+          <StatCard title="Total Clicks" value={formatNumber(stats.total_clicks)} />
           <StatCard title="Today Clicks" value={stats.today_clicks} />
           <StatCard title="Unique Visitors" value={stats.unique_ips} />
           <StatCard title="Passed Traffic" value={stats.passed} />

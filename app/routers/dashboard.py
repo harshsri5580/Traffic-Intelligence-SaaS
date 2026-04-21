@@ -79,6 +79,17 @@ def get_dashboard_stats(
     # =====================
     # TODAY CLICKS
     # =====================
+    from datetime import datetime
+
+    start_month = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0)
+
+    monthly_clicks = (
+        db.query(func.count(ClickLog.id))
+        .join(Campaign, Campaign.id == ClickLog.campaign_id)
+        .filter(Campaign.user_id == current_user.id, ClickLog.created_at >= start_month)
+        .scalar()
+        or 0
+    )
 
     today = date.today()
 
@@ -187,6 +198,7 @@ def get_dashboard_stats(
     return {
         "total_clicks": total_clicks,
         "today_clicks": today_clicks,
+        "monthly_clicks": monthly_clicks,
         "unique_ips": unique_ips,
         "passed": passed,
         "blocked": blocked,

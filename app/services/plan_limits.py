@@ -131,11 +131,7 @@ def check_click_limit(db: Session, user_id: int):
     plan = get_user_plan(db, user_id)
 
     start_month = datetime.utcnow().replace(
-        day=1,
-        hour=0,
-        minute=0,
-        second=0,
-        microsecond=0,
+        day=1, hour=0, minute=0, second=0, microsecond=0
     )
 
     count = (
@@ -147,14 +143,14 @@ def check_click_limit(db: Session, user_id: int):
         .count()
     )
 
-    # unlimited support (NULL = unlimited)
     limit = get_final_monthly_click_limit(db, user_id)
 
+    print("🔥 DEBUG CLICKS:", count)
+    print("🔥 DEBUG LIMIT:", limit)
+
     if limit is not None and count >= limit:
-        raise HTTPException(
-            status_code=403,
-            detail="Active campaign limit reached for your plan",
-        )
+        print("🚫 LIMIT HIT")
+        raise HTTPException(status_code=403, detail="Limit reached")
 
 
 # ======================================
@@ -254,14 +250,6 @@ def get_final_daily_click_limit(db: Session, user_id: int):
 def get_final_monthly_click_limit(db: Session, user_id: int):
 
     plan = get_user_plan(db, user_id)
-    settings = db.query(SystemSettings).first()
 
-    plan_limit = plan.max_monthly_clicks
-    system_limit = getattr(settings, "max_monthly_clicks", None) if settings else None
-
-    if system_limit is not None:
-        if plan_limit is None:
-            return system_limit
-        return min(plan_limit, system_limit)
-
-    return plan_limit
+    # 🔥 FINAL FIX: only plan limit use करो
+    return plan.max_monthly_clicks

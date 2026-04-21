@@ -26,6 +26,15 @@ export default function Home() {
     } catch { }
   };
 
+  const formatNumber = (num) => {
+    if (!num) return "Unlimited";
+
+    if (num >= 1000000) return (num / 1000000).toFixed(1).replace(".0", "") + "M";
+    if (num >= 1000) return (num / 1000).toFixed(1).replace(".0", "") + "K";
+
+    return num;
+  };
+
   return (
     <div className="bg-black text-white min-h-screen">
 
@@ -332,8 +341,10 @@ export default function Home() {
                   {/* FEATURES */}
                   <div className="space-y-3 text-gray-300 text-sm mb-8">
 
-                    <p>✔ {p.max_campaigns} Campaigns</p>
-                    <p>✔ {p.max_monthly_clicks || "Unlimited"} Click Tracking</p>
+                    <p>✔ Up to {p.max_campaigns} Campaigns</p>
+                    <p>
+                      ✔ {formatNumber(p.max_monthly_clicks)} Clicks / month
+                    </p>
 
                     <p>✔ Real-time Traffic Analytics</p>
                     <p>✔ Advanced Traffic Filtering</p>

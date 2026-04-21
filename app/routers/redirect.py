@@ -17,6 +17,7 @@ from fastapi.responses import StreamingResponse
 from app.models.click_log import ClickLog
 from app.models.raw_hit_log import RawHitLog
 from app.services.bot_classifier import BotClassifier
+from app.services.plan_limits import check_click_limit
 from app.services.super_rewrite import rewrite_all
 from app.models.subscription import Subscription
 from app.routers.challenge import get_real_ip
@@ -1251,6 +1252,32 @@ async def redirect_campaign(
             print("🔒 LOCK SAVED:", decision)
     except Exception:
         pass
+
+    # ---------------------------------
+    # 🔥 PLAN LIMIT HARD BLOCK (FINAL FIX)
+    # ---------------------------------
+    print("🔥 CHECKING PLAN LIMIT FOR USER:", campaign.user_id)
+
+    try:
+        check_click_limit(db, campaign.user_id)
+
+    except HTTPException:
+        print("🚫 PLAN LIMIT REACHED")
+
+        decision = "blocked"
+        reason = "plan_limit_reached"
+
+        redirect_url = campaign.safe_page_url or "/decoy"
+        destination_url = redirect_url
+
+        is_blocked_final = True
+
+        # 🔥 LOCK CLEAR
+        try:
+            redis_client.delete(lock_key)
+            print("🧹 LOCK CLEARED")
+        except Exception:
+            pass
     # -------------------------------------------------
     # CLICK LOGGING
 

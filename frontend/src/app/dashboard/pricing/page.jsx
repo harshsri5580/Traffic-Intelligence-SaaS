@@ -32,6 +32,15 @@ export default function PricingPage() {
     loadAll();
   }, [token]);
 
+  const formatNumber = (num) => {
+    if (!num) return "Unlimited";
+
+    if (num >= 1000000) return (num / 1000000).toFixed(1).replace(".0", "") + "M";
+    if (num >= 1000) return (num / 1000).toFixed(1).replace(".0", "") + "K";
+
+    return num;
+  };
+
   const loadCurrentPlan = async () => {
     try {
       const res = await api.get("/billing/my-subscription");
@@ -173,8 +182,10 @@ export default function PricingPage() {
 
               <div className="space-y-2 text-gray-600 text-sm">
 
-                <p>✔ {p.max_campaigns} Campaigns</p>
-                <p>✔ {p.max_monthly_clicks || "Unlimited"} Click Tracking</p>
+                <p>✔ Up to {p.max_campaigns} Campaigns</p>
+                <p>
+                  ✔ {formatNumber(p.max_monthly_clicks)} Clicks / month
+                </p>
 
                 <p>✔ Real-time Traffic Analytics</p>
                 <p>✔ Advanced Traffic Filtering</p>
