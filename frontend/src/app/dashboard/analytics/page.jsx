@@ -479,7 +479,7 @@ export default function AnalyticsPage() {
                     <td className="p-3">{log.status}</td>
 
                     <td className="p-3">
-                      {log.created_at ? new Date(log.created_at).toLocaleString() : "-"}
+                      {log.created_at ? new Date(log.created_at + "Z").toLocaleString() : "-"}
                     </td>
 
                     <td className="p-3 text-green-400 font-semibold">

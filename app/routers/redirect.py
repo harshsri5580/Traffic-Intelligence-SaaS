@@ -1343,26 +1343,30 @@ async def redirect_campaign(
 
             db.commit()
 
+            # 🔥 ADD THIS HERE (ONLY HERE)
+            try:
+                status_map = {"offer": "pass", "fallback": "safe", "blocked": "blocked"}
+
+                await broadcast(
+                    {
+                        "campaign": campaign.name,
+                        "country": visitor.country,
+                        "device": visitor.device_type,
+                        "ip": ip,
+                        "status": status_map.get(decision, decision),
+                        "time": datetime.utcnow().isoformat() + "Z",
+                    }
+                )
+                print("🚀 WS BROADCAST SENT")
+            except Exception as e:
+                print("❌ BROADCAST ERROR:", e)
+
             # ---------------------------------
             # AI LEARNING ENGINE
             # ---------------------------------
             try:
                 update_campaign_learning(campaign.id, decision)
                 update_source_learning(visitor.traffic_source, decision)
-            except Exception:
-                pass
-
-            try:
-                await broadcast(
-                    {
-                        "campaign": campaign.name,
-                        "country": visitor.country,
-                        "device": visitor.device_type,
-                        "ip": visitor.ip,
-                        "status": decision,
-                        "time": datetime.utcnow().isoformat(),
-                    }
-                )
             except Exception:
                 pass
 

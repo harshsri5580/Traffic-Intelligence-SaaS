@@ -159,7 +159,7 @@ app.include_router(traffic_sources.router, prefix="/api")
 app.include_router(traffic_filters.router, prefix="/api")
 
 app.include_router(offer.router, prefix="/api/offers")
-app.include_router(realtime.router)
+app.include_router(realtime.router, prefix="/api")
 
 # rules router already has prefix inside file
 app.include_router(rules.router)

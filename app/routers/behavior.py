@@ -34,3 +34,27 @@ async def track_behavior_api(data: BehaviorData, request: Request):
 
     except Exception as e:
         return {"status": "error", "msg": str(e)}
+
+
+@router.post("/fingerprint")
+async def fingerprint_api(request: Request):
+    try:
+        data = await request.json()
+
+        ip = request.headers.get("x-forwarded-for")
+        if ip:
+            ip = ip.split(",")[0].strip()
+        else:
+            ip = request.client.host
+
+        ua = request.headers.get("user-agent", "")
+
+        print("🔥 FINGERPRINT HIT")
+        print("IP:", ip)
+        print("UA:", ua)
+        print("FP DATA:", data)
+
+        return {"status": "ok"}
+
+    except Exception as e:
+        return {"status": "error", "msg": str(e)}

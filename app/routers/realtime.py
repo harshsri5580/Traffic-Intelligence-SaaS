@@ -1,25 +1,25 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from app.services.realtime_service import connect, disconnect
+import asyncio
 
 router = APIRouter()
 
-connections = []
 
-
-@router.websocket("/ws/live")
+@router.websocket("/dashboard/live")
 async def websocket_live(websocket: WebSocket):
 
     await websocket.accept()
+    await connect(websocket)
 
-    connections.append(websocket)
+    print("✅ WS CONNECTED")
 
     try:
-
         while True:
-            data = await websocket.receive_text()
+            await asyncio.sleep(25)
+            await websocket.send_json({"type": "ping"})
 
-    except WebSocketDisconnect:
+    except (WebSocketDisconnect, RuntimeError):
+        print("❌ WS DISCONNECTED")
 
-        if websocket in connections:
-            connections.remove(websocket)
-
-        print("WebSocket disconnected")
+    finally:
+        disconnect(websocket)

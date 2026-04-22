@@ -33,9 +33,18 @@ export default function DashboardLayout({ children }) {
     // ===============================
     // 🔥 FINGERPRINT TRACKING (SAFE)
     // ===============================
+    // ===============================
+    // 🔥 FINGERPRINT TRACKING (PRO SAFE)
+    // ===============================
     const sendFingerprint = async () => {
       try {
-        // Canvas
+        if (window.__fp_sent) return;
+        window.__fp_sent = true;
+
+        const API_BASE =
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+
+        // 🔥 CANVAS
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d");
         ctx.textBaseline = "top";
@@ -43,45 +52,26 @@ export default function DashboardLayout({ children }) {
         ctx.fillText("fingerprint", 2, 2);
         const canvasHash = canvas.toDataURL();
 
-        // WebGL
+        // 🔥 WEBGL
         let webgl = "";
         try {
           const gl = canvas.getContext("webgl");
           webgl = gl ? gl.getParameter(gl.RENDERER) : "";
         } catch { }
 
-        // Audio fingerprint
+        // 🔥 AUDIO
         let audioHash = "";
         try {
           const audioCtx = new OfflineAudioContext(1, 44100, 44100);
           const oscillator = audioCtx.createOscillator();
-          oscillator.type = "triangle";
           oscillator.connect(audioCtx.destination);
           oscillator.start(0);
           const buffer = await audioCtx.startRendering();
           audioHash = buffer.getChannelData(0)[0].toString();
         } catch { }
 
-        // Fonts (basic)
-        const fonts = [
-          "Arial",
-          "Verdana",
-          "Times New Roman",
-          "Courier New",
-        ];
-
-        const fontCheck = fonts.map((f) => {
-          const span = document.createElement("span");
-          span.style.fontFamily = f;
-          span.innerText = "test";
-          document.body.appendChild(span);
-          const width = span.offsetWidth;
-          document.body.removeChild(span);
-          return `${f}:${width}`;
-        });
-
-        // Send to backend
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/behavior/fingerprint`, {
+        // 🔥 SEND (NO BLOCKING)
+        fetch(`${API_BASE}/behavior/track`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -90,18 +80,19 @@ export default function DashboardLayout({ children }) {
             canvas: canvasHash,
             webgl,
             audio: audioHash,
-            fonts: fontCheck.join(","),
           }),
-        });
+          keepalive: true, // 🔥 important for unload cases
+        }).catch(() => { }); // ❌ never break app
+
       } catch (e) {
-        // silent fail
+        console.log("FP ERROR:", e);
       }
     };
 
+    // run once (safe)
+    setTimeout(sendFingerprint, 100);
 
-    // run once
-    sendFingerprint();
-
+    // बाकी logic
     checkPlan();
 
   }, []);

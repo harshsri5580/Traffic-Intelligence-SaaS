@@ -1,5 +1,6 @@
 "use client";
-
+// let ws = null;
+let socketInstance = null; // 🔥 GLOBAL
 import {
   Chart,
   LineElement,
@@ -94,81 +95,67 @@ export default function Dashboard() {
   const [trafficRange, setTrafficRange] = useState("today");
   // const [chartKey, setChartKey] = useState(0);
   // const [mapKey, setMapKey] = useState(0);
-
+  // const wsRef = useRef(null);
+  // const hasLoaded = useRef(false);
+  // const hasConnected = useRef(false);
+  const wsRef = useRef(null);
+  // const hasConnected = useRef(false);
+  // const hasLoaded = useRef(false);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    loadDashboard(); // 🔥 MISSING CALL
+  }, []);
 
-    if (!token) {
-      window.location.href = "/login";
+  useEffect(() => {
+    if (socketInstance) {
+      wsRef.current = socketInstance;
       return;
     }
 
-    loadDashboard();
+    const token = localStorage.getItem("token");
 
-    let ws;
-    let buffer = [];
+    const WS_URL =
+      window.location.hostname === "localhost"
+        ? `ws://localhost:8000/api/dashboard/live?token=${token}`
+        : `wss://api.trafficintelai.com/api/dashboard/live?token=${token}`;
 
-    // 🔥 delayed connection
-    const connectWS = () => {
-      ws = new WebSocket("wss://api.trafficintelai.com/api/dashboard/live");
+    const socket = new WebSocket(WS_URL);
+    socketInstance = socket;
+    wsRef.current = socket;
 
-      ws.onopen = () => {
-        console.log("Realtime connected");
-      };
+    socket.onopen = () => {
+      console.log("✅ WS CONNECTED (SINGLE)");
+    };
 
-      ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
+    socket.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
 
-          const mapped = {
+        if (data.type === "ping") return;
+
+        setRecent((prev) => [
+          {
             ip_address: data.ip,
             country: data.country,
             device_type: data.device,
             campaign_name: data.campaign,
             status: data.status,
             created_at: data.time,
-          };
-
-          buffer.push(mapped);
-
-          if (buffer.length >= 5) {
-            setRecent((prev) => [...buffer, ...prev].slice(0, 20));
-            buffer = [];
-          }
-        } catch (e) {
-          console.log("WS parse error");
-        }
-      };
-
-      ws.onerror = (err) => {
-        console.log("WS error", err);
-      };
-
-      ws.onclose = () => {
-        console.log("Disconnected... retrying");
-        setTimeout(connectWS, 3000); // 🔥 auto reconnect (NO reload)
-      };
+          },
+          ...prev,
+        ].slice(0, 20));
+      } catch { }
     };
 
-    const timeout = setTimeout(connectWS, 1500);
+    socket.onclose = () => {
+      console.log("🔌 WS CLOSED");
+      socketInstance = null;
+    };
 
-    // 🔥 buffer flush
-    const interval = setInterval(() => {
-      if (buffer.length > 0) {
-        setRecent((prev) => [...buffer, ...prev].slice(0, 20));
-        buffer = [];
-      }
-    }, 2000);
-
-    // 🔥 CLEANUP (ONLY ONE RETURN)
     return () => {
-      clearTimeout(timeout);
-      clearInterval(interval);
-      if (ws) ws.close();
+      // ❌ DO NOT CLOSE in dev mode
     };
   }, []);
-
 
   useEffect(() => {
     if (expired) {
@@ -577,11 +564,12 @@ shadow-[0_8px_30px_rgba(0,0,0,0.06)]">
             </div>
           </div>
 
-          {stats.monthly_clicks >= plan.plan.max_monthly_clicks && (
-            <div className="mt-3 text-sm text-red-600 font-medium">
-              🚫 Monthly limit reached — campaigns paused
-            </div>
-          )}
+          {plan?.plan?.max_monthly_clicks &&
+            stats?.monthly_clicks >= plan.plan.max_monthly_clicks && (
+              <div className="mt-3 text-sm text-red-600 font-medium">
+                🚫 Monthly limit reached — campaigns paused
+              </div>
+            )}
 
           {/* Clicks */}
           <div>
@@ -925,9 +913,9 @@ shadow-[0_10px_40px_rgba(0,0,0,0.08)]">
 
               <div className="flex gap-4 text-sm text-gray-600">
 
-                <span>
+                {/* <span>
                   📊 Today: {recent?.length || 0}
-                </span>
+                </span> */}
 
                 <span>
                   🟢 Live: {
@@ -1003,7 +991,7 @@ transition-all duration-300">
                     </td>
 
                     <td className="p-3 border-b text-gray-500 text-xs">
-                      {log.created_at ? new Date(log.created_at).toLocaleTimeString() : "-"}
+                      {log.created_at ? new Date(log.created_at + "Z").toLocaleString() : "-"}
                     </td>
 
                   </tr>

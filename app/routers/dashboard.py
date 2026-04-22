@@ -213,20 +213,20 @@ def get_dashboard_stats(
     }
 
 
-@router.websocket("/live")
-async def live_dashboard(websocket: WebSocket):
+# @router.websocket("/live")
+# async def live_dashboard(websocket: WebSocket):
 
-    await websocket.accept()
-    await connect(websocket)
+#     await websocket.accept()
+#     await connect(websocket)
 
-    print("WebSocket client connected")
+#     print("WebSocket client connected")
 
-    try:
-        while True:
-            await websocket.receive()
+#     try:
+#         while True:
+#             await websocket.receive()
 
-    except WebSocketDisconnect:
+#     except WebSocketDisconnect:
 
-        print("WebSocket client disconnected")
+#         print("WebSocket client disconnected")
 
-        disconnect(websocket)
+#         disconnect(websocket)
