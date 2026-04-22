@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 import asyncio
 from datetime import datetime, timezone, timedelta
 import random
+from app.services.queue_service import push_click
 import httpx
 import urllib.parse
 import hashlib
@@ -1335,15 +1336,15 @@ async def redirect_campaign(
 
             db.add(click)
 
-            asyncio.create_task(
-                asyncio.to_thread(
-                    update_daily_stats,
-                    campaign.id,
-                    matched_rule.id if matched_rule else None,
-                    selected_offer.id if selected_offer else None,
-                    decision,
-                    visitor.is_bot,
-                )
+            push_click(
+                {
+                    "campaign_id": campaign.id,
+                    "rule_id": matched_rule.id if matched_rule else None,
+                    "offer_id": selected_offer.id if selected_offer else None,
+                    "decision": decision,
+                    "ip": ip,
+                    "is_bot": visitor.is_bot,
+                }
             )
 
             try:

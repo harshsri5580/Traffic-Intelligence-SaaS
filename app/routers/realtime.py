@@ -15,10 +15,11 @@ async def websocket_live(websocket: WebSocket):
 
     try:
         while True:
-            await asyncio.sleep(25)
+            await asyncio.sleep(10)
             await websocket.send_json({"type": "ping"})
 
-    except (WebSocketDisconnect, RuntimeError):
+    except WebSocketDisconnect:
+        disconnect(websocket)
         print("❌ WS DISCONNECTED")
 
     finally:
