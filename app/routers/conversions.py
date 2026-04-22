@@ -31,9 +31,9 @@ def track_conversion(
         click = db.query(ClickLog).filter(ClickLog.click_id == click_id).first()
         if not click:
             return {"status": "invalid_click"}
-        print("CLICK FOUND:", click_id)
-        print("SUB1 (ZONE):", click.sub1)
-        print("COST:", click.cost)
+        # print("CLICK FOUND:", click_id)
+        # print("SUB1 (ZONE):", click.sub1)
+        # print("COST:", click.cost)
 
         # ✅ 2. prevent duplicate conversion
         exists = db.query(Conversion).filter(Conversion.click_id == click_id).first()
@@ -97,19 +97,19 @@ def track_conversion(
                     roi = -100
                 else:
                     roi = ((total_revenue - total_cost) / total_cost) * 100
-                    print("TOTAL REVENUE:", total_revenue)
-                    print("TOTAL COST:", total_cost)
-                    print("ROI:", roi)
-                    print("THRESHOLD:", campaign.roi_threshold)
+                    # print("TOTAL REVENUE:", total_revenue)
+                    # print("TOTAL COST:", total_cost)
+                    # print("ROI:", roi)
+                    # print("THRESHOLD:", campaign.roi_threshold)
 
                 # ---------------------------
                 # AUTO DECISION
                 # ---------------------------
                 if roi < campaign.roi_threshold:
-                    print("🔥 ENTERED BLOCK CONDITION 🔥")
+                    # print("🔥 ENTERED BLOCK CONDITION 🔥")
                     # 🔥 AUTO ZONE BLOCK
                     zone = click.sub1 or "unknown"
-                    print("ZONE TO BLOCK:", zone)
+                    # print("ZONE TO BLOCK:", zone)
 
                     if zone:
                         exists = (
@@ -123,7 +123,7 @@ def track_conversion(
 
                         if not exists:
                             db.add(BlockedZone(campaign_id=campaign.id, zone_id=zone))
-                            print("✅ INSERTING BLOCKED ZONE:", zone)
+                            # print("✅ INSERTING BLOCKED ZONE:", zone)
 
                     campaign.auto_status = "blocked"
 

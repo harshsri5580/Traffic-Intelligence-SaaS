@@ -417,24 +417,39 @@ GROUP BY click_logs.offer_id, offers.name
 
 @router.get("/bot-stats")
 def bot_stats(
-    db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
+    # ✅ HUMAN (<40)
+    human = (
+        db.query(func.count(ClickLog.id))
+        .filter(ClickLog.user_id == current_user.id, ClickLog.risk_score < 40)
+        .scalar()
+    ) or 0
 
-    logs = db.query(ClickLog).filter(ClickLog.user_id == current_user.id).all()
+    # ⚠️ SUSPICIOUS (40–69)
+    suspicious = (
+        db.query(func.count(ClickLog.id))
+        .filter(
+            ClickLog.user_id == current_user.id,
+            ClickLog.risk_score >= 40,
+            ClickLog.risk_score < 70,
+        )
+        .scalar()
+    ) or 0
 
-    result = {"human": 0, "bot": 0, "suspicious": 0}
+    # ❌ BOT (>=70)
+    bot = (
+        db.query(func.count(ClickLog.id))
+        .filter(ClickLog.user_id == current_user.id, ClickLog.risk_score >= 70)
+        .scalar()
+    ) or 0
 
-    for log in logs:
-
-        # use risk score
-        if log.risk_score >= 70:
-            result["bot"] += 1
-        elif log.risk_score >= 40:
-            result["suspicious"] += 1
-        else:
-            result["human"] += 1
-
-    return result
+    return {
+        "human": int(human),
+        "suspicious": int(suspicious),
+        "bot": int(bot),
+    }
 
 
 @router.get("/zones")

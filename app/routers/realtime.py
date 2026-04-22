@@ -11,7 +11,7 @@ async def websocket_live(websocket: WebSocket):
     await websocket.accept()
     await connect(websocket)
 
-    print("✅ WS CONNECTED")
+    # print("✅ WS CONNECTED")
 
     try:
         while True:

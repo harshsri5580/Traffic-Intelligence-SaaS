@@ -49,10 +49,10 @@ async def fingerprint_api(request: Request):
 
         ua = request.headers.get("user-agent", "")
 
-        print("🔥 FINGERPRINT HIT")
-        print("IP:", ip)
-        print("UA:", ua)
-        print("FP DATA:", data)
+        # print("🔥 FINGERPRINT HIT")
+        # print("IP:", ip)
+        # print("UA:", ua)
+        # print("FP DATA:", data)
 
         return {"status": "ok"}
 

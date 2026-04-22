@@ -662,20 +662,20 @@ class VisitorContext:
         # DEBUG LOG
         # ================================
 
-        print("----- VISITOR DEBUG -----")
-        print("IP:", self.ip)
-        print("Country:", self.country_code)
-        print("Device:", self.device_type)
-        print("ASN:", self.asn)
-        print("Connection:", self.connection_type)
-        print("VPN:", self.is_vpn)
-        print("Proxy:", self.is_proxy)
-        print("Tor:", self.is_tor)
-        print("Datacenter:", self.is_datacenter)
-        print("Automation:", self.is_automation)
-        print("Bot Score:", self.bot_score)
-        print("Quality:", self.traffic_quality)
-        print("------------------------")
+        # print("----- VISITOR DEBUG -----")
+        # print("IP:", self.ip)
+        # print("Country:", self.country_code)
+        # print("Device:", self.device_type)
+        # print("ASN:", self.asn)
+        # print("Connection:", self.connection_type)
+        # print("VPN:", self.is_vpn)
+        # print("Proxy:", self.is_proxy)
+        # print("Tor:", self.is_tor)
+        # print("Datacenter:", self.is_datacenter)
+        # print("Automation:", self.is_automation)
+        # print("Bot Score:", self.bot_score)
+        # print("Quality:", self.traffic_quality)
+        # print("------------------------")
 
     # ================================
     # SESSION FINGERPRINT

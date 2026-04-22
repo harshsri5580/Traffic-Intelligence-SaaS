@@ -136,111 +136,101 @@ def get_traffic_timeseries(campaign_id: int):
     return [{"date": str(r[0]), "clicks": r[1]} for r in rows]
 
 
-# ======================================
-# DAILY STATS UPDATE
-# ======================================
+def update_daily_stats(campaign_id, rule_id, offer_id, decision, is_bot):
 
-
-def update_daily_stats(db, campaign, rule, offer, decision, visitor):
-
+    db = SessionLocal()
     today = date.today()
 
-    campaign_stats = (
-        db.query(CampaignDailyStats)
-        .filter(
-            and_(
-                CampaignDailyStats.campaign_id == campaign.id,
+    try:
+        # ---------------- CAMPAIGN ----------------
+        campaign_stats = (
+            db.query(CampaignDailyStats)
+            .filter(
+                CampaignDailyStats.campaign_id == campaign_id,
                 CampaignDailyStats.date == today,
             )
-        )
-        .first()
-    )
-
-    if not campaign_stats:
-
-        campaign_stats = CampaignDailyStats(
-            campaign_id=campaign.id,
-            date=today,
-            total_clicks=0,
-            passed=0,
-            blocked=0,
-            fallback=0,
-            bots=0,
-        )
-
-        db.add(campaign_stats)
-        db.flush()
-
-    # ---------------- TOTAL ----------------
-
-    campaign_stats.total_clicks += 1
-
-    if decision == "blocked":
-        campaign_stats.blocked += 1
-    elif decision == "passed":
-        campaign_stats.passed += 1
-    else:
-        campaign_stats.fallback += 1
-
-    if visitor.is_bot:
-        campaign_stats.bots += 1
-
-    # ======================================
-    # OFFER STATS
-    # ======================================
-
-    if offer:
-
-        offer_stats = (
-            db.query(OfferDailyStats)
-            .filter(
-                and_(
-                    OfferDailyStats.offer_id == offer.id, OfferDailyStats.date == today
-                )
-            )
             .first()
         )
 
-        if not offer_stats:
-
-            offer_stats = OfferDailyStats(
-                offer_id=offer.id, date=today, clicks=0, bots=0
+        if not campaign_stats:
+            campaign_stats = CampaignDailyStats(
+                campaign_id=campaign_id,
+                date=today,
+                total_clicks=0,
+                passed=0,
+                blocked=0,
+                fallback=0,
+                bots=0,
             )
+            db.add(campaign_stats)
 
-            db.add(offer_stats)
-            db.flush()
-
-        offer_stats.clicks += 1
-
-        if visitor.is_bot:
-            offer_stats.bots += 1
-
-    # ======================================
-    # RULE STATS
-    # ======================================
-
-    if rule:
-
-        rule_stats = (
-            db.query(RuleDailyStats)
-            .filter(
-                and_(RuleDailyStats.rule_id == rule.id, RuleDailyStats.date == today)
-            )
-            .first()
-        )
-
-        if not rule_stats:
-
-            rule_stats = RuleDailyStats(
-                rule_id=rule.id, date=today, matches=0, blocked=0, passed=0
-            )
-
-            db.add(rule_stats)
-            db.flush()
-
-        rule_stats.matches += 1
+        campaign_stats.total_clicks += 1
 
         if decision == "blocked":
             campaign_stats.blocked += 1
         elif decision == "passed":
             campaign_stats.passed += 1
+        else:
+            campaign_stats.fallback += 1
+
+        if is_bot:
+            campaign_stats.bots += 1
+
+        # ---------------- OFFER ----------------
+        if offer_id:
+            offer_stats = (
+                db.query(OfferDailyStats)
+                .filter(
+                    OfferDailyStats.offer_id == offer_id,
+                    OfferDailyStats.date == today,
+                )
+                .first()
+            )
+
+            if not offer_stats:
+                offer_stats = OfferDailyStats(
+                    offer_id=offer_id, date=today, clicks=0, bots=0
+                )
+                db.add(offer_stats)
+
+            offer_stats.clicks += 1
+
+            if is_bot:
+                offer_stats.bots += 1
+
+        # ---------------- RULE ----------------
+        if rule_id:
+            rule_stats = (
+                db.query(RuleDailyStats)
+                .filter(
+                    RuleDailyStats.rule_id == rule_id,
+                    RuleDailyStats.date == today,
+                )
+                .first()
+            )
+
+            if not rule_stats:
+                rule_stats = RuleDailyStats(
+                    rule_id=rule_id,
+                    date=today,
+                    matches=0,
+                    blocked=0,
+                    passed=0,
+                )
+                db.add(rule_stats)
+
+            rule_stats.matches += 1
+
+            if decision == "blocked":
+                rule_stats.blocked += 1
+            elif decision == "passed":
+                rule_stats.passed += 1
+
+        db.commit()
+
+    except Exception as e:
+        db.rollback()
+        print("❌ ANALYTICS ERROR:", e)
+
+    finally:
+        db.close()

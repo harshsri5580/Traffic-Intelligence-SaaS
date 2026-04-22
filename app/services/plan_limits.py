@@ -145,8 +145,8 @@ def check_click_limit(db: Session, user_id: int):
 
     limit = get_final_monthly_click_limit(db, user_id)
 
-    print("🔥 DEBUG CLICKS:", count)
-    print("🔥 DEBUG LIMIT:", limit)
+    # print("🔥 DEBUG CLICKS:", count)
+    # print("🔥 DEBUG LIMIT:", limit)
 
     if limit is not None and count >= limit:
         print("🚫 LIMIT HIT")

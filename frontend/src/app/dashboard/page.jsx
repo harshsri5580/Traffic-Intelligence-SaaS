@@ -26,6 +26,21 @@ import api from "../../services/api";
 import { countries } from "../../data/countries";
 import dynamic from "next/dynamic";
 
+const safeApi = async (url) => {
+  try {
+    const res = await Promise.race([
+      api.get(url),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("timeout")), 5000)
+      ),
+    ]);
+    return res;
+  } catch (err) {
+    console.error("API FAIL:", url);
+    return { data: [] }; // safe fallback
+  }
+};
+
 const ComposableMap = dynamic(
   () => import("react-simple-maps").then(m => m.ComposableMap),
   { ssr: false }
@@ -133,17 +148,31 @@ export default function Dashboard() {
 
         if (data.type === "ping") return;
 
-        setRecent((prev) => [
-          {
-            ip_address: data.ip,
-            country: data.country,
-            device_type: data.device,
-            campaign_name: data.campaign,
-            status: data.status,
-            created_at: data.time,
-          },
-          ...prev,
-        ].slice(0, 20));
+        setRecent((prev) => {
+          let time = data.time;
+
+          if (!time || time === "" || time === "Invalid Date") {
+            time = new Date().toISOString();
+          }
+
+          const exists = prev.find(
+            (p) => p.ip_address === data.ip && p.created_at === time
+          );
+
+          if (exists) return prev;
+
+          return [
+            {
+              ip_address: data.ip,
+              country: data.country,
+              device_type: data.device,
+              campaign_name: data.campaign,
+              status: data.status === "Offer" ? "Pass" : data.status,
+              created_at: time,
+            },
+            ...prev,
+          ].slice(0, 20);
+        });
       } catch { }
     };
 
@@ -174,17 +203,20 @@ export default function Dashboard() {
     }
   }, [stats, plan]);
 
-  const loadRestData = async () => {
+  const loadRestData = () => {
     try {
-      await Promise.all([
-        loadRecent(),
-        loadSources(range),
-        loadOffers(),
-        loadCampaigns(),
-        loadZones(),
-        loadCampaignTraffic(trafficRange),
-        loadAdvancedProfit()
-      ]);
+      // ✅ LIGHT APIs
+      setTimeout(() => loadSources(range), 800);
+      setTimeout(() => loadCampaigns(), 1200);
+
+      // ✅ MEDIUM
+      setTimeout(() => loadCampaignTraffic(trafficRange), 1800);
+
+      // ❌ HEAVY (DISABLED FOR NOW)
+      loadZones();
+      loadAdvancedProfit();
+      loadOffers();
+
     } catch (e) {
       console.log("Background load error");
     }
@@ -206,7 +238,8 @@ export default function Dashboard() {
       setLoading(false); // 🔥 FAST SHOW UI
 
       // 👇 बाकी data background में लोड होगा
-      loadRestData();
+      setTimeout(() => loadRecent(), 500);
+      setTimeout(() => loadRestData(), 1000);
 
     } catch (err) {
       setLoading(false);
@@ -229,7 +262,7 @@ export default function Dashboard() {
 
   const loadCampaignTraffic = async (selectedRange = range) => {
     try {
-      const res = await api.get(`/analytics/campaign-traffic?range=${selectedRange}`);
+      const res = await safeApi(`/analytics/campaign-traffic?range=${selectedRange}`);
       setCampaignTraffic(res.data || []);
     } catch (err) {
       console.error("Campaign traffic error", err);
@@ -254,7 +287,7 @@ export default function Dashboard() {
 
     try {
 
-      const res = await api.get(`/analytics/sources?range=${selectedRange}`);
+      const res = await safeApi(`/analytics/sources?range=${selectedRange}`);
 
       setSources(res.data || []);
 
@@ -270,7 +303,7 @@ export default function Dashboard() {
 
     try {
 
-      const res = await api.get("/analytics/recent?limit=20&range=today");
+      const res = await safeApi("/analytics/recent?limit=20&range=today");
 
       const data = res.data;
 
@@ -335,7 +368,7 @@ export default function Dashboard() {
 
   const loadCampaigns = async () => {
     try {
-      const res = await api.get("/campaigns/");
+      const res = await safeApi("/campaigns/");
       setCampaigns(res.data || []);
     } catch (err) {
       console.error("Campaign load error", err);

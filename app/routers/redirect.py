@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse, Response
 from sqlalchemy.orm import Session
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 import random
 import httpx
 import urllib.parse
@@ -165,10 +165,13 @@ async def redirect_campaign(
     # is_duplicate = False
 
     visitor = VisitorContext(request)
+    # 🔥 EARLY EXIT (SUPER IMPORTANT)
+    if visitor.is_bot and visitor.bot_score > 90:
+        return RedirectResponse("/decoy")
 
     # ✅ DEBUG + FIX (yahi jagah correct hai)
-    print("🔥 HEADER REFERER:", request.headers.get("referer"))
-    print("🔥 SAVED REF:", visitor.referrer)
+    # print("🔥 HEADER REFERER:", request.headers.get("referer"))
+    # print("🔥 SAVED REF:", visitor.referrer)
     # ✅ FIX: Capture real referrer
     # 🔥 ALWAYS CAPTURE FIRST HIT
     raw_ref = (
@@ -214,11 +217,11 @@ async def redirect_campaign(
         ip = cf_ip
     else:
         ip = visitor.ip
-    print("🔥 XFF:", forwarded_for)
-    print("🔥 CF-IP:", cf_ip)
-    print("🔥 FINAL IP:", ip)
+    # print("🔥 XFF:", forwarded_for)
+    # print("🔥 CF-IP:", cf_ip)
+    # print("🔥 FINAL IP:", ip)
 
-    print("🔥 Clean IP:", ip)
+    # print("🔥 Clean IP:", ip)
     # 🔥 DEFINE REAL NAVIGATION (FIX)
     sec_fetch = request.headers.get("sec-fetch-dest", "")
     sec_mode = request.headers.get("sec-fetch-mode", "")
@@ -245,7 +248,7 @@ async def redirect_campaign(
 
     if is_real_navigation:
         if redis_client.get(f"challenge_pass:{ip}"):
-            print("✅ CHALLENGE ALREADY PASSED")
+            # print("✅ CHALLENGE ALREADY PASSED")
             challenge_pass = True
 
     # ✅ PEHLE campaign load karo
@@ -272,7 +275,7 @@ async def redirect_campaign(
 
     # 🔥 BLOCKED IP
     if blocked:
-        print("🚫 BLOCKED IP HIT:", ip)
+        # print("🚫 BLOCKED IP HIT:", ip)
         return RedirectResponse(campaign.safe_page_url or "/decoy")
 
     # campaign = (
@@ -299,28 +302,28 @@ async def redirect_campaign(
     )
 
     # 🔍 DEBUG (temporary)
-    print("SUB STATUS:", sub.status if sub else None)
-    print("SUB EXPIRE:", sub.expire_date if sub else None)
-    print("NOW UTC:", datetime.utcnow())
-    print("USER ID:", campaign.user_id)
+    # print("SUB STATUS:", sub.status if sub else None)
+    # print("SUB EXPIRE:", sub.expire_date if sub else None)
+    # print("NOW UTC:", datetime.utcnow())
+    # print("USER ID:", campaign.user_id)
 
     # ❌ NO SUBSCRIPTION → BLOCK
     if not sub:
-        print("⛔ NO SUBSCRIPTION FOUND")
+        # print("⛔ NO SUBSCRIPTION FOUND")
 
         subscription_active = False
         is_blocked_final = True
 
     # 🔴 EXPIRED BY STATUS
     elif sub.status == "expired":
-        print("⛔ SUBSCRIPTION EXPIRED (STATUS)")
+        # print("⛔ SUBSCRIPTION EXPIRED (STATUS)")
 
         subscription_active = False
         is_blocked_final = True
 
     # 🟡 EXPIRED BY DATE (SAFE CHECK)
     elif sub.expire_date and sub.expire_date < datetime.utcnow():
-        print("⛔ SUBSCRIPTION EXPIRED (DATE)")
+        # print("⛔ SUBSCRIPTION EXPIRED (DATE)")
 
         sub.status = "expired"
         db.commit()
@@ -342,19 +345,19 @@ async def redirect_campaign(
     ENABLE_CHALLENGE_LOCAL = ENABLE_CHALLENGE  # default
 
     if sec_fetch and sec_fetch not in ["document", "navigate"]:
-        print("⚡ SKIP NON DOCUMENT:", sec_fetch)
+        # print("⚡ SKIP NON DOCUMENT:", sec_fetch)
         ENABLE_CHALLENGE_LOCAL = False
 
     # 🔥 SKIP AJAX
     if request.headers.get("x-requested-with") == "XMLHttpRequest":
-        print("⚡ AJAX SKIP")
+        # print("⚡ AJAX SKIP")
         ENABLE_CHALLENGE_LOCAL = False
 
     # 🔥 REFERER BASED SKIP
     referer = request.headers.get("referer", "")
 
     if "/r/" in referer:
-        print("⚡ INTERNAL REQUEST SKIP")
+        # print("⚡ INTERNAL REQUEST SKIP")
         ENABLE_CHALLENGE_LOCAL = False
 
     # -------------------------------------------------
@@ -385,7 +388,7 @@ async def redirect_campaign(
     ):
         # 🔥 SKIP AJAX / FETCH CALLS
         if request.headers.get("x-requested-with") == "XMLHttpRequest":
-            print("⚡ AJAX SKIP")
+            # print("⚡ AJAX SKIP")
             ENABLE_CHALLENGE_LOCAL = False
 
         # 🔥 Only suspicious traffic
@@ -468,9 +471,9 @@ async def redirect_campaign(
             .first()
         )
 
-        print("ZONE:", sub1)
-        print("CAMPAIGN:", campaign.id)
-        print("BLOCKED:", blocked_zone)
+        # print("ZONE:", sub1)
+        # print("CAMPAIGN:", campaign.id)
+        # print("BLOCKED:", blocked_zone)
 
         if blocked_zone:
             decision = "blocked"
@@ -514,7 +517,7 @@ async def redirect_campaign(
         cached = redis_client.get(lock_key)
         if cached:
             locked_decision = cached.decode() if isinstance(cached, bytes) else cached
-            print("🔒 LOCK HIT:", locked_decision)
+            # print("🔒 LOCK HIT:", locked_decision)
     except Exception:
         pass
 
@@ -577,28 +580,28 @@ async def redirect_campaign(
 
             # USER AGENT FILTER
             if f.category == "ua" and val in ua:
-                print("🚫 UA FILTER HIT")
+                # print("🚫 UA FILTER HIT")
 
                 decision = "blocked"
                 reason = "ua_filter"
 
             # ISP FILTER
             elif f.category == "isp" and val in isp:
-                print("🚫 ISP FILTER HIT")
+                # print("🚫 ISP FILTER HIT")
 
                 decision = "blocked"
                 reason = "isp_filter"
 
             # DOMAIN FILTER
             elif f.category.lower() == "domain" and val in ref:
-                print("🚫 DOMAIN FILTER HIT")
+                # print("🚫 DOMAIN FILTER HIT")
 
                 decision = "blocked"
                 reason = "domain_filter"
 
             # 🔥 IP FILTER (MISSING THA - MOST IMPORTANT)
             elif f.category == "ip" and val == visitor.ip:
-                print("🚫 IP FILTER HIT:", visitor.ip)
+                # print("🚫 IP FILTER HIT:", visitor.ip)
 
                 decision = "blocked"
                 reason = "ip_filter"
@@ -673,7 +676,7 @@ async def redirect_campaign(
     # -------------------------------------------------
     # 🔥 HARD BLOCK (TOP PRIORITY)
     if visitor.is_datacenter or visitor.is_vpn or visitor.is_proxy or visitor.is_tor:
-        print("🚫 HARD BLOCK: BAD NETWORK")
+        # print("🚫 HARD BLOCK: BAD NETWORK")
 
         return RedirectResponse(campaign.bot_url or campaign.safe_page_url or "/decoy")
 
@@ -686,7 +689,7 @@ async def redirect_campaign(
     # campaign inactive
     if not campaign.is_active:
 
-        print("⛔ CAMPAIGN PAUSED")
+        # print("⛔ CAMPAIGN PAUSED")
 
         decision = "blocked"
         reason = "campaign_paused"
@@ -706,7 +709,7 @@ async def redirect_campaign(
 
         if is_bot_traffic and visitor.bot_score >= 80:
 
-            print("🤖 BOT → DECOY")
+            # print("🤖 BOT → DECOY")
 
             decision = "blocked"
             reason = "bot_traffic"
@@ -944,7 +947,7 @@ async def redirect_campaign(
 
         redis_client.expire(rate_key, 5)
 
-        if hits > 15:
+        if hits > 10:
 
             decision = set_decision(decision, "blocked")
             reason = "filter_block"
@@ -1027,7 +1030,7 @@ async def redirect_campaign(
     # 🔥 HIGH RISK BLOCK
     # 🔥 HIGH RISK BLOCK
     if risk_score >= 70 or visitor.bot_score >= 80:
-        print("🚫 HIGH RISK BLOCK")
+        # print("🚫 HIGH RISK BLOCK")
 
         decision = set_decision(decision, "blocked")
         reason = "fraud_traffic"
@@ -1068,7 +1071,7 @@ async def redirect_campaign(
 
             # 🔥 FINAL FIX
             if challenge_pass:
-                print("✅ CHALLENGE ALREADY PASSED → FORCE ALLOW")
+                # print("✅ CHALLENGE ALREADY PASSED → FORCE ALLOW")
                 is_bot_traffic = False
                 decision_type = "allow"
 
@@ -1128,8 +1131,8 @@ async def redirect_campaign(
                         reason = "offer"
 
                         redirect_url = selected_offer.url
-                        print("🔥 FINAL DECISION:", decision)
-                        print("🔥 USING URL:", redirect_url)
+                        # print("🔥 FINAL DECISION:", decision)
+                        # print("🔥 USING URL:", redirect_url)
                         redirect_url = append_click_id(redirect_url, click_id)
 
                         # MACRO REPLACE
@@ -1167,7 +1170,7 @@ async def redirect_campaign(
     # 🔒 APPLY DECISION LOCK
     # =========================
     if locked_decision and decision not in ["blocked", "challenge"]:
-        print("🔒 USING LOCKED DECISION:", locked_decision)
+        # print("🔒 USING LOCKED DECISION:", locked_decision)
 
         if locked_decision == "offer":
             decision = "offer"
@@ -1195,8 +1198,8 @@ async def redirect_campaign(
             reason = "rule_match"
 
             redirect_url = selected_offer.url
-            print("🔥 FINAL DECISION:", decision)
-            print("🔥 USING URL:", redirect_url)
+            # print("🔥 FINAL DECISION:", decision)
+            # print("🔥 USING URL:", redirect_url)
 
             redirect_url = redirect_url.replace("{sub1}", sub1 or "")
             redirect_url = redirect_url.replace("{sub2}", sub2 or "")
@@ -1235,7 +1238,7 @@ async def redirect_campaign(
 
     try:
         if redis_client.get(log_key):
-            print("⚠️ FINAL DUPLICATE DETECTED (LOG SKIPPED)")
+            # print("⚠️ FINAL DUPLICATE DETECTED (LOG SKIPPED)")
             # ❌ DO NOT BLOCK FLOW
             should_log_final = False
         else:
@@ -1249,20 +1252,20 @@ async def redirect_campaign(
     try:
         if decision in ["offer", "fallback"]:
             redis_client.setex(lock_key, 300, decision)  # 5 min lock
-            print("🔒 LOCK SAVED:", decision)
+            # print("🔒 LOCK SAVED:", decision)
     except Exception:
         pass
 
     # ---------------------------------
     # 🔥 PLAN LIMIT HARD BLOCK (FINAL FIX)
     # ---------------------------------
-    print("🔥 CHECKING PLAN LIMIT FOR USER:", campaign.user_id)
+    # print("🔥 CHECKING PLAN LIMIT FOR USER:", campaign.user_id)
 
     try:
         check_click_limit(db, campaign.user_id)
 
     except HTTPException:
-        print("🚫 PLAN LIMIT REACHED")
+        # print("🚫 PLAN LIMIT REACHED")
 
         decision = "blocked"
         reason = "plan_limit_reached"
@@ -1275,7 +1278,7 @@ async def redirect_campaign(
         # 🔥 LOCK CLEAR
         try:
             redis_client.delete(lock_key)
-            print("🧹 LOCK CLEARED")
+            # print("🧹 LOCK CLEARED")
         except Exception:
             pass
     # -------------------------------------------------
@@ -1288,7 +1291,7 @@ async def redirect_campaign(
         # print("DESTINATION:", destination_url)
         if should_log_final and request.method == "GET":
 
-            print("🔥 REAL CLICK LOGGED")
+            # print("🔥 REAL CLICK LOGGED")
 
             click = ClickLog(
                 campaign_id=campaign.id,
@@ -1332,32 +1335,45 @@ async def redirect_campaign(
 
             db.add(click)
 
-            update_daily_stats(
-                db=db,
-                campaign=campaign,
-                rule=matched_rule,
-                offer=selected_offer,
-                decision=decision,
-                visitor=visitor,
+            asyncio.create_task(
+                asyncio.to_thread(
+                    update_daily_stats,
+                    campaign.id,
+                    matched_rule.id if matched_rule else None,
+                    selected_offer.id if selected_offer else None,
+                    decision,
+                    visitor.is_bot,
+                )
             )
 
-            db.commit()
+            try:
+                db.commit()
+            except:
+                db.rollback()
 
             # 🔥 ADD THIS HERE (ONLY HERE)
             try:
-                status_map = {"offer": "pass", "fallback": "safe", "blocked": "blocked"}
+                status_map = {
+                    "offer": "offer",
+                    "fallback": "safe",
+                    "blocked": "blocked",
+                }
 
-                await broadcast(
-                    {
-                        "campaign": campaign.name,
-                        "country": visitor.country,
-                        "device": visitor.device_type,
-                        "ip": ip,
-                        "status": status_map.get(decision, decision),
-                        "time": datetime.utcnow().isoformat() + "Z",
-                    }
+                asyncio.create_task(
+                    broadcast(
+                        {
+                            "campaign": campaign.name,
+                            "country": visitor.country,
+                            "device": visitor.device_type,
+                            "ip": ip,
+                            "status": status_map.get(decision, decision),
+                            "time": datetime.now(timezone.utc)
+                            .isoformat()
+                            .replace("+00:00", "Z"),
+                        }
+                    )
                 )
-                print("🚀 WS BROADCAST SENT")
+                # print("🚀 WS BROADCAST SENT")
             except Exception as e:
                 print("❌ BROADCAST ERROR:", e)
 
@@ -1365,8 +1381,15 @@ async def redirect_campaign(
             # AI LEARNING ENGINE
             # ---------------------------------
             try:
-                update_campaign_learning(campaign.id, decision)
-                update_source_learning(visitor.traffic_source, decision)
+                asyncio.create_task(
+                    asyncio.to_thread(update_campaign_learning, campaign.id, decision)
+                )
+
+                asyncio.create_task(
+                    asyncio.to_thread(
+                        update_source_learning, visitor.traffic_source, decision
+                    )
+                )
             except Exception:
                 pass
 
@@ -1376,13 +1399,13 @@ async def redirect_campaign(
     # -------------------------------------------------
     # BLOCK HANDLING (SAFE)
     # -------------------------------------------------
-    print("🔥 FINAL DECISION:", decision)
-    print("🔥 FINAL URL:", redirect_url)
-    print("🔥 RISK SCORE:", risk_score)
-    print("🔥 BOT:", visitor.is_bot)
+    # print("🔥 FINAL DECISION:", decision)
+    # print("🔥 FINAL URL:", redirect_url)
+    # print("🔥 RISK SCORE:", risk_score)
+    # print("🔥 BOT:", visitor.is_bot)
     if decision == "blocked":
 
-        print("🚫 FINAL BLOCK EXECUTED")
+        # print("🚫 FINAL BLOCK EXECUTED")
 
         # 🔥 ALWAYS FORCE SAFE URL (NO LEAK)
         safe_url = campaign.safe_page_url or "/decoy"
@@ -1398,7 +1421,7 @@ async def redirect_campaign(
 
     if selected_offer:
         mode = selected_offer.redirect_mode
-        print("🔥 MODE:", mode)
+        # print("🔥 MODE:", mode)
 
         # -----------------------------
         # DIRECT MODE
@@ -1493,7 +1516,7 @@ async def redirect_campaign(
     # 🔥 FINAL BLOCK LOCK (FAST + SAFE)
     # =========================================
     if is_blocked_final:
-        print("🚫 FINAL BLOCK LOCK ACTIVE")
+        # print("🚫 FINAL BLOCK LOCK ACTIVE")
 
         # 🔥 BOT → safe page
         if visitor.is_bot:

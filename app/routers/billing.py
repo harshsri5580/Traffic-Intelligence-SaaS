@@ -111,8 +111,8 @@ def create_checkout(
     plan = db.query(Plan).filter(Plan.id == plan_id).first()
 
     # ✅ 👉 YAHAN ADD KARO
-    print("PLAN:", plan.name)
-    print("PRICE ID:", plan.paddle_price_id)
+    # print("PLAN:", plan.name)
+    # print("PRICE ID:", plan.paddle_price_id)
 
     if not plan:
         raise HTTPException(status_code=404, detail="Plan not found")
@@ -141,7 +141,7 @@ def create_checkout(
         res = requests.post(url, json=payload, headers=headers)
         data = res.json()
 
-        print("PADDLE RESPONSE:", data)
+        # print("PADDLE RESPONSE:", data)
 
         # ✅ SAFE checkout url extraction
         checkout_url = data.get("data", {}).get("checkout", {}).get("url") or data.get(
@@ -215,7 +215,7 @@ async def paddle_webhook(request: Request, db: Session = Depends(get_db)):
         db.add(new_sub)
         db.commit()
 
-        print(f"✅ Paddle subscription created user {user_id}")
+        # print(f"✅ Paddle subscription created user {user_id}")
 
     # ❌ Cancel
     elif event == "subscription.canceled":

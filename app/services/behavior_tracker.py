@@ -16,7 +16,7 @@ def track_behavior(ip: str, ua: str, data: dict):
         fp = generate_fp(ip, ua)
         key = f"behavior:{fp}"
 
-        print("🔥 TRACK FUNCTION HIT")
+        # print("🔥 TRACK FUNCTION HIT")
         print("FP:", fp)
         print("KEY:", key)
 
@@ -47,7 +47,7 @@ def track_behavior(ip: str, ua: str, data: dict):
 
         redis_client.expire(key, 900)
 
-        print("🔥 SAVED TO REDIS")
+        # print("🔥 SAVED TO REDIS")
 
     except Exception as e:
         print("BEHAVIOR ERROR:", e)

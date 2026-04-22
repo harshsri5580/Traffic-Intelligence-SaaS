@@ -467,7 +467,7 @@ def get_system_logs(
 
 @router.get("/test-log")
 def test_log(db: Session = Depends(get_db)):
-    print("API HIT 🔥")
+    # print("API HIT 🔥")
 
     log = SystemLog(type="INFO", message="Test log working")
     db.add(log)

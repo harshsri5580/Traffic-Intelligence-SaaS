@@ -9,7 +9,7 @@ connections: List[WebSocket] = []
 # ===============================
 async def connect(websocket: WebSocket):
     connections.append(websocket)
-    print(f"✅ WS CONNECTED: {len(connections)}")
+    # print(f"✅ WS CONNECTED: {len(connections)}")
 
 
 # ===============================
@@ -21,7 +21,7 @@ def disconnect(websocket: WebSocket):
     except ValueError:
         pass
 
-    print(f"❌ WS DISCONNECTED: {len(connections)}")
+    # print(f"❌ WS DISCONNECTED: {len(connections)}")
 
 
 # ===============================
@@ -34,7 +34,7 @@ async def broadcast(data):
         try:
             await ws.send_json(data)
         except Exception as e:
-            print("⚠️ WS ERROR:", e)
+            # print("⚠️ WS ERROR:", e)
             dead_connections.append(ws)
 
     # cleanup
@@ -44,4 +44,4 @@ async def broadcast(data):
         except ValueError:
             pass
 
-    print(f"📡 BROADCAST TO: {len(connections)}")
+    # print(f"📡 BROADCAST TO: {len(connections)}")

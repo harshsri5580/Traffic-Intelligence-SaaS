@@ -35,13 +35,13 @@ class RuleEngine:
             .all()
         )
 
-        print("TOTAL RULES:", len(rules))
+        # print("TOTAL RULES:", len(rules))
 
         # 🔥 calculate risk once
         self._risk_score = self._get_risk_score()
 
         for rule in rules:
-            print("CHECKING RULE:", rule.id, rule.name)
+            # print("CHECKING RULE:", rule.id, rule.name)
 
             try:
 
@@ -49,14 +49,14 @@ class RuleEngine:
                 # 🔥 GLOBAL RISK OVERRIDE
                 # ---------------------------------
                 if self._risk_score >= 90:
-                    print("HIGH RISK → FORCE BLOCK")
+                    # print("HIGH RISK → FORCE BLOCK")
                     return None
 
                 # ---------------------------------
                 # rule without conditions = auto match
                 # ---------------------------------
                 if not rule.conditions:
-                    print("RULE MATCH (NO CONDITIONS)")
+                    # print("RULE MATCH (NO CONDITIONS)")
                     return rule
 
                 # ---------------------------------
@@ -74,18 +74,18 @@ class RuleEngine:
                 # 🔥 BOT THRESHOLD (FIXED)
                 if final_threshold is not None:
                     if self.visitor.bot_score >= final_threshold:
-                        print("BOT THRESHOLD MATCH:", final_threshold)
+                        # print("BOT THRESHOLD MATCH:", final_threshold)
                         return None
 
                 # ---------------------------------
                 # NORMAL MATCH
                 # ---------------------------------
                 if self._match_rule(rule):
-                    print("RULE MATCHED:", rule.id)
+                    # print("RULE MATCHED:", rule.id)
                     return rule
 
             except Exception as e:
-                print("RULE ERROR:", e)
+                # print("RULE ERROR:", e)
                 continue
 
         return None
@@ -150,9 +150,9 @@ class RuleEngine:
 
                 visitor_value = self._get_visitor_value(condition.field)
 
-                print("FIELD:", condition.field)
-                print("VISITOR VALUE:", visitor_value)
-                print("RULE VALUE:", condition.value)
+                # print("FIELD:", condition.field)
+                # print("VISITOR VALUE:", visitor_value)
+                # print("RULE VALUE:", condition.value)
 
                 result = self.evaluate_condition(
                     visitor_value,
@@ -168,7 +168,7 @@ class RuleEngine:
 
             group_match = any(results)
 
-            print(f"GROUP RESULT ({field}):", group_match)
+            # print(f"GROUP RESULT ({field}):", group_match)
 
             group_results.append(group_match)
 
