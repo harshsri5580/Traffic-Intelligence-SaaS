@@ -35,8 +35,10 @@ from app.services.ip_reputation import increase_ip_risk
 from app.services.learning_engine import (
     update_campaign_learning,
     update_source_learning,
+    update_ai_learning,
 )
 
+# from app.services.learning_engine import update_ai_learning
 from app.services.token_service import (
     generate_secure_token,
     decode_secure_token,
@@ -1379,7 +1381,7 @@ async def redirect_campaign(
                 print("❌ BROADCAST ERROR:", e)
 
             # ---------------------------------
-            # AI LEARNING ENGINE
+            # 🤖 AI LEARNING ENGINE (FINAL FIX)
             # ---------------------------------
             try:
                 asyncio.create_task(
@@ -1391,8 +1393,14 @@ async def redirect_campaign(
                         update_source_learning, visitor.traffic_source, decision
                     )
                 )
-            except Exception:
-                pass
+
+                # 🔥 ADD THIS LINE (MAIN AI)
+                asyncio.create_task(
+                    asyncio.to_thread(update_ai_learning, visitor, decision)
+                )
+
+            except Exception as e:
+                print("❌ AI LEARNING ERROR:", e)
 
     except Exception:
         db.rollback()

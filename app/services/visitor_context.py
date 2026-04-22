@@ -4,7 +4,7 @@ from user_agents import parse
 from urllib.parse import parse_qs
 import json
 from app.services.redis_client import redis_client
-
+from app.services.learning_engine import get_ai_risk
 from app.services.geo import get_geo_data, get_asn_data
 
 
@@ -400,6 +400,72 @@ class VisitorContext:
             "datasource",
             "dmzhost",
         ]
+        # 🔥 NEW ADVANCED SUSPICIOUS ISP KEYWORDS
+
+        dc_keywords += [
+            # 🌍 GLOBAL HOSTING / VPS (MORE)
+            "choopa",
+            "hostwinds",
+            "namecheap",
+            "interserver",
+            "knownhost",
+            "liquidweb",
+            "inmotion",
+            "a2hosting",
+            "hostgator",
+            "bluehost",
+            "dreamhost",
+            "rackspace",
+            "stackpath",
+            "stackpathcdn",
+            # 🧠 PROXY / ROTATING NETWORKS
+            "911 re",
+            "911 proxy",
+            "proxyrack",
+            "geosurf",
+            "shifter",
+            "stormproxies",
+            "proxyline",
+            "proxy6",
+            "buyproxies",
+            "rsocks",
+            "socks5",
+            "residential proxy",
+            "rotating proxy",
+            "backconnect",
+            "ip rotation",
+            # ⚠️ KNOWN DC / ABUSE NETWORKS
+            "path network",
+            "path.net",
+            "zenlayer",
+            "xserver",
+            "xtom",
+            "frantech",
+            "buyvm",
+            "ramnode",
+            "colo cross",
+            "multacom",
+            "psychz networks",
+            "quadranet",
+            "secureserver",
+            "godaddy",
+            "hosteurope",
+            "fasthosts",
+            "ukfast",
+            # 🇪🇺 EUROPE MIXED NETWORK
+            "ovh sas",
+            "online sas",
+            "scaleway",
+            # 🇺🇸 US MIXED / SUSPICIOUS
+            "cox business",
+            "att services",
+            "verizon business",
+            # 🌐 GENERIC HIGH-RISK WORDS
+            "network solutions",
+            "hosting solutions",
+            "cloud services",
+            "internet services",
+        ]
 
         # 🔥 NORMALIZE FIRST WORD (SUPER IMPORTANT)
         def normalize_word(text):
@@ -422,7 +488,7 @@ class VisitorContext:
             self.connection_type = "datacenter"
             self.ip_type = "datacenter"
 
-            self.bot_score = max(self.bot_score, 85)  # 🔥 increase
+            self.bot_score += 60  # 🔥 increase
 
         # ================================
         # VPN DETECTION
@@ -563,8 +629,17 @@ class VisitorContext:
             pass
 
         # 🔥 BOT SIGNAL (missing fingerprint = suspicious)
+        missing_fp = 0
+
         if not self.canvas_fingerprint:
-            self.bot_score += 10
+            missing_fp += 1
+        if not self.webgl_fingerprint:
+            missing_fp += 1
+        if not self.audio_fingerprint:
+            missing_fp += 1
+
+        if missing_fp >= 2:
+            self.bot_score += 20
 
         # =========================================
         # 🔥 TRUST SCORE SYSTEM (ADSPECT++ CORE)
@@ -588,6 +663,119 @@ class VisitorContext:
         # 🔥 FORCE HIGH SCORE FOR DATACENTER
         if self.is_datacenter:
             self.bot_score = max(self.bot_score, 80)
+
+        # ================================
+        # 🔥 AI RISK BOOST (SAFE VERSION)
+        # ================================
+
+        try:
+            ai_risk = get_ai_risk(self)
+
+            # 🔥 ignore low confidence data
+            if ai_risk < 20:
+                pass
+
+            # 🔥 medium risk (safe boost)
+            elif ai_risk < 50:
+                self.bot_score += 5
+
+            # 🔥 high risk (controlled boost)
+            elif ai_risk < 70:
+                self.bot_score += 10
+
+            # 🔥 very high risk (but still safe)
+            else:
+                self.bot_score += 15
+
+        except:
+            pass
+
+        # ================================
+        # 🛡️ TRUSTED ISP SAFE GUARD
+        # ================================
+
+        trusted_isp = [
+            # 🇮🇳 INDIA
+            "jio",
+            "airtel",
+            "vodafone idea",
+            "vi",
+            "bsnl",
+            "act fibernet",
+            "hathway",
+            # 🇺🇸 USA
+            "comcast",
+            "xfinity",
+            "verizon",
+            "att",
+            "at&t",
+            "spectrum",
+            "charter",
+            "cox",
+            "frontier",
+            "centurylink",
+            # 🇬🇧 UK
+            "bt",
+            "british telecom",
+            "virgin media",
+            "sky broadband",
+            "talktalk",
+            # 🇪🇺 EUROPE (major)
+            "orange",
+            "telefonica",
+            "o2",
+            "vodafone",
+            "deutsche telekom",
+            "telekom",
+            "t-mobile",
+            "bouygues",
+            "free sas",
+            "iliad",
+            "proximus",
+            "kpn",
+            "ziggo",
+            "telia",
+            "telenor",
+            "tele2",
+            # 🇯🇵 JAPAN
+            "ntt",
+            "ntt docomo",
+            "softbank",
+            "kddi",
+            "au",
+            "rakuten",
+            # 🇰🇷 KOREA
+            "kt corporation",
+            "sk telecom",
+            "lg uplus",
+            # 🇨🇳 CHINA (mixed but big)
+            "china telecom",
+            "china unicom",
+            "china mobile",
+            # 🇸🇬 / 🇦🇺 ASIA PACIFIC
+            "singtel",
+            "starhub",
+            "m1",
+            "telstra",
+            "optus",
+            "tpg",
+            # 🌍 MIDDLE EAST
+            "etisalat",
+            "du",
+            "stc",
+            "zain",
+            "ooredoo",
+            "mobily",
+            "batelco",
+            # 🌍 AFRICA
+            "mtn",
+            "airtel africa",
+            "vodacom",
+            "safaricom",
+        ]
+
+        if self.isp and any(t in self.isp.lower() for t in trusted_isp):
+            self.bot_score -= 10
         # ================================
         # FINAL BOT SCORE
         # ================================

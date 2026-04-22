@@ -76,3 +76,76 @@ def get_source_risk(source: str):
 
     except Exception:
         return 0
+
+
+# ================================
+# 🔥 AI MULTI SIGNAL LEARNING ENGINE
+# ================================
+
+
+def update_ai_learning(visitor, decision: str):
+    try:
+        keys = [
+            f"asn:{visitor.asn}",
+            f"isp:{visitor.isp}",
+            f"country:{visitor.country_code}",
+            f"fp:{visitor.full_fingerprint}",
+        ]
+
+        for key in keys:
+            if not key:
+                continue
+
+            redis_key = f"ai_stats:{key}"
+
+            redis_client.hincrby(redis_key, "total", 1)
+
+            if decision == "blocked":
+                redis_client.hincrby(redis_key, "bad", 1)
+            else:
+                redis_client.hincrby(redis_key, "good", 1)
+
+            redis_client.expire(redis_key, 86400)
+
+    except Exception:
+        pass
+
+
+def get_ai_risk(visitor):
+    try:
+        keys = [
+            f"asn:{visitor.asn}",
+            f"isp:{visitor.isp}",
+            f"country:{visitor.country_code}",
+            f"fp:{visitor.full_fingerprint}",
+        ]
+
+        total_risk = 0
+        count = 0
+
+        for key in keys:
+            redis_key = f"ai_stats:{key}"
+
+            data = redis_client.hgetall(redis_key)
+
+            if not data:
+                continue
+
+            total = int(data.get(b"total", 0))
+            bad = int(data.get(b"bad", 0))
+
+            if total < 20:
+                continue  # ignore low data
+
+            risk = (bad / total) * 100
+
+            total_risk += risk
+            count += 1
+
+        if count == 0:
+            return 0
+
+        return int(total_risk / count)
+
+    except Exception:
+        return 0
