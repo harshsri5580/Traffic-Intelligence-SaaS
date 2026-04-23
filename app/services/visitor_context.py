@@ -13,6 +13,7 @@ class VisitorContext:
     def __init__(self, request: Request):
 
         self.request = request
+        self.reasons = []
 
         # ================================
         # SAFE IP DETECTION
@@ -190,12 +191,14 @@ class VisitorContext:
 
             self.is_automation = True
             self.bot_score += 50
+            self.reasons.append("automation_detected")
 
         if any(k in ua_lower for k in bot_keywords):
 
             self.is_bot = True
             self.device_type = "bot"
             self.bot_score += 60
+            self.reasons.append("bot_user_agent")
 
         # ================================
         # KNOWN CRAWLER DETECTION
@@ -539,7 +542,8 @@ class VisitorContext:
             self.connection_type = "datacenter"
             self.ip_type = "datacenter"
 
-            self.bot_score += 60  # 🔥 increase
+            self.bot_score += 50  # 🔥 increase
+            self.reasons.append("datacenter_ip")
 
         # ================================
         # VPN DETECTION
@@ -570,8 +574,8 @@ class VisitorContext:
         # 🔥 UNKNOWN NETWORK BOOST (ADD HERE)
         # ================================
 
-        if self.connection_type == "unknown" and self.bot_score > 40:
-            self.bot_score += 20
+        if self.connection_type == "unknown" and self.bot_score > 30:
+            self.bot_score += 10
         # ================================
         # DEFAULT IP TYPE
         # ================================
@@ -689,8 +693,9 @@ class VisitorContext:
         if not self.audio_fingerprint:
             missing_fp += 1
 
-        if missing_fp >= 2:
-            self.bot_score += 20
+        if missing_fp >= 3:
+            self.bot_score += 10
+            self.reasons.append("missing_fingerprint")
 
         # =========================================
         # 🔥 TRUST SCORE SYSTEM (ADSPECT++ CORE)
@@ -713,7 +718,7 @@ class VisitorContext:
             pass
         # 🔥 FORCE HIGH SCORE FOR DATACENTER
         if self.is_datacenter:
-            self.bot_score = max(self.bot_score, 80)
+            self.bot_score = max(self.bot_score, 50)
 
         # ================================
         # 🔥 AI RISK BOOST (SAFE VERSION)
@@ -750,6 +755,13 @@ class VisitorContext:
             "jio",
             "airtel",
             "vodafone idea",
+            "asahi",
+            "optage",
+            "qtnet",
+            "jcom",
+            "chubu",
+            "ntt",
+            "kddi",
             "vi",
             "bsnl",
             "act fibernet",
@@ -835,7 +847,7 @@ class VisitorContext:
         ]
 
         if self.isp and any(t in self.isp.lower() for t in trusted_isp):
-            self.bot_score -= 10
+            self.bot_score -= 25
         # ================================
         # FINAL BOT SCORE
         # ================================

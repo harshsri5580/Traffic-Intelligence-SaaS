@@ -384,7 +384,7 @@ async def redirect_campaign(
         and not challenge_pass
         and not is_bot_traffic
         and (
-            visitor.bot_score >= 30
+            visitor.bot_score >= 40
             or visitor.connection_type in ["vpn", "datacenter"]
             or visitor.is_bot
         )
@@ -680,8 +680,7 @@ async def redirect_campaign(
     # 🔥 HARD BLOCK (TOP PRIORITY)
     if visitor.is_datacenter or visitor.is_vpn or visitor.is_proxy or visitor.is_tor:
         # print("🚫 HARD BLOCK: BAD NETWORK")
-
-        return RedirectResponse(campaign.bot_url or campaign.safe_page_url or "/decoy")
+        visitor.bot_score += 30
 
     if not campaign:
         decision = set_decision(decision, "blocked")
@@ -1032,11 +1031,31 @@ async def redirect_campaign(
 
     # 🔥 HIGH RISK BLOCK
     # 🔥 HIGH RISK BLOCK
-    if risk_score >= 70 or visitor.bot_score >= 80:
+    if risk_score >= 80 or visitor.bot_score >= 80:
         # print("🚫 HIGH RISK BLOCK")
 
         decision = set_decision(decision, "blocked")
-        reason = "fraud_traffic"
+        fraud_reasons = []
+
+        if visitor.is_vpn:
+            fraud_reasons.append("VPN")
+
+        if visitor.is_proxy:
+            fraud_reasons.append("Proxy")
+
+        if visitor.is_datacenter:
+            fraud_reasons.append("Datacenter")
+
+        if visitor.is_tor:
+            fraud_reasons.append("TOR")
+
+        if visitor.bot_score >= 85:
+            fraud_reasons.append("High Bot Score")
+
+        if risk_score >= 85:
+            fraud_reasons.append("High Risk Score")
+
+        reason = ", ".join(fraud_reasons) if fraud_reasons else "fraud_traffic"
 
         is_bot_traffic = True
         is_blocked_final = True  # 🔥 MOST IMPORTANT
@@ -1092,12 +1111,16 @@ async def redirect_campaign(
     # DATACENTER HARD BLOCK (ALWAYS INDEPENDENT)
     # -------------------------------------------------
     try:
-        if getattr(visitor, "is_datacenter", False):
-            if campaign.block_datacenter:
-                decision = set_decision(decision, "blocked")
-                reason = "datacenter_block"
-                redirect_url = campaign.bot_url or campaign.safe_page_url or "/decoy"
-                destination_url = redirect_url
+        # 🔥 STRICT NETWORK BLOCK (SAFE)
+        if visitor.is_vpn or visitor.is_proxy or visitor.is_tor:
+
+            decision = set_decision(decision, "blocked")
+            reason = "VPN/Proxy detected"
+
+            redirect_url = campaign.safe_page_url or "/decoy"
+            destination_url = redirect_url
+
+            is_blocked_final = True
     except Exception:
         pass
 
@@ -1110,10 +1133,12 @@ async def redirect_campaign(
         try:
 
             rule_engine = RuleEngine(db, campaign, visitor)
-            matched_rule = rule_engine.evaluate()
+            matched_rule, rule_reason = rule_engine.evaluate()
 
             if matched_rule:
                 # 🔥 HARD LOCK
+                if not reason and rule_reason:
+                    reason = rule_reason
                 is_bot_traffic = is_bot_traffic
 
                 if matched_rule.action_type == "block":
@@ -1198,7 +1223,7 @@ async def redirect_campaign(
         elif matched_rule.action_type == "rotate" and selected_offer:
 
             decision = "offer"
-            reason = "rule_match"
+            reason = "Rule Match"
 
             redirect_url = selected_offer.url
             # print("🔥 FINAL DECISION:", decision)
@@ -1214,9 +1239,10 @@ async def redirect_campaign(
 
     # 🔥 NO RULE MATCH → SAFE PAGE (STRICT MODE)
     elif not is_bot_traffic and not is_blocked_final and not proxied_url:
+        print("🔥 RULE FAIL REASON:", rule_reason)
 
         decision = "fallback"
-        reason = "no_rule_match"
+        reason = rule_reason or "no_rule_match"
 
         redirect_url = campaign.fallback_url or campaign.safe_page_url or "/decoy"
         destination_url = redirect_url
@@ -1229,7 +1255,8 @@ async def redirect_campaign(
         decision = "fallback"
         redirect_url = campaign.fallback_url or "/decoy"
         destination_url = redirect_url
-        reason = "fallback"
+        if not reason:
+            reason = rule_reason or "fallback"
     redirect_url = append_click_id(redirect_url, click_id)
 
     # 🔥 FINAL DEDUPE (FIXED ✅)

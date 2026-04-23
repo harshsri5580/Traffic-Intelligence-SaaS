@@ -514,7 +514,9 @@ ${log.risk_score >= 70 ? "bg-red-500/10 text-red-400 border border-red-500/20" :
                       )}
 
                       {visibleColumns.reason && (
-                        <td className="px-3 py-2 border text-xs">{log.reason || "-"}</td>
+                        <td className="px-3 py-2 border text-xs">
+                          {log.reason ? log.reason : "-"}
+                        </td>
                       )}
 
                       {visibleColumns.flags && (

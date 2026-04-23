@@ -29,7 +29,7 @@ def get_campaign_stats(campaign_id: int):
         db.query(func.count(ClickLog.id))
         .filter(
             ClickLog.campaign_id == campaign_id,
-            ClickLog.status.in_(["passed", "rule", "offer"]),
+            ClickLog.status.in_(["offer", "pass"]),
         )
         .scalar()
     )
@@ -139,7 +139,7 @@ def get_traffic_timeseries(campaign_id: int):
 def update_daily_stats(campaign_id, rule_id, offer_id, decision, is_bot):
 
     db = SessionLocal()
-    today = date.today()
+    today = datetime.utcnow().date()
 
     try:
         # ---------------- CAMPAIGN ----------------
@@ -168,9 +168,9 @@ def update_daily_stats(campaign_id, rule_id, offer_id, decision, is_bot):
 
         if decision == "blocked":
             campaign_stats.blocked += 1
-        elif decision == "passed":
+        elif decision in ["offer", "pass"]:
             campaign_stats.passed += 1
-        else:
+        elif decision == "fallback":
             campaign_stats.fallback += 1
 
         if is_bot:

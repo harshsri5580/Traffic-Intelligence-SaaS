@@ -1,0 +1,24 @@
+{"campaign_id": 36, "rule_id": 16, "offer_id": 14, "decision": "offer", "is_bot": false}
+{"campaign_id": 36, "rule_id": null, "offer_id": null, "decision": "fallback", "is_bot": false}
+{"campaign_id": 36, "rule_id": null, "offer_id": null, "decision": "fallback", "is_bot": false}
+{"campaign_id": 36, "rule_id": null, "offer_id": null, "decision": "fallback", "is_bot": false}
+{"campaign_id": 36, "rule_id": null, "offer_id": null, "decision": "fallback", "is_bot": false}
+{"campaign_id": 36, "rule_id": null, "offer_id": null, "decision": "fallback", "is_bot": false}
+{"campaign_id": 36, "rule_id": null, "offer_id": null, "decision": "fallback", "is_bot": false}
+{"campaign_id": 36, "rule_id": null, "offer_id": null, "decision": "fallback", "ip": "103.46.203.161", "is_bot": false}
+{"campaign_id": 36, "rule_id": 16, "offer_id": 14, "decision": "offer", "ip": "103.46.203.161", "is_bot": false}
+{"campaign_id": 36, "rule_id": null, "offer_id": null, "decision": "fallback", "ip": "103.46.203.161", "is_bot": false}
+{"campaign_id": 36, "rule_id": null, "offer_id": null, "decision": "fallback", "ip": "103.46.203.161", "is_bot": false}
+{"campaign_id": 36, "rule_id": 16, "offer_id": 14, "decision": "offer", "ip": "103.46.203.161", "is_bot": false}
+{"campaign_id": 36, "rule_id": null, "offer_id": null, "decision": "fallback", "ip": "103.46.203.161", "is_bot": false}
+{"campaign_id": 36, "rule_id": 16, "offer_id": 14, "decision": "offer", "ip": "103.46.203.161", "is_bot": false}
+{"campaign_id": 36, "rule_id": null, "offer_id": null, "decision": "fallback", "ip": "103.46.203.161", "is_bot": false}
+{"campaign_id": 36, "rule_id": null, "offer_id": null, "decision": "fallback", "ip": "103.46.203.161", "is_bot": false}
+{"campaign_id": 36, "rule_id": 16, "offer_id": 14, "decision": "offer", "ip": "103.46.203.161", "is_bot": false}
+{"campaign_id": 36, "rule_id": 16, "offer_id": 14, "decision": "offer", "ip": "103.46.203.161", "is_bot": false}
+{"campaign_id": 36, "rule_id": 16, "offer_id": 14, "decision": "offer", "ip": "103.46.203.161", "is_bot": false}
+{"campaign_id": 36, "rule_id": 16, "offer_id": 14, "decision": "offer", "ip": "185.220.101.1", "is_bot": false}
+{"campaign_id": 36, "rule_id": null, "offer_id": null, "decision": "blocked", "ip": "8.8.8.8", "is_bot": false}
+{"campaign_id": 36, "rule_id": 16, "offer_id": 14, "decision": "offer", "ip": "185.220.101.1", "is_bot": false}
+{"campaign_id": 36, "rule_id": null, "offer_id": null, "decision": "blocked", "ip": "185.220.101.1", "is_bot": false}
+{"campaign_id": 36, "rule_id": null, "offer_id": null, "decision": "blocked", "ip": "8.8.8.8", "is_bot": false}

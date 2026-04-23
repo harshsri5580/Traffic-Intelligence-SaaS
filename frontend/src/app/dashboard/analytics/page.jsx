@@ -122,7 +122,7 @@ export default function AnalyticsPage() {
       }
 
       // ✅ passed
-      if (["offer", "passed"].includes(log.status)) {
+      if (["offer", "pass"].includes(log.status)) {
         trafficByHour[hour].passed++;
       }
 
@@ -257,7 +257,7 @@ export default function AnalyticsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full min-w-0">
 
           <StatCard title="Total Clicks" value={overview.total_clicks} />
-          <StatCard title="Passed" value={overview.real_traffic} />
+          <StatCard title="Passed" value={overview.passed} />
           <StatCard title="Blocked" value={overview.blocked} />
         </div>
 

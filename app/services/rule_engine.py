@@ -39,7 +39,7 @@ class RuleEngine:
 
         # 🔥 calculate risk once
         self._risk_score = self._get_risk_score()
-
+        last_fail_reason = None
         for rule in rules:
             # print("CHECKING RULE:", rule.id, rule.name)
 
@@ -50,14 +50,14 @@ class RuleEngine:
                 # ---------------------------------
                 if self._risk_score >= 90:
                     # print("HIGH RISK → FORCE BLOCK")
-                    return None
+                    continue
 
                 # ---------------------------------
                 # rule without conditions = auto match
                 # ---------------------------------
                 if not rule.conditions:
                     # print("RULE MATCH (NO CONDITIONS)")
-                    return rule
+                    return rule, None
 
                 # ---------------------------------
                 # 🔥 BOT SCORE THRESHOLD (SMART)
@@ -74,21 +74,25 @@ class RuleEngine:
                 # 🔥 BOT THRESHOLD (FIXED)
                 if final_threshold is not None:
                     if self.visitor.bot_score >= final_threshold:
-                        # print("BOT THRESHOLD MATCH:", final_threshold)
-                        return None
+                        last_fail_reason = "bot_score_high"
+                        continue  # ❗ skip this rule, don't kill all rules
 
                 # ---------------------------------
                 # NORMAL MATCH
                 # ---------------------------------
-                if self._match_rule(rule):
-                    # print("RULE MATCHED:", rule.id)
-                    return rule
+                matched, fail_reason = self._match_rule(rule)
+
+                if matched:
+                    return rule, None
+
+                if fail_reason:
+                    last_fail_reason = fail_reason
 
             except Exception as e:
                 # print("RULE ERROR:", e)
                 continue
 
-        return None
+        return None, last_fail_reason or "no_matching_rule"
 
     # =========================================
     # 🔥 RISK HELPER
@@ -121,23 +125,17 @@ class RuleEngine:
             self._risk_score = getattr(self.visitor, "bot_score", 0)
             return self._risk_score
 
-    # =========================================
-    # GROUPED CONDITION LOGIC (FIXED ✅)
-    # =========================================
-
     def _match_rule(self, rule):
 
         grouped_conditions = {}
 
         # 🔹 Group conditions
         for condition in rule.conditions:
-            # 🔥 GROUP SAME FIELD CONDITIONS TOGETHER
-            group_key = (
-                f"{condition.field}"  # or condition.group_id if you have groupings
-            )
+            group_key = f"{condition.field}"
             grouped_conditions.setdefault(group_key, []).append(condition)
 
         group_results = []
+        group_fail_map = {}  # 🔥 track per-field result
 
         # 🔹 Process each group
         for field, conditions in grouped_conditions.items():
@@ -150,10 +148,6 @@ class RuleEngine:
 
                 visitor_value = self._get_visitor_value(condition.field)
 
-                # print("FIELD:", condition.field)
-                # print("VISITOR VALUE:", visitor_value)
-                # print("RULE VALUE:", condition.value)
-
                 result = self.evaluate_condition(
                     visitor_value,
                     condition.operator,
@@ -162,29 +156,58 @@ class RuleEngine:
 
                 results.append(result)
 
-            # 🔥 FIX: EMPTY FIELD SKIP
+            # 🔥 skip empty
             if not results:
-                continue  # ❗ पूरा field ignore
+                continue
 
-            group_match = any(results)
-
-            # print(f"GROUP RESULT ({field}):", group_match)
-
+            group_match = any(results)  # ✅ OR logic inside group
             group_results.append(group_match)
 
+            # 🔥 store fail only if पूरी group fail
+            group_fail_map[field] = group_match
+
         # =========================================
-        # 🔥 FINAL RULE LOGIC (ONLY HERE AND/OR)
+        # 🔥 FINAL RULE LOGIC
         # =========================================
 
         match_type = getattr(rule, "match_type", "AND")
 
         if match_type == "AND":
-            return all(group_results)
-
+            matched = all(group_results)
         elif match_type == "OR":
-            return any(group_results)
+            matched = any(group_results)
+        else:
+            matched = False
 
-        return False
+        if matched:
+            return True, None
+
+        # =========================================
+        # ❌ BUILD FAIL REASON (FIXED ✅)
+        # =========================================
+
+        fail_reasons = []
+
+        labels = {
+            "country": "Country",
+            "device": "Device",
+            "browser": "Browser",
+            "os": "OS",
+            "bot_score": "Bot Score",
+            "isp": "ISP",
+            "asn": "ASN",
+        }
+
+        for field, passed in group_fail_map.items():
+
+            # ❌ only if पूरा group fail
+            if not passed:
+                name = labels.get(field, field)
+                fail_reasons.append(f"{name} mismatch")
+
+        reason = ", ".join(fail_reasons) if fail_reasons else "no_rule_match"
+
+        return False, reason
 
     # =========================================
     # VISITOR FIELD RESOLVER
@@ -200,8 +223,8 @@ class RuleEngine:
             "device_type": "device_type",
             "browser": "browser",
             "os": "os",
-            "country": "country_code",
-            "country_code": "country",
+            "country": "country",
+            "country_code": "country_code",
             "region": "region",
             "city": "city",
             "timezone": "ip_timezone",
@@ -294,11 +317,16 @@ class RuleEngine:
         # 🔥 ISP MATCH (CORRECT)
         if operator == "isp_match":
             rule_isps = [v.strip().lower() for v in condition_value.split(",")]
-            return any(isp in field_value for isp in rule_isps)
+            return any(isp in field_value for isp in rule_isps if isp)
 
         # 🔥 ASN MATCH (CORRECT)
         if operator == "asn_match":
-            rule_asn = [int(v.strip()) for v in condition_value.split(",")]
+            rule_asn = []
+            for v in condition_value.split(","):
+                try:
+                    rule_asn.append(int(v.strip()))
+                except:
+                    continue
             return int(field_value) in rule_asn
 
         # if operator == "equals":
