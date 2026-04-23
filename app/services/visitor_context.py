@@ -260,11 +260,18 @@ class VisitorContext:
             pass
 
         dc_asn_keywords = [
+            # 🌐 BIG CLOUD (HIGH CONFIDENCE)
             "amazon",
+            "aws",
             "google",
+            "gcp",
             "microsoft",
             "azure",
+            "oracle",
             "cloudflare",
+            "akamai",
+            "fastly",
+            # 🏢 MAJOR VPS / HOSTING
             "digitalocean",
             "linode",
             "vultr",
@@ -273,10 +280,48 @@ class VisitorContext:
             "contabo",
             "scaleway",
             "leaseweb",
-            "oracle",
+            "choopa",
+            "buyvm",
+            "ramnode",
+            "frantech",
+            # 🌍 CDN / EDGE / INFRA
+            "cdn",
+            "edge",
+            "anycast",
+            "cache",
+            # 🧠 PROXY / VPN NETWORKS (STRONG SIGNAL)
+            "vpn",
+            "proxy",
+            "tunnel",
+            "anonymous",
+            "nordvpn",
+            "expressvpn",
+            "surfshark",
+            "ipvanish",
+            "protonvpn",
+            # 🧪 RESIDENTIAL PROXY NETWORKS
+            "luminati",
+            "brightdata",
+            "oxylabs",
+            "smartproxy",
+            "soax",
+            "netnut",
+            "packetstream",
+            "honeygain",
+            # 🌏 ASIA CLOUD (SAFE TO KEEP)
             "alibaba",
             "tencent",
             "huawei",
+            # ⚠️ KNOWN ABUSE / MIXED INFRA
+            "zenlayer",
+            "xtom",
+            "multacom",
+            "psychz",
+            "quadranet",
+            "path network",
+            "path.net",
+            # ⚠️ YOUR CUSTOM (FIXED CASE)
+            "waicore",
         ]
 
         if self.org:
@@ -324,6 +369,7 @@ class VisitorContext:
             # 🏢 VPS / HOSTING
             "digitalocean",
             "linode",
+            "waicore",
             "vultr",
             "ovh",
             "hetzner",
@@ -367,6 +413,7 @@ class VisitorContext:
             # 🇪🇺 EU HOSTING / DC
             "m247",
             "worldstream",
+            "private layer inc",
             "psychz",
             "online",
             # ⚠️ HARD TARGETS (IMPORTANT)
@@ -393,7 +440,9 @@ class VisitorContext:
             "instance",
             "proton",
             "big data host",
-            "Hydra",
+            "hydra",
+            "altushost",
+            "netprotect",
             "protonVPN",
             "ipxo",
             "virgin",
