@@ -417,9 +417,11 @@ class VisitorContext:
             "psychz",
             "online",
             # ⚠️ HARD TARGETS (IMPORTANT)
-            "biglobe",
+            # "biglobe",
             "arteria",
-            "k-opticom",
+            # "k-opticom",
+            "akari",
+            "it7",
             "softether",
             "cogent",
             "zenlayer",
@@ -431,7 +433,7 @@ class VisitorContext:
             "celeste",
             "community",
             "latitude",
-            "starcat",
+            # "starcat",
             # ⚠️ GENERIC INFRA
             "cloud",
             "compute",
@@ -821,6 +823,15 @@ class VisitorContext:
             "airtel africa",
             "vodacom",
             "safaricom",
+            "biglobe",
+            "k-opticom",
+            "matsusaka",
+            "ocn",
+            "open computer network",
+            "starcat",
+            "stnet",
+            "koshinomiyako",
+            "community network center",
         ]
 
         if self.isp and any(t in self.isp.lower() for t in trusted_isp):
