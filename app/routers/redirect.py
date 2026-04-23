@@ -1397,9 +1397,7 @@ async def redirect_campaign(
                             "device": visitor.device_type,
                             "ip": ip,
                             "status": status_map.get(decision, decision),
-                            "time": datetime.now(timezone.utc)
-                            .isoformat()
-                            .replace("+00:00", "Z"),
+                            "time": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
                         }
                     )
                 )

@@ -168,10 +168,10 @@ export default function Dashboard() {
               device_type: data.device,
               campaign_name: data.campaign,
               status: data.status === "Offer" ? "Pass" : data.status,
-              created_at: time,
+              created_at: new Date().toISOString(), // 🔥 FIX
             },
             ...prev,
-          ].slice(0, 20);
+          ].slice(0, 50);
         });
       } catch { }
     };
@@ -309,13 +309,7 @@ export default function Dashboard() {
 
       // handle both possible API formats
       if (Array.isArray(data)) {
-        const today = new Date().toDateString();
-
-        const todayLogs = data.filter((l) =>
-          new Date(l.created_at).toDateString() === today
-        );
-
-        setRecent(todayLogs);
+        setRecent(data); // ❌ NO FILTER
       } else if (data.logs) {
         setRecent(data.logs);
       } else {
@@ -910,7 +904,7 @@ shadow-[0_10px_40px_rgba(0,0,0,0.08)]">
 
                 {/* 🔥 SMART MARKERS */}
                 {Array.isArray(recent) &&
-                  recent.slice(0, 12).map((log, i) => {
+                  recent.slice(0, 30).map((log, i) => {
 
                     const countryName = getCountryName(log.country);
                     const coords = countryCoords[countryName];
@@ -954,8 +948,10 @@ shadow-[0_10px_40px_rgba(0,0,0,0.08)]">
                   🟢 Live: {
                     recent?.filter(r => {
                       const time = new Date(r.created_at);
+                      if (isNaN(time)) return false;
+
                       const now = new Date();
-                      return (now - time) / 1000 < 60;
+                      return (now - time) < 120000; // 2 min window
                     }).length || 0
                   }
                 </span>
@@ -1024,7 +1020,7 @@ transition-all duration-300">
                     </td>
 
                     <td className="p-3 border-b text-gray-500 text-xs">
-                      {log.created_at ? new Date(log.created_at + "Z").toLocaleString() : "-"}
+                      {log.created_at ? new Date(log.created_at).toLocaleString() : "-"}
                     </td>
 
                   </tr>
