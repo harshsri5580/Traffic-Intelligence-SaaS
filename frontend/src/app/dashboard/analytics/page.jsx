@@ -46,9 +46,10 @@ export default function AnalyticsPage() {
 
       setLoading(true);
 
-      const [logsRes, overviewRes] = await Promise.all([
-        api.get(`/analytics/recent?page=${page}&limit=${rowsPerPage}`),
-        api.get("/analytics/overview")
+      const [logsRes, overviewRes, fullRes] = await Promise.all([
+        api.get(`/analytics/recent?page=${page}&limit=${rowsPerPage}`), // table
+        api.get("/analytics/overview"),
+        api.get(`/analytics/recent?limit=1000`) // 🔥 FULL DATA FOR CHART
       ]);
       // ✅ ADD THIS AT END
       try {
@@ -64,9 +65,7 @@ export default function AnalyticsPage() {
       setLogs(logsData);
       setOverview(overviewRes.data || null);
 
-      if (page === 1) {
-        buildCharts(logsData);
-      }
+      buildCharts(fullRes.data.logs || []);
 
     } catch (err) {
 
@@ -84,7 +83,7 @@ export default function AnalyticsPage() {
   useEffect(() => {
     setLoading(true);
     loadData();
-  }, [page]);
+  }, []);
 
 
 
