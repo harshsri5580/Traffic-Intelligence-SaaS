@@ -55,7 +55,7 @@ export default function LogsPage() {
 
     loadData();
 
-  }, []);
+  }, [currentPage, filters.campaign_id]);
 
 
   // ✅ separate useEffect
@@ -230,10 +230,10 @@ export default function LogsPage() {
 
   // Pagination logic
 
-  const indexOfLastRow = currentPage * rowsPerPage;
-  const indexOfFirstRow = indexOfLastRow - rowsPerPage;
+  // const indexOfLastRow = currentPage * rowsPerPage;
+  // const indexOfFirstRow = indexOfLastRow - rowsPerPage;
 
-  const currentLogs = filteredLogs.slice(indexOfFirstRow, indexOfLastRow);
+  // const currentLogs = filteredLogs.slice(indexOfFirstRow, indexOfLastRow);
 
   const totalPages = Math.ceil(totalCount / rowsPerPage);
 
@@ -395,7 +395,7 @@ transition-all duration-300 flex-1 flex flex-col">
                     </tr>
                   )}
 
-                  {currentLogs.map((log, i) => (
+                  {filteredLogs.map((log, i) => (
 
                     <tr key={i} className="text-center hover:bg-gray-50 transition-colors duration-150">
 
@@ -602,8 +602,13 @@ transition shadow-sm hover:shadow"
       <div className="flex justify-between items-center mt-4 px-2 flex-wrap gap-2">
 
         <div className="text-sm text-gray-800">
-          Showing <span className="font-medium">{indexOfFirstRow + 1}</span> –
-          <span className="font-medium"> {Math.min(indexOfLastRow, filteredLogs.length)}</span>
+          Showing <span className="font-medium">
+            {(currentPage - 1) * rowsPerPage + 1}
+          </span>{" "}
+          –
+          <span className="font-medium">
+            {Math.min(currentPage * rowsPerPage, totalCount)}
+          </span>{" "}
           of <span className="font-medium">{totalCount}</span>
         </div>
 
