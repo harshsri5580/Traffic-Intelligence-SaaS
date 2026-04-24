@@ -49,7 +49,7 @@ export default function AnalyticsPage() {
       const [logsRes, overviewRes, fullRes] = await Promise.all([
         api.get(`/analytics/recent?page=${page}&limit=${rowsPerPage}`), // table
         api.get("/analytics/overview"),
-        api.get(`/analytics/recent?limit=1000`) // 🔥 FULL DATA FOR CHART
+        api.get(`/analytics/recent`) // 🔥 FULL DATA FOR CHART
       ]);
       // ✅ ADD THIS AT END
       try {
