@@ -25,7 +25,7 @@ export default function AnalyticsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [overview, setOverview] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
-
+  const [fullRes, setFullRes] = useState(null);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -83,7 +83,7 @@ export default function AnalyticsPage() {
   useEffect(() => {
     setLoading(true);
     loadData();
-  }, []);
+  }, [page, rowsPerPage]);
 
 
 
@@ -202,7 +202,10 @@ export default function AnalyticsPage() {
 
   const filteredLogs = logs.filter((log) => {
 
-    if (statusFilter !== "all" && log.status !== statusFilter) {
+    if (
+      statusFilter !== "all" &&
+      (log.status || "").toLowerCase() !== statusFilter.toLowerCase()
+    ) {
       return false;
     }
 
@@ -366,8 +369,9 @@ export default function AnalyticsPage() {
           <option value="all">All Status</option>
           <option value="offer">Passed</option>
           <option value="blocked">Blocked</option>
-          <option value="fallback">Safe</option>
-          <option value="rule">Rule Redirect</option>
+          <option value="fallback">Fallback</option>
+          <option value="safe">Safe</option>
+          <option value="converted">Converted</option>
         </select>
 
         {/* 🔽 ROWS */}

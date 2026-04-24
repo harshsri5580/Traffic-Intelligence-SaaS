@@ -200,10 +200,9 @@ class RuleEngine:
 
         for field, passed in group_fail_map.items():
 
-            # ❌ only if पूरा group fail
             if not passed:
                 name = labels.get(field, field)
-                fail_reasons.append(f"{name} mismatch")
+                fail_reasons.append(f"{name} Mismatch")
 
         reason = ", ".join(fail_reasons) if fail_reasons else "no_rule_match"
 

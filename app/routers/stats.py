@@ -53,6 +53,8 @@ def traffic_logs(
     country: str | None = None,
     device: str | None = None,
     status: str | None = None,
+    page: int = 1,
+    limit: int = 50,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -64,7 +66,7 @@ def traffic_logs(
         .outerjoin(Rule, Rule.id == ClickLog.rule_id)
         .filter(Campaign.user_id == current_user.id)
     )
-    # ✅ ADD THIS
+
     if campaign_id:
         query = query.filter(ClickLog.campaign_id == campaign_id)
 
@@ -77,12 +79,18 @@ def traffic_logs(
     if status:
         query = query.filter(ClickLog.status == status)
 
-    logs = query.order_by(desc(ClickLog.created_at)).limit(200).all()
+    total = query.count()
+
+    logs = (
+        query.order_by(desc(ClickLog.created_at))
+        .offset((page - 1) * limit)
+        .limit(limit)
+        .all()
+    )
 
     data = []
 
     for log, campaign, offer, rule in logs:
-
         data.append(
             {
                 "ip_address": log.ip_address,
@@ -92,7 +100,6 @@ def traffic_logs(
                 "device_type": log.device_type,
                 "browser": log.browser,
                 "os": log.os,
-                # 🔥 ADD THESE
                 "user_agent": log.user_agent,
                 "ip_timezone": log.ip_timezone,
                 "connection_type": log.connection_type,
@@ -113,4 +120,4 @@ def traffic_logs(
             }
         )
 
-    return data
+    return {"logs": data, "total": total}

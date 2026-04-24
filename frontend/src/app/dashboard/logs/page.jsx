@@ -13,6 +13,7 @@ export default function LogsPage() {
   const blockedReasons = ["bot_detected", "fallback", "safe_page", "fraud_traffic"];
   const [loading, setLoading] = useState(true);
   const [blockedIPs, setBlockedIPs] = useState([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [filters, setFilters] = useState({
     campaign_id: "",
     ip: "",
@@ -123,13 +124,14 @@ export default function LogsPage() {
       const cid = filters.campaign_id || localStorage.getItem("campaign_id");
 
       const [logsRes, campaignsRes, blockedRes] = await Promise.all([
-        api.get(`/stats/logs${cid ? `?campaign_id=${cid}` : ""}`),
+        api.get(`/stats/logs?page=${currentPage}&limit=${rowsPerPage}${cid ? `&campaign_id=${cid}` : ""}`),
         api.get("/campaigns/"),
         api.get("/admin/blocked")
       ]);
 
       setBlockedIPs(blockedRes.data.ips || []);
-      setLogs(logsRes.data || []);
+      setLogs(logsRes.data.logs || []);
+      setTotalCount(logsRes.data.total || 0);
       setCampaigns(campaignsRes.data || []);
 
     } catch (err) {
@@ -233,7 +235,7 @@ export default function LogsPage() {
 
   const currentLogs = filteredLogs.slice(indexOfFirstRow, indexOfLastRow);
 
-  const totalPages = Math.ceil(filteredLogs.length / rowsPerPage);
+  const totalPages = Math.ceil(totalCount / rowsPerPage);
 
   if (loading) {
     return (
@@ -602,7 +604,7 @@ transition shadow-sm hover:shadow"
         <div className="text-sm text-gray-800">
           Showing <span className="font-medium">{indexOfFirstRow + 1}</span> –
           <span className="font-medium"> {Math.min(indexOfLastRow, filteredLogs.length)}</span>
-          of <span className="font-medium">{filteredLogs.length}</span>
+          of <span className="font-medium">{totalCount}</span>
         </div>
 
         <div className="flex items-center gap-2">
