@@ -32,9 +32,20 @@ export default function Header() {
             <div className="flex justify-between items-center px-6 py-4 max-w-7xl mx-auto">
 
                 {/* LOGO */}
-                <Link href="/" className="text-2xl font-bold tracking-tight">
-                    <span className="bg-gradient-to-r from-indigo-400 to-purple-500 bg-clip-text text-transparent">
-                        TrafficIntel AI
+                <Link href="/" className="flex items-center gap-1.5">
+
+                    <span className="text-2xl md:text-3xl font-medium text-white tracking-tight">
+                        TrafficIntel
+                    </span>
+
+                    <span className="
+  text-[16px] md:text-[17px]
+  text-indigo-400
+  font-semibold
+  tracking-wide
+  ml-1
+">
+                        AI
                     </span>
                 </Link>
 

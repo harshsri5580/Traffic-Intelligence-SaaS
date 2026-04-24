@@ -23,9 +23,23 @@ export default function Footer() {
 
                 {/* BRAND */}
                 <div>
-                    <h2 className="text-2xl font-bold mb-4 bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
-                        TrafficIntel AI
-                    </h2>
+                    {/* LOGO */}
+                    <Link href="/" className="flex items-center gap-1.5 mb-3">
+
+                        <span className="text-2xl md:text-3xl font-medium text-white tracking-tight">
+                            TrafficIntel
+                        </span>
+
+                        <span className="
+  text-[16px] md:text-[17px]
+  text-indigo-400
+  font-semibold
+  tracking-wide
+  ml-1
+">
+                            AI
+                        </span>
+                    </Link>
 
                     <p className="text-gray-400 text-sm leading-relaxed mb-6">
                         AI-powered traffic intelligence platform for marketers, agencies, and SaaS founders.

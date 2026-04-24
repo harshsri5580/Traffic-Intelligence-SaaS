@@ -52,46 +52,76 @@ export default function Home() {
       </div> */}
 
       {/* HERO */}
-      <div className="relative text-center py-32 px-6 overflow-hidden">
+      <div className="relative text-center py-28 md:py-36 px-6 overflow-hidden">
 
-        {/* BACKGROUND GLOW */}
+        {/* MULTI LAYER BACKGROUND */}
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 via-purple-600/10 to-transparent blur-3xl"></div>
+
+        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-indigo-500/20 blur-[120px] rounded-full"></div>
+
+        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-purple-500/20 blur-[100px] rounded-full"></div>
 
         {/* CONTENT */}
         <div className="relative z-10 max-w-5xl mx-auto">
 
-          <h1 className="text-6xl md:text-7xl font-extrabold leading-tight">
-            <span className="bg-gradient-to-r from-indigo-400 to-purple-500 bg-clip-text text-transparent">
+          {/* SMALL TAG */}
+          <div className="inline-block mb-6 px-4 py-1.5 text-sm rounded-full border border-white/10 bg-white/5 backdrop-blur text-gray-300">
+            🚀 AI-Powered Traffic Intelligence
+          </div>
+
+          {/* HEADING */}
+          <h1 className="text-5xl md:text-7xl font-semibold leading-tight tracking-tight">
+
+            <span className="bg-gradient-to-r from-indigo-300 via-purple-300 to-indigo-400 bg-clip-text text-transparent">
               Control Your Traffic
             </span>
+
             <br />
-            Like a Pro 🚀
+
+            <span className="text-white">
+              Like a Pro
+            </span>
+
           </h1>
 
-          <p className="text-gray-400 max-w-2xl mx-auto mt-6 text-lg">
+          {/* SUBTEXT */}
+          <p className="text-gray-400 max-w-2xl mx-auto mt-6 text-lg leading-relaxed">
             Advanced cloaking, AI-powered bot detection, and ultra-fast routing —
             built for marketers who demand performance and precision.
           </p>
 
           {/* BUTTONS */}
           <div className="mt-10 flex justify-center gap-4 flex-wrap">
+
             <Link
               href="/register"
-              className="bg-gradient-to-r from-indigo-600 to-purple-600 px-10 py-4 rounded-xl font-semibold shadow-lg shadow-indigo-600/30 hover:scale-105 transition"
+              className="
+          bg-gradient-to-r from-indigo-600 to-purple-600
+          px-8 py-3.5 rounded-xl font-medium
+          shadow-lg shadow-indigo-600/30
+          hover:scale-105 hover:shadow-indigo-500/40
+          transition duration-300
+        "
             >
               Start Free Trial
             </Link>
 
-            <Link
+            {/* <Link
               href="/login"
-              className="border border-white/20 px-10 py-4 rounded-xl hover:bg-white/10 transition"
+              className="
+          border border-white/20
+          px-8 py-3.5 rounded-xl
+          hover:bg-white/10
+          transition duration-300
+        "
             >
               View Demo
-            </Link>
+            </Link> */}
+
           </div>
 
-          {/* TRUST BADGE */}
-          <div className="mt-10 text-sm text-gray-500">
+          {/* TRUST */}
+          <div className="mt-12 text-sm text-gray-500">
             Trusted by marketers & agencies worldwide
           </div>
 

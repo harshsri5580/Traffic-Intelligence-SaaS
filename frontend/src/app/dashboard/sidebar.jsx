@@ -82,11 +82,24 @@ transition-all duration-300 z-50`}>
       <div className={`px-4 py-5 border-b border-gray-800 flex items-center ${collapsed ? "justify-center" : "justify-between"}`}>
 
         {!collapsed && (
-          <div>
-            <h2 className="text-base font-semibold tracking-wide text-white">
-              TrafficIntel AI
+          <div className="leading-tight">
+
+            <h2 className="
+    text-lg font-semibold tracking-tight
+    bg-gradient-to-r from-white to-gray-300
+    bg-clip-text text-transparent
+  ">
+              TrafficIntel <span className="text-indigo-400">AI</span>
             </h2>
-            <p className="text-xs text-gray-500">Traffic Intelligence Platform</p>
+
+            <p className="
+    text-xs text-gray-500
+    mt-0.5
+    tracking-wide
+  ">
+              Smarter Traffic. Better Conversions.
+            </p>
+
           </div>
         )}
 
