@@ -190,7 +190,7 @@ class VisitorContext:
         if any(a in ua_lower for a in automation_keywords):
 
             self.is_automation = True
-            self.bot_score += 50
+            self.bot_score += 40
             self.reasons.append("automation_detected")
 
         if any(k in ua_lower for k in bot_keywords):
@@ -332,7 +332,7 @@ class VisitorContext:
 
             if any(k in org_lower for k in dc_asn_keywords):
                 self.is_datacenter = True
-                self.bot_score = max(self.bot_score, 90)
+                self.bot_score = max(self.bot_score, 70)
         # =========================================
         # 🔥 GEO-ASN CONSISTENCY CHECK
         # =========================================
@@ -557,7 +557,7 @@ class VisitorContext:
 
                 self.connection_type = "vpn"
                 self.is_vpn = True
-                self.bot_score += 30
+                self.bot_score += 15
 
         # ================================
         # VPN / PROXY / TOR DETECTION
@@ -693,7 +693,7 @@ class VisitorContext:
         if not self.audio_fingerprint:
             missing_fp += 1
 
-        if missing_fp >= 3:
+        if missing_fp >= 3 and self.is_datacenter:
             self.bot_score += 10
             self.reasons.append("missing_fingerprint")
 
