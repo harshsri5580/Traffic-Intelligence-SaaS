@@ -557,7 +557,7 @@ class VisitorContext:
 
                 self.connection_type = "vpn"
                 self.is_vpn = True
-                self.bot_score += 30
+                self.bot_score += 50
 
         # ================================
         # VPN / PROXY / TOR DETECTION
@@ -570,12 +570,25 @@ class VisitorContext:
         self.is_vpn = self.is_vpn or vpn_info.get("is_vpn", False)
         self.is_proxy = self.is_proxy or vpn_info.get("is_proxy", False)
         self.is_tor = self.is_tor or vpn_info.get("is_tor", False)
+
+        # 🔥 STRONG BOOST (IMPORTANT)
+        if self.is_proxy:
+            self.bot_score += 50
+            self.reasons.append("proxy_detected")
+
+        if self.is_vpn:
+            self.bot_score += 30
+            self.reasons.append("vpn_detected")
+
+        if self.is_tor:
+            self.bot_score = max(self.bot_score, 90)
+            self.reasons.append("tor_detected")
         # ================================
         # 🔥 UNKNOWN NETWORK BOOST (ADD HERE)
         # ================================
 
-        if self.connection_type == "unknown" and self.bot_score > 30:
-            self.bot_score += 10
+        if self.connection_type == "unknown" and self.bot_score > 40:
+            self.bot_score += 15
         # ================================
         # DEFAULT IP TYPE
         # ================================
@@ -694,8 +707,25 @@ class VisitorContext:
             missing_fp += 1
 
         if missing_fp >= 3:
-            self.bot_score += 10
-            self.reasons.append("missing_fingerprint")
+            self.bot_score += 30
+            self.reasons.append("no_fingerprint")
+
+        # ================================
+        # 🔥 IP RATE BEHAVIOR
+        # ================================
+
+        try:
+            key = f"ip_hits:{self.ip}"
+            hits = redis_client.incr(key)
+
+            if hits == 1:
+                redis_client.expire(key, 10)
+
+            if hits > 10:
+                self.bot_score += 30
+                self.reasons.append("high_frequency")
+        except:
+            pass
 
         # =========================================
         # 🔥 TRUST SCORE SYSTEM (ADSPECT++ CORE)
@@ -708,7 +738,7 @@ class VisitorContext:
             if trust:
                 trust = int(trust)
 
-                if trust > 5 and self.traffic_quality == "clean":
+                if trust and int(trust) > 10 and self.bot_score < 40:
                     self.bot_score -= 10
 
             else:
@@ -718,7 +748,7 @@ class VisitorContext:
             pass
         # 🔥 FORCE HIGH SCORE FOR DATACENTER
         if self.is_datacenter:
-            self.bot_score = max(self.bot_score, 50)
+            self.bot_score = max(self.bot_score, 60)
 
         # ================================
         # 🔥 AI RISK BOOST (SAFE VERSION)
@@ -852,8 +882,8 @@ class VisitorContext:
         # FINAL BOT SCORE
         # ================================
 
-        if self.is_bot and self.bot_score < 80:
-            self.bot_score += 30
+        if self.is_bot:
+            self.bot_score += 10
 
         if self.device_type == "bot":
             self.bot_score += 20
@@ -903,8 +933,9 @@ class VisitorContext:
                 if hits == 1:
                     redis_client.expire(key, 300)
 
-                if hits > 15:
-                    self.bot_score += 40
+                if hits > 10:
+                    self.bot_score += 60
+                    self.reasons.append("fp_reuse")
         except Exception:
             pass
 

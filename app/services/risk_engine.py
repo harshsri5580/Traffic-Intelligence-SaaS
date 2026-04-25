@@ -19,7 +19,7 @@ class RiskEngine:
 
     def calculate(self):
         self.score = 0  # 🔥 MUST FIX (no side effect)
-        self.score = max(self.score, self.visitor.bot_score * 0.8)
+        self.score = max(self.score, self.visitor.bot_score * 1.2)
 
         ip = getattr(self.visitor, "ip", None)
 
@@ -40,7 +40,7 @@ class RiskEngine:
                 not getattr(self.visitor, "is_proxy", False)
                 and not getattr(self.visitor, "is_datacenter", False)
                 and not getattr(self.visitor, "is_vpn", False)
-                and getattr(self.visitor, "bot_score", 0) < 15
+                and getattr(self.visitor, "bot_score", 0) < 10
                 and getattr(self.visitor, "traffic_quality", "") == "clean"
             ):
                 return getattr(self.visitor, "bot_score", 0)
@@ -75,7 +75,7 @@ class RiskEngine:
                 if not self.campaign or getattr(
                     self.campaign, "block_proxy_rotation", True
                 ):
-                    self.score += 40
+                    self.score += 50
         except Exception:
             pass
 
@@ -92,7 +92,7 @@ class RiskEngine:
             self.score += 70
 
         elif bot_score >= 60:
-            self.score += 15
+            self.score += 30
         # ---------------------------------
         # TRAFFIC QUALITY
         # ---------------------------------
@@ -129,11 +129,11 @@ class RiskEngine:
                 if vpn_info.get("is_tor"):
                     self.score += 80
                 if vpn_info.get("is_vpn"):
-                    self.score += 40
+                    self.score += 50
                 if vpn_info.get("is_proxy"):
-                    self.score += 40
+                    self.score += 60
                 if vpn_info.get("is_residential_proxy"):
-                    self.score += 20
+                    self.score += 30
 
         except Exception:
             pass
@@ -182,7 +182,7 @@ class RiskEngine:
                     self.score += 5
 
                 if mouse == 0 and scroll == 0 and clicks == 0:
-                    self.score += 10
+                    self.score += 20
 
         except Exception:
             pass
@@ -243,8 +243,8 @@ class RiskEngine:
             if hits == 1:
                 redis_client.expire(key, 10)
 
-            if hits > 100:
-                self.score += 15
+            if hits > 50:
+                self.score += 40
 
         except Exception:
             pass
@@ -253,7 +253,7 @@ class RiskEngine:
         # RETURNING USER BONUS
         # ---------------------------------
         if getattr(self.visitor, "is_returning", False):
-            self.score -= 10
+            self.score -= 5
 
         # ---------------------------------
         # 🔥 JS SIGNAL BOOST (CORRECT PLACE)
@@ -263,7 +263,7 @@ class RiskEngine:
 
             if hasattr(visitor, "js_cpu"):
                 if visitor.js_cpu <= 2:
-                    self.score += 15
+                    self.score += 25
 
             if hasattr(visitor, "js_screen"):
                 if "0x0" in visitor.js_screen:
@@ -285,7 +285,7 @@ class RiskEngine:
         # CACHE HIGH RISK
         # ---------------------------------
         try:
-            if self.score >= 95:
+            if self.score >= 85:
                 redis_client.setex(f"blocked_ip:{ip}", 60, "1")
         except Exception:
             pass
@@ -318,4 +318,4 @@ class RiskEngine:
     # =========================================
 
     def is_high_risk(self):
-        return self.calculate() >= 70
+        return self.calculate() >= 50

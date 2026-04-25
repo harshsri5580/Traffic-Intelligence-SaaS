@@ -14,12 +14,24 @@ router = APIRouter(tags=["Challenge"])
 
 
 def get_real_ip(request: Request):
-    return (
-        request.headers.get("cf-connecting-ip")
-        or request.headers.get("x-forwarded-for", "").split(",")[0].strip()
-        or request.headers.get("x-real-ip")
-        or request.client.host
-    )
+    cf_ip = request.headers.get("cf-connecting-ip")
+    xff = request.headers.get("x-forwarded-for")
+    real_ip = request.headers.get("x-real-ip")
+
+    if cf_ip:
+        return cf_ip.strip()
+
+    if xff:
+        return xff.split(",")[0].strip()
+
+    if real_ip:
+        return real_ip.strip()
+
+    # ✅ LOCAL SAFE (IMPORTANT)
+    if request.client and request.client.host in ["127.0.0.1", "localhost"]:
+        return "103.46.203.161"
+
+    return request.client.host if request.client else "0.0.0.0"
 
 
 # ================= CHALLENGE PAGE =================
@@ -41,7 +53,8 @@ async def challenge_page(slug: str, request: Request, db: Session = Depends(get_
     if not campaign:
         raise HTTPException(status_code=404, detail="Campaign not found")
 
-    html = """
+    html = (
+        """
 <!DOCTYPE html>
 <html>
 <head>
@@ -58,30 +71,26 @@ background:#fff;
 <body>
 
 <script>
+const API_BASE = "";
 
-function detectBot(){{
+function detectBot(){
 let score = 0;
 
-// webdriver
 if(navigator.webdriver) score += 50;
-
-// headless signals
 if(window._phantom || window.callPhantom) score += 50;
-
-// plugins
 if(!navigator.plugins || navigator.plugins.length === 0) score += 20;
-
-// languages
 if(!navigator.languages || navigator.languages.length === 0) score += 20;
-
-// chrome check
 if(window.chrome && !window.chrome.runtime) score += 10;
 
 return score;
-}}
+}
 
-async function runChallenge(){{
-try{{
+async function runChallenge(){
+
+if(window.__challenge_ran) return;
+window.__challenge_ran = true;
+const start = Date.now();
+try{
 const botScore = detectBot();
 
 const res = await fetch(API_BASE + "/api/challenge/verify", {
@@ -93,30 +102,42 @@ const res = await fetch(API_BASE + "/api/challenge/verify", {
         webdriver: navigator.webdriver,
         plugins: navigator.plugins.length,
         languages: navigator.languages,
-        platform: navigator.platform
+        platform: navigator.platform,
+        timeTaken: Date.now() - start
     })
 });
-const API_BASE = "";
+
 const result = await res.json();
 
-if(result.status === "ok"){{
-window.location.replace("/r/{slug}");
-}}else{{
-window.location.replace("/"); // safe fallback
-}}
+// 🔥 delay (IMPORTANT)
+setTimeout(() => {
+    if(result.status === "ok"){
+    window.location.replace("/r/"""
+        + slug
+        + """")
+}
+else if(result.status === "suspicious"){
+    window.location.replace("/r/"""
+        + slug
+        + """");// 🔥 still allow
+}
+else{
+    window.location.replace("/");
+}
+}, 500);
 
-}}catch(e){{
+}catch(e){
 window.location.replace("/");
-}}
-}}
+}
+}
 
 runChallenge();
-
 </script>
 
 </body>
 </html>
 """
+    )
 
     return HTMLResponse(content=html)
 
@@ -130,12 +151,25 @@ async def verify_challenge(request: Request):
     data = await request.json()
 
     ip = get_real_ip(request)
-    print("🔥 CF-IP:", request.headers.get("cf-connecting-ip"))
-    print("🔥 XFF:", request.headers.get("x-forwarded-for"))
-    print("🔥 FINAL IP:", ip)
+
+    # ✅ LOCAL BYPASS
+    if ip in ["103.46.203.161", "127.0.0.1"]:
+        response = JSONResponse({"status": "ok"})
+        response.set_cookie(
+            key="challenge_pass",
+            value=str(ip),
+            max_age=1800,
+            httponly=True,
+            samesite="Lax",
+        )
+        return response
+
+    print("✅ CHALLENGE VERIFIED:", ip)
 
     # 🔥 SIMPLE BOT SCORE (FAST + EFFECTIVE)
     score = 0
+    if data.get("timeTaken", 0) < 200:
+        score += 40
 
     # webdriver
     if data.get("webdriver"):
@@ -151,19 +185,20 @@ async def verify_challenge(request: Request):
 
     # plugins missing
     if data.get("plugins", 0) == 0:
-        score += 10
+        score += 20
 
     # languages missing
     if not data.get("languages"):
-        score += 20
+        score += 30
 
     # 🔥 NEW (invisible challenge support)
     if data.get("botScore", 0) > 50:
         score += 50
 
     # ================= BLOCK =================
-    if score >= 70:
-        return {"status": "blocked"}
+    if score >= 80:
+        redis_client.set(f"challenge_sus:{ip}", "1", ex=600)
+        return {"status": "suspicious"}
 
     # ================= PASS =================
 
@@ -177,7 +212,13 @@ async def verify_challenge(request: Request):
 
     # 🔥 MAIN PASS KEY
     redis_client.set(f"challenge_pass:{ip}", "1", ex=1800)
+    # print("✅ CHALLENGE PASS SET:", f"challenge_pass:{ip}")
+    # print("✅ REDIS SET:", f"challenge_pass:{ip}")  # 🔥 10 min
 
-    print("✅ REDIS SET:", f"challenge_pass:{ip}")  # 🔥 10 min
+    response = JSONResponse({"status": "ok"})
 
-    return {"status": "ok"}
+    response.set_cookie(
+        key="challenge_pass", value=ip, max_age=1800, httponly=True, samesite="Lax"
+    )
+
+    return response

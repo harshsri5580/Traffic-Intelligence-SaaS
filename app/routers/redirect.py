@@ -211,18 +211,16 @@ async def redirect_campaign(
     # =========================
     # 🔥 CLEAN IP (FINAL FIX)
     # =========================
-    forwarded_for = request.headers.get("x-forwarded-for")
-    cf_ip = request.headers.get("cf-connecting-ip")
-
-    if forwarded_for:
-        ip = forwarded_for.split(",")[0].strip()  # ✅ REAL USER IP
-    elif cf_ip:
-        ip = cf_ip
-    else:
-        ip = visitor.ip
+    ip = get_real_ip(request)
     # print("🔥 XFF:", forwarded_for)
     # print("🔥 CF-IP:", cf_ip)
     # print("🔥 FINAL IP:", ip)
+    print("🌍 REAL IP:", ip)
+    # 🔥 REDIS TEST
+    try:
+        print("🔥 REDIS TEST:", redis_client.ping())
+    except Exception as e:
+        print("❌ REDIS ERROR:", e)
 
     # print("🔥 Clean IP:", ip)
     # 🔥 DEFINE REAL NAVIGATION (FIX)
@@ -368,9 +366,16 @@ async def redirect_campaign(
     # -------------------------------------------------
 
     try:
-        challenge_pass = bool(redis_client.get(f"challenge_pass:{ip}"))
+        cookie_ip = request.cookies.get("challenge_pass")
+
+        redis_pass = redis_client.get(f"challenge_pass:{ip}")
+
+        if cookie_ip == ip or redis_pass:
+            challenge_pass = True
+        else:
+            challenge_pass = False  # 🔥 TEMP FIX (NO LOOP, NO BLOCK)
     except Exception:
-        challenge_pass = None
+        challenge_pass = False
     print("IP:", ip)
     try:
         val = redis_client.get(f"challenge_pass:{ip}")
@@ -378,13 +383,20 @@ async def redirect_campaign(
     except Exception as e:
         print("REDIS ERROR:", e)
         val = None
+    print("🔥 DEBUG CHALLENGE CHECK")
+    print("bot_score:", visitor.bot_score)
+    print("is_bot:", visitor.is_bot)
+    print("connection:", visitor.connection_type)
+    print("challenge_pass:", challenge_pass)
+    print("ENABLE_CHALLENGE_LOCAL:", ENABLE_CHALLENGE_LOCAL)
+    print("is_bot_traffic:", is_bot_traffic)
 
     if (
         ENABLE_CHALLENGE_LOCAL
         and not challenge_pass
         and not is_bot_traffic
         and (
-            visitor.bot_score >= 40
+            visitor.bot_score >= 25
             or visitor.connection_type in ["vpn", "datacenter"]
             or visitor.is_bot
         )
@@ -525,18 +537,17 @@ async def redirect_campaign(
         pass
 
     # 🔥 BOT SCORE LOCK (FIXED POSITION)
-    bot_key = f"bot_score:{ip}:{fingerprint}"
+    # bot_key = f"bot_score:{ip}:{fingerprint}"
 
-    try:
-        cached_score = redis_client.get(bot_key)
+    # try:
+    #     cached_score = redis_client.get(bot_key)
 
-        if cached_score:
-            print("🔒 BOT CACHE FOUND:", cached_score)
-            # ❌ DO NOT OVERRIDE REAL SCORE
-        else:
-            redis_client.setex(bot_key, 10, int(visitor.bot_score or 0))
-    except Exception:
-        pass
+    #     if cached_score:
+    #         print("🔒 BOT CACHE FOUND:", cached_score)
+    #     else:
+    #         redis_client.setex(bot_key, 10, int(visitor.bot_score or 0))
+    # except Exception:
+    #     pass
 
     # -------------------------------------------------
     # CHALLENGE FINGERPRINT OVERRIDE (SAFE)
@@ -1319,6 +1330,11 @@ async def redirect_campaign(
         # print("DECISION:", decision)
         # print("REASON:", reason)
         # print("DESTINATION:", destination_url)
+        # ❌ skip challenge logs
+        # ❌ skip challenge logs (FINAL FIX)
+        if destination_url and "/challenge" in destination_url:
+            should_log_final = False
+
         if should_log_final and request.method == "GET":
 
             # print("🔥 REAL CLICK LOGGED")
