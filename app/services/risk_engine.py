@@ -19,7 +19,7 @@ class RiskEngine:
 
     def calculate(self):
         self.score = 0  # 🔥 MUST FIX (no side effect)
-        self.score = max(self.score, self.visitor.bot_score * 1.2)
+        self.score = max(self.score, self.visitor.bot_score)
 
         ip = getattr(self.visitor, "ip", None)
 
@@ -85,11 +85,11 @@ class RiskEngine:
         bot_score = getattr(self.visitor, "bot_score", 0) or 0
 
         # 🔥 HARD BOT BLOCK (NO ESCAPE)
-        if bot_score >= 90:
+        if bot_score >= 85:
             return 100
 
-        elif bot_score >= 75:
-            self.score += 70
+        elif bot_score >= 70:
+            self.score += 60
 
         elif bot_score >= 60:
             self.score += 30
@@ -109,7 +109,7 @@ class RiskEngine:
         # DATACENTER
         # ---------------------------------
         if getattr(self.visitor, "is_datacenter", False):
-            self.score += 60
+            self.score += 40
 
         # ---------------------------------
         # VPN / PROXY (SAFE CACHE)
@@ -129,9 +129,9 @@ class RiskEngine:
                 if vpn_info.get("is_tor"):
                     self.score += 80
                 if vpn_info.get("is_vpn"):
-                    self.score += 50
+                    self.score += 25
                 if vpn_info.get("is_proxy"):
-                    self.score += 60
+                    self.score += 25
                 if vpn_info.get("is_residential_proxy"):
                     self.score += 30
 
@@ -182,7 +182,7 @@ class RiskEngine:
                     self.score += 5
 
                 if mouse == 0 and scroll == 0 and clicks == 0:
-                    self.score += 20
+                    self.score += 10
 
         except Exception:
             pass
@@ -243,8 +243,8 @@ class RiskEngine:
             if hits == 1:
                 redis_client.expire(key, 10)
 
-            if hits > 50:
-                self.score += 40
+            if hits > 80:
+                self.score += 25
 
         except Exception:
             pass
@@ -286,7 +286,7 @@ class RiskEngine:
         # ---------------------------------
         try:
             if self.score >= 85:
-                redis_client.setex(f"blocked_ip:{ip}", 60, "1")
+                redis_client.setex(f"blocked_ip:{ip}", 120, "1")
         except Exception:
             pass
 

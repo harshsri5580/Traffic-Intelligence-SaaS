@@ -542,7 +542,7 @@ class VisitorContext:
             self.connection_type = "datacenter"
             self.ip_type = "datacenter"
 
-            self.bot_score += 50  # 🔥 increase
+            self.bot_score += 25  # 🔥 increase
             self.reasons.append("datacenter_ip")
 
         # ================================
@@ -573,11 +573,11 @@ class VisitorContext:
 
         # 🔥 STRONG BOOST (IMPORTANT)
         if self.is_proxy:
-            self.bot_score += 50
+            self.bot_score += 30
             self.reasons.append("proxy_detected")
 
         if self.is_vpn:
-            self.bot_score += 30
+            self.bot_score += 20
             self.reasons.append("vpn_detected")
 
         if self.is_tor:
@@ -707,7 +707,7 @@ class VisitorContext:
             missing_fp += 1
 
         if missing_fp >= 3:
-            self.bot_score += 30
+            self.bot_score += 20
             self.reasons.append("no_fingerprint")
 
         # ================================
@@ -722,7 +722,7 @@ class VisitorContext:
                 redis_client.expire(key, 10)
 
             if hits > 10:
-                self.bot_score += 30
+                self.bot_score += 20
                 self.reasons.append("high_frequency")
         except:
             pass
@@ -748,7 +748,7 @@ class VisitorContext:
             pass
         # 🔥 FORCE HIGH SCORE FOR DATACENTER
         if self.is_datacenter:
-            self.bot_score = max(self.bot_score, 60)
+            self.bot_score = max(self.bot_score, 40)
 
         # ================================
         # 🔥 AI RISK BOOST (SAFE VERSION)
@@ -877,7 +877,7 @@ class VisitorContext:
         ]
 
         if self.isp and any(t in self.isp.lower() for t in trusted_isp):
-            self.bot_score -= 25
+            self.bot_score -= 35
         # ================================
         # FINAL BOT SCORE
         # ================================
