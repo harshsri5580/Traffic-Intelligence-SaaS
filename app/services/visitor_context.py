@@ -1,6 +1,7 @@
 import hashlib
 from fastapi import Request
 from user_agents import parse
+import random
 from urllib.parse import parse_qs
 import json
 from app.services.redis_client import redis_client
@@ -192,6 +193,9 @@ class VisitorContext:
             self.is_automation = True
             self.bot_score += 40
             self.reasons.append("automation_detected")
+        # 🔥 AUTOMATION HARD FORCE
+        if self.is_automation:
+            self.bot_score = max(self.bot_score, 80)
 
         if any(k in ua_lower for k in bot_keywords):
 
@@ -542,7 +546,7 @@ class VisitorContext:
             self.connection_type = "datacenter"
             self.ip_type = "datacenter"
 
-            self.bot_score += 50  # 🔥 increase
+            self.bot_score += 40  # 🔥 increase
             self.reasons.append("datacenter_ip")
 
         # ================================
@@ -570,6 +574,12 @@ class VisitorContext:
         self.is_vpn = self.is_vpn or vpn_info.get("is_vpn", False)
         self.is_proxy = self.is_proxy or vpn_info.get("is_proxy", False)
         self.is_tor = self.is_tor or vpn_info.get("is_tor", False)
+
+        # 🔥 HARD BOT BOOST (DC / PROXY / TOR)
+
+        if self.is_datacenter or self.is_proxy or self.is_tor:
+            self.bot_score += random.randint(20, 40)
+            self.reasons.append("network_risk")
         # ================================
         # 🔥 UNKNOWN NETWORK BOOST (ADD HERE)
         # ================================
@@ -584,7 +594,9 @@ class VisitorContext:
 
             self.ip_type = "residential"
             self.connection_type = "residential"
-
+        # 🔥 REAL USER SAFE (RESIDENTIAL)
+        if self.connection_type == "residential" and not self.is_automation:
+            self.bot_score -= random.randint(5, 15)
         # ================================
         # TRAFFIC SOURCE
         # ================================
@@ -718,7 +730,7 @@ class VisitorContext:
             pass
         # 🔥 FORCE HIGH SCORE FOR DATACENTER
         if self.is_datacenter:
-            self.bot_score = max(self.bot_score, 50)
+            self.bot_score = max(self.bot_score, 60)
 
         # ================================
         # 🔥 AI RISK BOOST (SAFE VERSION)
@@ -847,7 +859,7 @@ class VisitorContext:
         ]
 
         if self.isp and any(t in self.isp.lower() for t in trusted_isp):
-            self.bot_score -= 25
+            self.bot_score -= 15
         # ================================
         # FINAL BOT SCORE
         # ================================
@@ -878,11 +890,6 @@ class VisitorContext:
             self.traffic_quality = "clean"
 
         # =========================================
-        # 🔥 FINAL BOT SCORE NORMALIZATION (FIX)
-        # =========================================
-        self.bot_score = max(0, min(100, self.bot_score))
-
-        # =========================================
         # 🔥 TRUST LEARNING
         # =========================================
         try:
@@ -903,8 +910,9 @@ class VisitorContext:
                 if hits == 1:
                     redis_client.expire(key, 300)
 
-                if hits > 15:
-                    self.bot_score += 40
+                if hits > 10:
+                    self.bot_score += random.randint(30, 60)
+                    self.reasons.append("fp_abuse")
         except Exception:
             pass
 
@@ -918,6 +926,14 @@ class VisitorContext:
             f"{self.ip}|{self.user_agent_string}|{self.browser}|{self.os}".encode()
         ).hexdigest()
 
+        # 🔥 SESSION VARIATION
+        session_seed = hash(self.session_fingerprint) % 10
+        self.bot_score += session_seed
+
+        # =========================================
+        # 🔥 FINAL BOT SCORE NORMALIZATION (FINAL STEP)
+        # =========================================
+        self.bot_score = int(max(0, min(100, self.bot_score)))
         # ================================
         # DEBUG LOG
         # ================================
