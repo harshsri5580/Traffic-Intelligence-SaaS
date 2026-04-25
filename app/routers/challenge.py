@@ -168,8 +168,8 @@ async def verify_challenge(request: Request):
 
     # 🔥 SIMPLE BOT SCORE (FAST + EFFECTIVE)
     score = 0
-    if data.get("timeTaken", 0) < 200:
-        score += 40
+    if data.get("timeTaken", 0) < 100:
+        score += 20
 
     # webdriver
     if data.get("webdriver"):
@@ -184,19 +184,19 @@ async def verify_challenge(request: Request):
         score += 20
 
     # plugins missing
-    if data.get("plugins", 0) == 0:
-        score += 20
+    # if data.get("plugins", 0) == 0:
+    #     score += 20
 
     # languages missing
     if not data.get("languages"):
-        score += 30
+        score += 10
 
     # 🔥 NEW (invisible challenge support)
-    if data.get("botScore", 0) > 50:
-        score += 50
+    if data.get("botScore", 0) > 70:
+        score += 30
 
     # ================= BLOCK =================
-    if score >= 80:
+    if score >= 120:
         redis_client.set(f"challenge_sus:{ip}", "1", ex=600)
         return {"status": "suspicious"}
 
