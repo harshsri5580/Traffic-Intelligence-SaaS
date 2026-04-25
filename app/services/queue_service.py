@@ -12,11 +12,11 @@ REDIS_URL = os.getenv("REDIS_URL")
 if REDIS_URL:
     # ✅ server / cloud
     redis_client = redis.from_url(REDIS_URL, decode_responses=True)
-    print("🔥 USING REDIS_URL")
+    # print("🔥 USING REDIS_URL")
 else:
     # ✅ local fallback
     redis_client = redis.Redis(host="localhost", port=6379, decode_responses=True)
-    print("🔥 USING LOCAL REDIS")
+    # print("🔥 USING LOCAL REDIS")
 
 
 # ======================================

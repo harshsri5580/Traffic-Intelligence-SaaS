@@ -92,7 +92,7 @@ def compute_final_decision(visitor, risk_score):
         final_score = (risk_score * 0.7) + (bot_score * 0.3)
 
         # 🔥 HARD BLOCK
-        if final_score >= 85:
+        if final_score >= 90:
             return "blocked", final_score
 
         # 🔥 CHALLENGE ZONE
@@ -383,20 +383,20 @@ async def redirect_campaign(
     except Exception as e:
         print("REDIS ERROR:", e)
         val = None
-    print("🔥 DEBUG CHALLENGE CHECK")
-    print("bot_score:", visitor.bot_score)
-    print("is_bot:", visitor.is_bot)
-    print("connection:", visitor.connection_type)
-    print("challenge_pass:", challenge_pass)
-    print("ENABLE_CHALLENGE_LOCAL:", ENABLE_CHALLENGE_LOCAL)
-    print("is_bot_traffic:", is_bot_traffic)
+    # print("🔥 DEBUG CHALLENGE CHECK")
+    # print("bot_score:", visitor.bot_score)
+    # print("is_bot:", visitor.is_bot)
+    # print("connection:", visitor.connection_type)
+    # print("challenge_pass:", challenge_pass)
+    # print("ENABLE_CHALLENGE_LOCAL:", ENABLE_CHALLENGE_LOCAL)
+    # print("is_bot_traffic:", is_bot_traffic)
 
     if (
         ENABLE_CHALLENGE_LOCAL
         and not challenge_pass
         and not is_bot_traffic
         and (
-            visitor.bot_score >= 25
+            visitor.bot_score >= 35
             or visitor.connection_type in ["vpn", "datacenter"]
             or visitor.is_bot
         )

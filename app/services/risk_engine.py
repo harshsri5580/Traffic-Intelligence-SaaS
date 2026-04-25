@@ -19,7 +19,7 @@ class RiskEngine:
 
     def calculate(self):
         self.score = 0  # 🔥 MUST FIX (no side effect)
-        self.score = max(self.score, self.visitor.bot_score)
+        self.score = self.visitor.bot_score * 0.6
 
         ip = getattr(self.visitor, "ip", None)
 
