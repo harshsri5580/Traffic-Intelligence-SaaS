@@ -228,7 +228,7 @@ class RiskEngine:
                     redis_client.expire(key, 300)
 
                 if hits > 20:
-                    self.score += 25
+                    self.score += 20
 
         except Exception:
             pass

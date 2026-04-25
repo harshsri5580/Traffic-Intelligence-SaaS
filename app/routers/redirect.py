@@ -1024,9 +1024,9 @@ async def redirect_campaign(
     # ---------------------------------
     try:
         if risk_score >= 80:
-            increase_ip_risk(ip, 20)
+            increase_ip_risk(ip, 5)
         elif risk_score >= 50:
-            increase_ip_risk(ip, 10)
+            increase_ip_risk(ip, 3)
         elif risk_score < 20:
             increase_ip_risk(ip, -5)
     except Exception:
