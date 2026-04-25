@@ -336,7 +336,7 @@ class VisitorContext:
 
             if any(k in org_lower for k in dc_asn_keywords):
                 self.is_datacenter = True
-                self.bot_score = max(self.bot_score, 70)
+                # self.bot_score = max(self.bot_score, 70)
         # =========================================
         # 🔥 GEO-ASN CONSISTENCY CHECK
         # =========================================
@@ -578,7 +578,7 @@ class VisitorContext:
         # 🔥 HARD BOT BOOST (DC / PROXY / TOR)
 
         if self.is_datacenter or self.is_proxy or self.is_tor:
-            self.bot_score += random.randint(20, 40)
+            self.bot_score += random.randint(15, 30)
             self.reasons.append("network_risk")
         # ================================
         # 🔥 UNKNOWN NETWORK BOOST (ADD HERE)
@@ -705,9 +705,9 @@ class VisitorContext:
         if not self.audio_fingerprint:
             missing_fp += 1
 
-        if missing_fp >= 3 and self.is_datacenter:
-            self.bot_score += 10
-            self.reasons.append("missing_fingerprint")
+        if missing_fp >= 3:
+            self.bot_score += 20
+            self.reasons.append("fp_missing")
 
         # =========================================
         # 🔥 TRUST SCORE SYSTEM (ADSPECT++ CORE)

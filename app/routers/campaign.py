@@ -518,12 +518,12 @@ def update_protection(
     if not campaign:
         raise HTTPException(404, "Campaign not found")
 
-    campaign.block_vpn = data.get("block_vpn", False)
-    campaign.block_proxy = data.get("block_proxy", False)
-    campaign.block_tor = data.get("block_tor", False)
-    campaign.block_datacenter = data.get("block_datacenter", False)
-    campaign.block_automation = data.get("block_automation", False)
-    campaign.block_canvas = data.get("block_canvas", False)
+    campaign.block_vpn = data.get("block_vpn", campaign.block_vpn)
+    campaign.block_proxy = data.get("block_proxy", campaign.block_proxy)
+    campaign.block_tor = data.get("block_tor", campaign.block_tor)
+    campaign.block_datacenter = data.get("block_datacenter", campaign.block_datacenter)
+    campaign.block_automation = data.get("block_automation", campaign.block_automation)
+    campaign.block_canvas = data.get("block_canvas", campaign.block_canvas)
 
     db.commit()
 

@@ -396,7 +396,7 @@ async def redirect_campaign(
         and not challenge_pass
         and not is_bot_traffic
         and (
-            visitor.bot_score >= 35
+            visitor.bot_score >= 45
             or visitor.connection_type in ["vpn", "datacenter"]
             or visitor.is_bot
         )
@@ -407,7 +407,7 @@ async def redirect_campaign(
             ENABLE_CHALLENGE_LOCAL = False
 
         # 🔥 Only suspicious traffic
-        if visitor.bot_score >= 30 or visitor.connection_type in ["vpn", "datacenter"]:
+        if visitor.bot_score >= 40 or visitor.connection_type in ["vpn", "datacenter"]:
 
             # 🔥 CALCULATE RISK FIRST
             try:
@@ -689,9 +689,17 @@ async def redirect_campaign(
     # LOAD CAMPAIGN
     # -------------------------------------------------
     # 🔥 HARD BLOCK (TOP PRIORITY)
-    if visitor.is_datacenter or visitor.is_vpn or visitor.is_proxy or visitor.is_tor:
-        # print("🚫 HARD BLOCK: BAD NETWORK")
-        visitor.bot_score += 30
+    if visitor.is_datacenter:
+        visitor.bot_score += 25
+
+    if visitor.is_proxy:
+        visitor.bot_score += 20
+
+    if visitor.is_vpn:
+        visitor.bot_score += 10
+
+    if visitor.is_tor:
+        visitor.bot_score += 40
 
     if not campaign:
         decision = set_decision(decision, "blocked")
@@ -711,6 +719,64 @@ async def redirect_campaign(
         destination_url = redirect_url
 
         is_blocked_final = True  # 🔥 IMPORTANT
+
+    # =========================================
+    # 🔥 APPLY CAMPAIGN PROTECTION TOGGLES (FINAL FIX)
+    # =========================================
+
+    try:
+        # VPN
+        if campaign.block_vpn and visitor.is_vpn:
+            decision = "blocked"
+            reason = "vpn_block"
+            redirect_url = campaign.safe_page_url or "/decoy"
+            destination_url = redirect_url
+            is_blocked_final = True
+
+        # PROXY
+        if campaign.block_proxy and visitor.is_proxy:
+            decision = "blocked"
+            reason = "proxy_block"
+            redirect_url = campaign.safe_page_url or "/decoy"
+            destination_url = redirect_url
+            is_blocked_final = True
+
+        # TOR
+        if campaign.block_tor and visitor.is_tor:
+            decision = "blocked"
+            reason = "tor_block"
+            redirect_url = campaign.safe_page_url or "/decoy"
+            destination_url = redirect_url
+            is_blocked_final = True
+
+        # DATACENTER
+        if campaign.block_datacenter and visitor.is_datacenter:
+            decision = "blocked"
+            reason = "datacenter_block"
+            redirect_url = campaign.safe_page_url or "/decoy"
+            destination_url = redirect_url
+            is_blocked_final = True
+
+        # AUTOMATION (HEADLESS)
+        if campaign.block_automation and visitor.is_bot:
+            if visitor.bot_score >= 70:
+                decision = "blocked"
+                reason = "automation_block"
+                redirect_url = campaign.safe_page_url or "/decoy"
+                destination_url = redirect_url
+                is_blocked_final = True
+
+        # CANVAS (fingerprint mismatch)
+        if campaign.block_canvas:
+            if getattr(visitor, "canvas_suspicious", False):
+                decision = "blocked"
+                reason = "canvas_block"
+                redirect_url = campaign.safe_page_url or "/decoy"
+                destination_url = redirect_url
+                is_blocked_final = True
+
+    except Exception:
+        pass
 
     # -------------------------------------------------
     # BOT FILTER
@@ -1042,7 +1108,7 @@ async def redirect_campaign(
 
     # 🔥 HIGH RISK BLOCK
     # 🔥 HIGH RISK BLOCK
-    if risk_score >= 80 or visitor.bot_score >= 80:
+    if risk_score >= 90 or visitor.bot_score >= 85:
         # print("🚫 HIGH RISK BLOCK")
 
         decision = set_decision(decision, "blocked")
@@ -1073,7 +1139,10 @@ async def redirect_campaign(
 
         redirect_url = campaign.safe_page_url or "/decoy"
         destination_url = redirect_url
-
+    # =========================================
+    # 🔥 FINAL BOT SCORE NORMALIZATION (MANDATORY)
+    # =========================================
+    visitor.bot_score = int(max(0, min(100, visitor.bot_score)))
     # =========================================
     # 🔥 DECISION ENGINE (SAFE LAYER) — ALWAYS RUN
     # =========================================
@@ -1118,22 +1187,26 @@ async def redirect_campaign(
 
     except Exception:
         pass
+
     # -------------------------------------------------
     # DATACENTER HARD BLOCK (ALWAYS INDEPENDENT)
     # -------------------------------------------------
-    try:
-        # 🔥 STRICT NETWORK BLOCK (SAFE)
-        if visitor.is_vpn or visitor.is_proxy or visitor.is_tor:
+    # try:
+    #     🔥 STRICT NETWORK BLOCK (SAFE)
+    #     🔥 SOFT PENALTY (NO DIRECT BLOCK)
+    #     if visitor.is_vpn:
+    #         visitor.bot_score += 10
 
-            decision = set_decision(decision, "blocked")
-            reason = "VPN/Proxy detected"
+    #     if visitor.is_proxy:
+    #         visitor.bot_score += 20
 
-            redirect_url = campaign.safe_page_url or "/decoy"
-            destination_url = redirect_url
+    #     if visitor.is_tor:
+    #         visitor.bot_score += 40
 
-            is_blocked_final = True
-    except Exception:
-        pass
+    #     if visitor.is_datacenter:
+    #         visitor.bot_score += 30
+    # except Exception:
+    #     pass
 
     # ==============================
     # RULE ENGINE
@@ -1275,7 +1348,9 @@ async def redirect_campaign(
     # 🔥 FINAL HARD DEDUPE (NO DOUBLE LOG)
     log_key = f"log:{ip}:{campaign.id}:{fingerprint}"
 
-    should_log_final = True
+    # ❌ NEVER LOG CHALLENGE REDIRECT
+    if decision == "challenge":
+        should_log_final = False
 
     try:
         if redis_client.get(log_key):
