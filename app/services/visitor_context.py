@@ -578,7 +578,7 @@ class VisitorContext:
         # 🔥 HARD BOT BOOST (DC / PROXY / TOR)
 
         if self.is_datacenter or self.is_proxy or self.is_tor:
-            self.bot_score += random.randint(15, 30)
+            self.bot_score += 30
             self.reasons.append("network_risk")
         # ================================
         # 🔥 UNKNOWN NETWORK BOOST (ADD HERE)
@@ -596,7 +596,8 @@ class VisitorContext:
             self.connection_type = "residential"
         # 🔥 REAL USER SAFE (RESIDENTIAL)
         if self.connection_type == "residential" and not self.is_automation:
-            self.bot_score -= random.randint(5, 15)
+            if self.bot_score < 80:
+                self.bot_score *= 0.6
         # ================================
         # TRAFFIC SOURCE
         # ================================
@@ -730,7 +731,7 @@ class VisitorContext:
             pass
         # 🔥 FORCE HIGH SCORE FOR DATACENTER
         if self.is_datacenter:
-            self.bot_score = max(self.bot_score, 60)
+            self.bot_score = max(self.bot_score, 40)
 
         # ================================
         # 🔥 AI RISK BOOST (SAFE VERSION)
@@ -749,7 +750,7 @@ class VisitorContext:
 
             # 🔥 high risk (controlled boost)
             elif ai_risk < 70:
-                self.bot_score += 10
+                self.bot_score += 5
 
             # 🔥 very high risk (but still safe)
             else:
@@ -859,7 +860,7 @@ class VisitorContext:
         ]
 
         if self.isp and any(t in self.isp.lower() for t in trusted_isp):
-            self.bot_score -= 15
+            self.bot_score -= 20
         # ================================
         # FINAL BOT SCORE
         # ================================
@@ -911,7 +912,7 @@ class VisitorContext:
                     redis_client.expire(key, 300)
 
                 if hits > 10:
-                    self.bot_score += random.randint(30, 60)
+                    self.bot_score += 35
                     self.reasons.append("fp_abuse")
         except Exception:
             pass

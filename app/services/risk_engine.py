@@ -86,10 +86,14 @@ class RiskEngine:
 
         # 🔥 HARD BOT BLOCK (NO ESCAPE)
         if bot_score >= 85:
-            return 100
+            if getattr(self.visitor, "ip_type", "") != "residential":
+                return 100
 
         elif bot_score >= 70:
-            self.score += 60
+            if getattr(self.visitor, "ip_type", "") != "residential":
+                self.score += 40
+            else:
+                self.score += 20  # 🔥 residential safe
 
         elif bot_score >= 60:
             self.score += 30
@@ -307,6 +311,13 @@ class RiskEngine:
 
             set_ip_reputation(ip, new_score)
 
+        except Exception:
+            pass
+        # 🔥 FINAL RESIDENTIAL PROTECTION (YAHI ADD KARO)
+        try:
+            if getattr(self.visitor, "ip_type", "") == "residential":
+                if self.score < 90:
+                    self.score *= 0.7
         except Exception:
             pass
 
