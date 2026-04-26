@@ -517,19 +517,21 @@ ${log.risk_score >= 70 ? "bg-red-500/10 text-red-400 border border-red-500/20" :
 
                       {visibleColumns.reason && (
                         <td className="px-3 py-2 border text-xs">
-                          {(() => {
-                            if (!log.reason) return "-";
+                          <span className="px-2 py-1 rounded bg-gray-100 text-gray-700">
+                            {(() => {
+                              if (!log.reason) return "-";
 
-                            const r = log.reason.toLowerCase();
+                              const r = log.reason.toLowerCase();
 
-                            if (r.includes("vpn")) return "Datacenter";
-                            if (r.includes("proxy")) return "Proxy";
-                            if (r.includes("datacenter")) return "VPN";
-                            if (r.includes("high bot")) return "High Bot";
-                            if (r.includes("rule")) return "Rule Match";
+                              if (r.includes("vpn")) return "Datacenter";
+                              if (r.includes("proxy")) return "Proxy";
+                              if (r.includes("datacenter")) return "VPN";
+                              if (r.includes("high bot")) return "High Bot";
+                              if (r.includes("rule")) return "Rule Match";
 
-                            return log.reason.split(",")[0]; // fallback
-                          })()}
+                              return log.reason.split(",")[0]; // fallback
+                            })()}
+                          </span>
                         </td>
                       )}
 
