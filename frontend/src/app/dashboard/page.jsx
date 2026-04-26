@@ -156,7 +156,7 @@ export default function Dashboard() {
           }
 
           const exists = prev.find(
-            (p) => p.ip_address === data.ip && p.created_at === time
+            (p) => p.ip_address === data.ip
           );
 
           if (exists) return prev;
@@ -235,6 +235,15 @@ export default function Dashboard() {
       setStats(statsRes.data || {});
       setPlan(planRes.data || {});
 
+      const sub = planRes.data;
+
+      if (sub) {
+        setDaysLeft(sub.days_left ?? 0);
+        setExpired(sub.expired ?? false);
+        setHasSubscription(true);
+      } else {
+        setHasSubscription(false);
+      }
       setLoading(false); // 🔥 FAST SHOW UI
 
       // 👇 बाकी data background में लोड होगा
@@ -262,7 +271,7 @@ export default function Dashboard() {
 
   const loadCampaignTraffic = async (selectedRange = range) => {
     try {
-      const res = await safeApi(`/analytics/campaign-traffic?range=${selectedRange}`);
+      const res = await api.get(`/analytics/campaign-traffic?range=${selectedRange}`);
       setCampaignTraffic(res.data || []);
     } catch (err) {
       console.error("Campaign traffic error", err);
@@ -303,7 +312,7 @@ export default function Dashboard() {
 
     try {
 
-      const res = await safeApi("/analytics/recent?limit=20&range=today");
+      const res = await api.get("/analytics/recent?limit=20&range=today");
 
       const data = res.data;
 
@@ -426,6 +435,49 @@ export default function Dashboard() {
 
   }, [campaigns, zones]);
 
+  const Row = ({ label, value }) => (
+    <div className="flex justify-between text-sm bg-gray-50 px-3 py-2 rounded-lg">
+      <span className="capitalize text-gray-600">{label}</span>
+      <span className="font-medium text-gray-800">{value}</span>
+    </div>
+  );
+
+  const ProgressRow = ({ label, value, percent, gradient }) => (
+    <div>
+      <div className="flex justify-between text-xs mb-1 text-gray-600">
+        <span className="capitalize">{label}</span>
+        <span>{value}</span>
+      </div>
+      <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+        <div
+          className={`h-full bg-gradient-to-r ${gradient || "from-blue-400 to-indigo-500"} transition-all`}
+          style={{ width: `${percent}%` }}
+        />
+      </div>
+    </div>
+  );
+
+  const ZoneList = ({ title, data, type }) => (
+    <div>
+      <h3 className={`text-sm font-semibold mb-2 ${type === "good" ? "text-green-600" : "text-red-600"}`}>
+        {title}
+      </h3>
+      <div className="space-y-2">
+        {data.slice(0, 2).map((z, i) => {
+          const roi = z.cost > 0 ? (((z.revenue - z.cost) / z.cost) * 100).toFixed(1) : 0;
+          return (
+            <div key={i} className="flex justify-between bg-gray-50 px-3 py-2 rounded-lg">
+              <span className="truncate text-gray-700">{z.campaign_name}</span>
+              <span className={type === "good" ? "text-green-600" : "text-red-600"}>
+                {roi}%
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+
   if (loading && page === 1) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
@@ -434,6 +486,7 @@ export default function Dashboard() {
       </div>
     );
   }
+  const filteredGeo = (advancedProfit?.geo_roi || []).filter(g => g.roi !== 0);
 
 
   function ProfitChart({ data }) {
@@ -522,6 +575,24 @@ export default function Dashboard() {
       </div>
     );
   }
+  const ProgressBar = ({ value, max, color }) => {
+    const percent = max ? Math.min((value / max) * 100, 100) : 0;
+
+    const styles = {
+      blue: "from-blue-500 to-indigo-500",
+      green: "from-green-500 to-emerald-500",
+      red: "from-red-500 to-pink-500",
+    };
+
+    return (
+      <div className="w-full bg-gray-200/70 h-2.5 rounded-full overflow-hidden">
+        <div
+          className={`h-full rounded-full bg-gradient-to-r ${styles[color]} transition-all duration-500`}
+          style={{ width: `${percent}%` }}
+        />
+      </div>
+    );
+  };
 
   return (
 
@@ -542,118 +613,10 @@ export default function Dashboard() {
 
         </h1>
         {/* 🟢 FREE TRIAL ACTIVE */}
-        {hasSubscription && !expired && (
-          <div className="bg-green-50 border border-green-300 text-green-800 px-6 py-3 rounded text-center font-medium">
-            Active — {daysLeft} day{daysLeft > 1 ? "s" : ""} remaining
-          </div>
-        )}
 
-        <div className="bg-white/80 backdrop-blur-xl 
-rounded-2xl p-6 
-border border-gray-200/50 
-shadow-[0_8px_30px_rgba(0,0,0,0.06)]">
-
-          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-            Usage
-          </h2>
-
-          {/* Campaigns */}
-          <div className="mb-4">
-            <div className="flex justify-between text-sm mb-1">
-              <span>Campaigns</span>
-              <span>
-                {stats.active_campaigns || 0} / {plan?.plan?.max_campaigns || "-"}
-              </span>
-
-              {stats.inactive_campaigns > 0 && (
-                <p className="text-xs text-yellow-600 mt-1">
-                  {stats.inactive_campaigns} campaigns are inactive
-                </p>
-              )}
-            </div>
-
-            <div className="w-full bg-gray-200 h-3 rounded">
-              <div
-                className={`h-3 rounded ${stats.active_campaigns >= plan?.plan?.max_campaigns
-                  ? "bg-red-500"
-                  : "bg-gradient-to-r from-blue-500 to-indigo-500"
-                  }`}
-                style={{
-                  width: `${plan?.plan?.max_campaigns
-                    ? Math.min(
-                      (stats.active_campaigns / plan.plan.max_campaigns) * 100,
-                      100
-                    )
-                    : 0
-                    }%`,
-                }}
-              />
-            </div>
-          </div>
-
-          {plan?.plan?.max_monthly_clicks &&
-            stats?.monthly_clicks >= plan.plan.max_monthly_clicks && (
-              <div className="mt-3 text-sm text-red-600 font-medium">
-                🚫 Monthly limit reached — campaigns paused
-              </div>
-            )}
-
-          {/* Clicks */}
-          <div>
-            <div className="flex justify-between text-sm mb-1">
-              <span>Clicks</span>
-              <span>
-                {formatNumber(stats?.monthly_clicks || 0)} / {formatNumber(plan?.plan?.max_monthly_clicks || 0)}
-              </span>
-            </div>
-
-            {plan?.plan?.max_monthly_clicks && (
-              <div className="w-full bg-gray-200 h-3 rounded">
-                <div
-                  className="bg-green-500 h-3 rounded"
-                  style={{
-                    width: `${((stats.monthly_clicks || 0) / plan.plan.max_monthly_clicks) * 100}%`,
-                  }}
-                />
-              </div>
-            )}
-          </div>
-
-        </div>
 
         {advancedProfit && (
           <div className="space-y-6">
-
-            {/* 🔥 INSIGHT (TOP - FULL WIDTH) */}
-            {/* 🚨 AUTO ALERTS */}
-
-            {/* <div className={`flex items-center justify-between p-4 rounded-xl border
-  ${advancedProfit.roi > 50
-              ? "bg-green-50 border-green-200"
-              : advancedProfit.roi > 0
-                ? "bg-yellow-50 border-yellow-200"
-                : "bg-red-50 border-red-200"
-            }`}>
-
-            <div className="flex items-center gap-3">
-
-              <span className="text-xl">
-                {advancedProfit.roi > 50 ? "🚀" : advancedProfit.roi > 0 ? "⚖️" : "❌"}
-              </span>
-
-              <div className="text-sm font-medium">
-                {advancedProfit.roi > 50 && "Scale campaigns aggressively"}
-                {advancedProfit.roi > 0 && advancedProfit.roi <= 50 && "Optimize for better ROI"}
-                {advancedProfit.roi <= 0 && "Stop or fix campaigns immediately"}
-              </div>
-
-            </div>
-
-            <div className="text-xs text-gray-500">
-              ROI: {advancedProfit.roi.toFixed(1)}%
-            </div>
-
-          </div> */}
 
             {/* 🔥 STATS CARDS */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
@@ -694,29 +657,52 @@ shadow-[0_8px_30px_rgba(0,0,0,0.06)]">
                 value={`${Number(advancedProfit.cvr || 0).toFixed(2)}%`}
               />
 
-            </div>
+              {/* 🔥 SAME STYLE EXTRA CARDS */}
+              <StatCard
+                title="👆 Clicks"
+                value={advancedProfit.clicks || 0}
+              />
 
-            <div className="bg-white p-4 rounded-xl shadow border flex justify-between text-sm">
+              <StatCard
+                title="🎯 Conversions"
+                value={advancedProfit.conversions || 0}
+              />
 
-              <div>
-                <p className="text-gray-400 text-xs">Clicks</p>
-                <p className="font-semibold">{advancedProfit.clicks}</p>
-              </div>
+              <StatCard
+                title="💵 Revenue"
+                value={`$${Number(advancedProfit.revenue || 0).toFixed(2)}`}
+              />
 
-              <div>
-                <p className="text-gray-400 text-xs">Conversions</p>
-                <p className="font-semibold">{advancedProfit.conversions}</p>
-              </div>
+              <StatCard
+                title="💸 Cost"
+                value={`$${Number(advancedProfit.cost || 0).toFixed(2)}`}
+              />
+              <StatCard
+                title="👆 Total Clicks"
+                value={formatNumber(stats.total_clicks || 0)}
+              />
 
-              <div>
-                <p className="text-gray-400 text-xs">Revenue</p>
-                <p className="font-semibold">${advancedProfit.revenue.toFixed(2)}</p>
-              </div>
+              <StatCard
+                title="⚡ Today Clicks"
+                value={formatNumber(stats.today_clicks || 0)}
+              />
 
-              <div>
-                <p className="text-gray-400 text-xs">Cost</p>
-                <p className="font-semibold">${advancedProfit.cost.toFixed(2)}</p>
-              </div>
+              <StatCard
+                title="🧑‍💻 Unique Visitors"
+                value={formatNumber(stats.unique_ips || 0)}
+              />
+
+              <StatCard
+                title="🚫 Blocked Traffic"
+                value={formatNumber(stats.blocked || 0)}
+                highlight={stats.blocked > stats.passed ? "danger" : "normal"}
+              />
+
+              <StatCard
+                title="✅ Passed Traffic"
+                value={formatNumber(stats.passed || 0)}
+                highlight={stats.passed > stats.blocked ? "success" : "normal"}
+              />
 
             </div>
 
@@ -769,41 +755,6 @@ shadow-[0_8px_30px_rgba(0,0,0,0.06)]">
               <ProfitChart data={advancedProfit.graph} />
             )}
 
-            {/* 🌍 GEO ROI */}
-            {/* {advancedProfit?.geo_roi?.length > 0 && (
-              <div className="bg-white rounded-2xl p-6 shadow border mt-6">
-
-                <h3 className="text-lg font-semibold mb-4">
-                  🌍 Top GEO ROI
-                </h3>
-
-                <div className="space-y-3">
-
-                  {advancedProfit.geo_roi
-                    .sort((a, b) => b.roi - a.roi)
-                    .slice(0, 5)
-                    .map((g, i) => (
-
-                      <div key={i} className="flex justify-between items-center 
-          p-3 rounded-lg bg-gray-50 border">
-
-                        <span className="text-gray-700">
-                          {g.country}
-                        </span>
-
-                        <span className={`font-semibold 
-              ${g.roi > 0 ? "text-green-600" : "text-red-600"}`}>
-                          {g.roi}%
-                        </span>
-
-                      </div>
-
-                    ))}
-
-                </div>
-
-              </div>
-            )} */}
           </div>
         )}
 
@@ -811,7 +762,7 @@ shadow-[0_8px_30px_rgba(0,0,0,0.06)]">
 
 
         {/* 🔴 Expired */}
-        {hasSubscription && daysLeft <= 0 && (
+        {hasSubscription && expired && (
           <div className="bg-red-50 border border-red-300 text-red-800 px-6 py-3 rounded text-center font-medium">
             🚫 Your plan has expired. Upgrade now.
           </div>
@@ -824,25 +775,12 @@ shadow-[0_8px_30px_rgba(0,0,0,0.06)]">
           </div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+        {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
 
 
-          <StatCard title="Total Clicks" value={formatNumber(stats.total_clicks)} />
-          <StatCard title="Today Clicks" value={stats.today_clicks} />
-          <StatCard title="Unique Visitors" value={stats.unique_ips} />
-          <StatCard title="Passed Traffic" value={stats.passed} />
-          <StatCard title="Blocked Traffic" value={stats.blocked} />
-          {/* <StatCard
-          title="Total Profit"
-          value={`$${Number(stats.total_profit || 0).toFixed(2)}`}
-        />
+         
 
-        <StatCard
-          title="ROI"
-          value={`${Number(stats.roi || 0).toFixed(2)}%`}
-        /> */}
-
-        </div>
+        </div> */}
 
 
 
@@ -1047,7 +985,7 @@ transition-all duration-200 disabled:opacity-50 transition"
             </button>
 
             <span className="text-sm text-gray-600">
-              Page {page} / {Math.ceil(recent.length / rowsPerPage)}
+              Page {page} / {Math.max(1, Math.ceil(recent.length / rowsPerPage))}
             </span>
 
             <button
@@ -1066,142 +1004,82 @@ transition-all duration-200 disabled:opacity-50 transition"
 
 
         {/* 🌍 GEO ROI */}
-        {advancedProfit?.geo_roi?.length > 0 && (
-          <div className="bg-white rounded-2xl p-6 shadow border mt-6">
 
-            <h3 className="text-lg font-semibold mb-4">
-              🌍 Top GEO ROI
-            </h3>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
 
-            <div className="space-y-3">
+          {/* 🌍 GEO ROI */}
+          {filteredGeo.length > 0 && (
+            <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-5 border border-gray-200/50 shadow-sm hover:shadow-lg transition">
+              <h3 className="text-lg font-semibold mb-4">🌍 Top GEO ROI</h3>
 
-              {advancedProfit.geo_roi
-                .sort((a, b) => b.roi - a.roi)
-                .slice(0, 5)
-                .map((g, i) => (
-
-                  <div key={i} className="flex justify-between items-center 
-          p-3 rounded-lg bg-gray-50 border">
-
-                    <span className="text-gray-700">
-                      {g.country}
-                    </span>
-
-                    <span className={`font-semibold 
-              ${g.roi > 0 ? "text-green-600" : "text-red-600"}`}>
-                      {g.roi}%
-                    </span>
-
-                  </div>
-
-                ))}
-
-            </div>
-
-          </div>
-        )}
-        <div className="bg-white rounded-2xl p-6 shadow border border-gray-100">
-
-          <h2 className="text-xl font-semibold mb-6">
-            📊 Campaign Performance
-          </h2>
-
-          <div className="space-y-4">
-
-            {campaignSummary.map((c, i) => {
-
-              const profit = c.revenue - c.cost;
-              const roi =
-                c.cost > 0
-                  ? ((profit / c.cost) * 100)
-                  : 0;
-
-              return (
-                <div
-                  key={i}
-                  className="flex flex-col md:flex-row justify-between items-center p-4 rounded-xl border bg-gray-50 hover:bg-white hover:shadow transition-all"
-                >
-
-                  {/* LEFT */}
-                  <div className="flex flex-col md:flex-row md:items-center gap-4 w-full">
-
-                    <div className="font-semibold text-lg">
-                      {c.campaign}
-                    </div>
-
-                    <div className="text-sm text-gray-500">
-                      {c.clicks} clicks
-                    </div>
-
-                  </div>
-
-                  {/* RIGHT */}
-                  <div className="flex gap-6 mt-3 md:mt-0 text-sm items-center">
-
-                    <div>
-                      <p className="text-gray-400">Cost</p>
-                      <p className="text-red-500 font-medium">
-                        ${c.cost.toFixed(2)}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="text-gray-400">Revenue</p>
-                      <p className="text-green-600 font-medium">
-                        ${c.revenue.toFixed(2)}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="text-gray-400">Profit</p>
-                      <p className={`font-semibold ${profit >= 0 ? "text-green-600" : "text-red-600"}`}>
-                        ${profit.toFixed(2)}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="text-gray-400">ROI</p>
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-semibold ${roi >= 0
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
-                          }`}
-                      >
-                        <span
-                          className={`px-2 py-1 rounded text-xs font-semibold ${roi > 50
-                            ? "bg-green-200 text-green-800"
-                            : roi > 0
-                              ? "bg-yellow-100 text-yellow-700"
-                              : "bg-red-100 text-red-700"
-                            }`}
-                        >
-                          {roi.toFixed(1)}%
-                        </span>
+              <div className="space-y-3">
+                {filteredGeo
+                  .sort((a, b) => b.roi - a.roi)
+                  .slice(0, 5)
+                  .map((g, i) => (
+                    <div key={i} className="flex justify-between items-center text-sm bg-gray-50 px-3 py-2 rounded-lg">
+                      <span className="text-gray-700">{g.country}</span>
+                      <span className={`font-semibold ${g.roi > 0 ? "text-green-600" : "text-red-600"}`}>
+                        {g.roi.toFixed(1)}%
                       </span>
                     </div>
+                  ))}
+              </div>
+            </div>
+          )}
 
-                  </div>
-                </div>
-              );
+          {/* 📊 Campaign Performance */}
+          <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-5 border border-gray-200/50 shadow-sm hover:shadow-lg transition lg:col-span-2">
+            <h2 className="text-lg font-semibold mb-4">📊 Campaign Performance</h2>
 
-            })}
+            <div className="space-y-3">
+              {campaignSummary
+                .filter(c => (c.revenue - c.cost) !== 0)
+                .slice(0, 5)
+                .map((c, i) => {
 
+                  const profit = c.revenue - c.cost;
+                  const roi = c.cost > 0 ? ((profit / c.cost) * 100) : 0;
+
+                  return (
+                    <div key={i} className="p-4 bg-gray-50 rounded-xl flex flex-col md:flex-row justify-between gap-4 hover:bg-white hover:shadow transition">
+
+                      <div className="flex flex-col gap-1">
+                        <span className="font-medium text-gray-800">{c.campaign}</span>
+                        <span className="text-xs text-gray-500">{c.clicks} clicks</span>
+                      </div>
+
+                      <div className="flex gap-4 text-sm items-center">
+
+                        <span className="text-red-500">${c.cost.toFixed(2)}</span>
+                        <span className="text-green-600">${c.revenue.toFixed(2)}</span>
+
+                        <span className={`font-semibold ${profit >= 0 ? "text-green-600" : "text-red-600"}`}>
+                          ${profit.toFixed(2)}
+                        </span>
+
+                        <span className={`px-2 py-1 rounded text-xs font-semibold
+                  ${roi > 50 ? "bg-green-100 text-green-700"
+                            : roi > 0 ? "bg-yellow-100 text-yellow-700"
+                              : "bg-red-100 text-red-700"}`}>
+                          {roi.toFixed(1)}%
+                        </span>
+
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
           </div>
 
         </div>
 
+        {/* 🔥 TRAFFIC TABLE (FULL WIDTH) */}
+        <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-5 mt-6 border border-gray-200/50 shadow-sm hover:shadow-lg transition">
 
-        {/* 🔥 FULL 3D CARD */}
-        <div className="bg-white rounded-2xl p-6 
-  shadow-[0_10px_30px_rgba(0,0,0,0.08)] 
-  border border-gray-100 
-  hover:shadow-[0_20px_60px_rgba(0,0,0,0.15)] 
-  transition-all duration-300">
-
-          {/* 🔹 HEADER */}
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold">
-              Campaign Traffic Summary ({trafficRange})
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold">
+              Campaign Traffic ({trafficRange})
             </h2>
 
             <select
@@ -1211,349 +1089,200 @@ transition-all duration-200 disabled:opacity-50 transition"
                 setTrafficRange(val);
                 loadCampaignTraffic(val);
               }}
-              className="border border-gray-300 px-3 py-1 rounded-md text-sm 
-      shadow-sm hover:border-gray-400 bg-white"
+              className="text-sm border border-gray-300 px-2 py-1 rounded-md"
             >
               <option value="today">Today</option>
               <option value="yesterday">Yesterday</option>
-              <option value="7d">Last 7 Days</option>
-              <option value="all">All Time</option>
+              <option value="7d">7 Days</option>
+              <option value="all">All</option>
             </select>
           </div>
 
-          {/* 🔹 TABLE WRAPPER (important for 3D feel) */}
-          <div className="w-full overflow-x-auto rounded-xl border border-gray-100">
-
+          <div className="overflow-x-auto rounded-xl border border-gray-100">
             <table className="w-full text-sm">
 
-              <thead className="bg-gray-100/70 backdrop-blur">
+              <thead className="bg-gray-100">
                 <tr>
-                  <th className="p-3 border-b">Campaign</th>
-                  <th className="p-3 border-b">Total</th>
-                  <th className="p-3 border-b">Passed</th>
-                  <th className="p-3 border-b">Fallback</th>
-                  <th className="p-3 border-b">Blocked</th>
+                  <th className="p-3 text-left">Campaign</th>
+                  <th className="p-3">Total</th>
+                  <th className="p-3 text-green-600">Passed</th>
+                  <th className="p-3 text-yellow-500">Fallback</th>
+                  <th className="p-3 text-red-600">Blocked</th>
                 </tr>
               </thead>
 
               <tbody>
-
-                {campaignTraffic.map((c, i) => {
+                {campaignTraffic.slice(0, 10).map((c, i) => {
 
                   const total = c.total || 0;
                   const passed = c.passed || 0;
                   const blocked = c.blocked || 0;
                   const fallback = c.fallback ?? (total - passed - blocked);
+
                   return (
-                    <tr
-                      key={i}
-                      className="text-center hover:bg-gray-50 transition"
-                    >
-
-                      <td className="p-3 border-b">{c.campaign}</td>
-
-                      <td className="p-3 border-b font-medium">{total}</td>
-
-                      <td className="p-3 border-b text-green-600 font-semibold">
-                        {passed}
-                      </td>
-                      <td className="p-3 border-b text-yellow-500 font-semibold">
-                        {fallback}
-                      </td>
-
-                      <td className="p-3 border-b text-red-600 font-semibold">
-                        {blocked}
-                      </td>
-
+                    <tr key={i} className="hover:bg-gray-50 transition text-center">
+                      <td className="p-3 text-left">{c.campaign}</td>
+                      <td className="p-3">{total}</td>
+                      <td className="p-3 text-green-600">{passed}</td>
+                      <td className="p-3 text-yellow-500">{fallback}</td>
+                      <td className="p-3 text-red-600">{blocked}</td>
                     </tr>
                   );
-
                 })}
-
               </tbody>
-            </table>
 
+            </table>
           </div>
 
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
 
-          <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 
-shadow-[0_10px_30px_rgba(0,0,0,0.08)] 
-border border-gray-100 
-hover:shadow-[0_20px_60px_rgba(0,0,0,0.15)] 
-transition-all duration-300">
+          {/* 🔥 COMMON CARD STYLE */}
+          {[
+            {
+              title: "Device Traffic",
+              content: (stats.device_stats || []).map((d, i) => (
+                <Row key={i} label={d.device_type || "unknown"} value={d.clicks} />
+              )),
+            },
 
-            <h2 className="text-xl font-semibold mb-6">
-              Device Traffic
-            </h2>
+            {
+              title: "Top Countries",
+              content: (() => {
+                const grouped = {};
+                (stats.country_stats || []).forEach((c) => {
+                  const name = getCountryName(c.country) || "Unknown";
+                  if (!grouped[name]) grouped[name] = 0;
+                  grouped[name] += c.clicks;
+                });
 
-            {(stats.device_stats || []).map((d, i) => (
+                return Object.entries(grouped)
+                  .map(([country, clicks]) => ({ country, clicks }))
+                  .sort((a, b) => b.clicks - a.clicks)
+                  .slice(0, 4)
+                  .map((c, i) => (
+                    <Row key={i} label={c.country} value={c.clicks} />
+                  ));
+              })(),
+            },
 
-              <div
-                key={i}
-                className="flex justify-between items-center mb-3 p-3 rounded-xl 
-      bg-white border border-gray-100 
-      shadow-sm hover:shadow-md transition"
-              >
-
-                <span className="capitalize text-gray-700 font-medium">
-                  {d.device_type || "unknown"}
-                </span>
-
-                <span className="text-gray-900 font-semibold">
-                  {d.clicks}
-                </span>
-
-              </div>
-
-            ))}
-
-          </div>
-
-          <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 
-shadow-[0_10px_30px_rgba(0,0,0,0.08)] 
-border border-gray-100 
-hover:shadow-[0_20px_60px_rgba(0,0,0,0.15)] 
-transition-all duration-300">
-
-            <h2 className="text-xl font-semibold mb-6">
-              Top Countries
-            </h2>
-
-            {(() => {
-
-              const grouped = {};
-
-              (stats.country_stats || []).forEach((c) => {
-                const name = getCountryName(c.country) || "Unknown";
-                if (!grouped[name]) grouped[name] = 0;
-                grouped[name] += c.clicks;
-              });
-
-              const list = Object.entries(grouped)
-                .map(([country, clicks]) => ({ country, clicks }))
-                .sort((a, b) => b.clicks - a.clicks)
-                .slice(0, 5);
-
-              return list.map((c, i) => (
-
-                <div
-                  key={i}
-                  className="flex justify-between items-center mb-3 p-3 rounded-xl 
-        bg-white border border-gray-100 
-        shadow-sm hover:shadow-md transition"
+            {
+              title: "Traffic Sources",
+              extra: (
+                <select
+                  value={range}
+                  onChange={(e) => {
+                    setRange(e.target.value);
+                    loadSources(e.target.value);
+                  }}
+                  className="text-xs border border-gray-300 px-2 py-1 rounded-md"
                 >
+                  <option value="today">Today</option>
+                  <option value="yesterday">Yesterday</option>
+                  <option value="7d">Last 7 Days</option>
+                </select>
+              ),
+              content: (() => {
+                const grouped = {};
+                sources.forEach((s) => {
+                  const key = (s.source || "direct").toLowerCase();
+                  if (!grouped[key]) grouped[key] = 0;
+                  grouped[key] += s.clicks;
+                });
 
-                  <span className="text-gray-700 font-medium">
-                    {c.country}
-                  </span>
+                const list = Object.entries(grouped)
+                  .map(([source, clicks]) => ({ source, clicks }))
+                  .sort((a, b) => b.clicks - a.clicks)
+                  .slice(0, 5);
 
-                  <span className="text-gray-900 font-semibold">
-                    {c.clicks}
-                  </span>
+                const max = Math.max(...list.map((s) => s.clicks), 1);
 
+                return list.map((s, i) => (
+                  <ProgressRow
+                    key={i}
+                    label={s.source}
+                    value={s.clicks}
+                    percent={(s.clicks / max) * 100}
+                  />
+                ));
+              })(),
+            },
+
+            {
+              title: "Top Zone Performance",
+              content: (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <ZoneList title="🟢 Best" data={profitZones} type="good" />
+                  <ZoneList title="🔴 Worst" data={lossZones} type="bad" />
                 </div>
+              ),
+            },
 
-              ));
+            {
+              title: "Usage",
+              content: (
+                <>
+                  {[
+                    {
+                      label: "Plan",
+                      value: daysLeft,
+                      max: daysLeft || 1,
+                      display: expired
+                        ? "Expired"
+                        : daysLeft === 1
+                          ? "Expiring today"
+                          : `${daysLeft} days`,
+                    },
+                    {
+                      label: "Campaigns",
+                      value: stats.active_campaigns || 0,
+                      max: plan?.plan?.max_campaigns || 0,
+                      display: `${stats.active_campaigns || 0} / ${plan?.plan?.max_campaigns || "-"}`,
+                    },
+                    {
+                      label: "Clicks",
+                      value: stats.monthly_clicks || 0,
+                      max: plan?.plan?.max_monthly_clicks || 0,
+                      display: `${formatNumber(stats.monthly_clicks || 0)} / ${formatNumber(plan?.plan?.max_monthly_clicks || 0)}`,
+                    },
+                  ].map((item, i) => {
+                    const percent = item.max
+                      ? Math.min((item.value / item.max) * 100, 100)
+                      : 0;
 
-            })()}
+                    let color = "from-blue-300 to-blue-400";
+                    if (percent > 70) color = "from-indigo-600 to-blue-700";
+                    else if (percent > 40) color = "from-blue-500 to-indigo-600";
 
-          </div>
-
-
-          <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 
-shadow-[0_10px_30px_rgba(0,0,0,0.08)] 
-border border-gray-100 
-hover:shadow-[0_20px_60px_rgba(0,0,0,0.15)] 
-transition-all duration-300">
-
-            <div className="flex items-center justify-between mb-6">
-
-              <h2 className="text-xl font-semibold">
-                Traffic Sources
-              </h2>
-
-              <select
-                value={range}
-                onChange={(e) => {
-                  setRange(e.target.value);
-                  loadSources(e.target.value);
-                }}
-                className="border border-gray-300 px-3 py-1 rounded-md text-sm 
-      shadow-sm hover:border-gray-400 bg-white"
-              >
-                <option value="today">Today</option>
-                <option value="yesterday">Yesterday</option>
-                <option value="7d">Last 7 Days</option>
-              </select>
-
-            </div>
-
-            {(() => {
-
-              const grouped = {};
-
-              sources.forEach((s) => {
-                const key = (s.source || "direct").toLowerCase();
-                if (!grouped[key]) grouped[key] = 0;
-                grouped[key] += s.clicks;
-              });
-
-              const list = Object.entries(grouped)
-                .map(([source, clicks]) => ({ source, clicks }))
-                .sort((a, b) => b.clicks - a.clicks)
-                .slice(0, 5);
-
-              const max = Math.max(...list.map((s) => s.clicks), 1);
-
-              return list.map((s, i) => (
-
-                <div key={i} className="mb-5">
-
-                  <div className="flex justify-between text-sm mb-2">
-
-                    <span className="capitalize font-medium text-gray-700">
-                      {s.source}
-                    </span>
-
-                    <span className="text-gray-500">
-                      {s.clicks}
-                    </span>
-
-                  </div>
-
-                  <div className="w-full bg-gray-200 h-2.5 rounded-full overflow-hidden">
-
-                    <div
-                      className="bg-gradient-to-r from-green-400 to-green-600 h-2.5 rounded-full transition-all duration-500"
-                      style={{ width: `${(s.clicks / max) * 100}%` }}
-                    />
-
-                  </div>
-
-                </div>
-
-              ));
-
-            })()}
-
-          </div>
-
-          <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 
-shadow-[0_10px_30px_rgba(0,0,0,0.08)] 
-border border-gray-100 
-hover:shadow-[0_20px_60px_rgba(0,0,0,0.15)] 
-transition-all duration-300">
-
-            <h2 className="text-xl font-semibold mb-6">
-              Top Zone Performance
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-              {/* ✅ BEST */}
-              <div>
-
-                <h3 className="text-green-600 font-semibold mb-3">
-                  🟢 Best Zones
-                </h3>
-
-                <div className="space-y-3">
-
-                  {profitZones
-                    .sort((a, b) => (b.revenue - b.cost) - (a.revenue - a.cost))
-                    .slice(0, 2)
-                    .map((z, i) => {
-
-                      const profit = z.revenue - z.cost;
-                      const roi = z.cost > 0 ? ((profit / z.cost) * 100).toFixed(1) : 0;
-
-                      return (
-                        <div
-                          key={i}
-                          className="flex items-center justify-between p-4 rounded-xl
-              bg-green-50 border border-green-100
-              hover:bg-white hover:shadow-md transition"
-                        >
-
-                          {/* LEFT (NO WRAP) */}
-                          <div className="flex-1 min-w-0">
-                            <p className="text-gray-800 font-medium truncate">
-                              {z.campaign_name}
-                            </p>
-                            <p className="text-xs text-gray-400 truncate">
-                              Zone {z.zone_id}
-                            </p>
-                          </div>
-
-                          {/* RIGHT */}
-                          <div className="ml-4 text-green-600 font-semibold whitespace-nowrap">
-                            +{roi}%
-                          </div>
-
-                        </div>
-                      );
-                    })}
-
-                </div>
-
+                    return (
+                      <ProgressRow
+                        key={i}
+                        label={item.label}
+                        value={item.display}
+                        percent={percent}
+                        gradient={color}
+                      />
+                    );
+                  })}
+                </>
+              ),
+            },
+          ].map((card, i) => (
+            <div
+              key={i}
+              className="bg-white/80 backdrop-blur-xl rounded-2xl p-5 
+      border border-gray-200/50 
+      shadow-sm hover:shadow-lg transition-all duration-300"
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-semibold">{card.title}</h2>
+                {card.extra}
               </div>
 
-              {/* ❌ WORST */}
-              <div>
-
-                <h3 className="text-red-600 font-semibold mb-3">
-                  🔴 Worst Zones
-                </h3>
-
-                <div className="space-y-3">
-
-                  {lossZones
-                    .sort((a, b) => (a.revenue - a.cost) - (b.revenue - a.cost))
-                    .slice(0, 2)
-                    .map((z, i) => {
-
-                      const profit = z.revenue - z.cost;
-                      const roi = z.cost > 0 ? ((profit / z.cost) * 100).toFixed(1) : 0;
-
-                      return (
-                        <div
-                          key={i}
-                          className="flex items-center justify-between p-4 rounded-xl
-              bg-red-50 border border-red-100
-              hover:bg-white hover:shadow-md transition"
-                        >
-
-                          {/* LEFT (NO WRAP) */}
-                          <div className="flex-1 min-w-0">
-                            <p className="text-gray-800 font-medium truncate">
-                              {z.campaign_name}
-                            </p>
-                            <p className="text-xs text-gray-400 truncate">
-                              Zone {z.zone_id}
-                            </p>
-                          </div>
-
-                          {/* RIGHT */}
-                          <div className="ml-4 text-red-600 font-semibold whitespace-nowrap">
-                            {roi}%
-                          </div>
-
-                        </div>
-                      );
-                    })}
-
-                </div>
-
-              </div>
-
+              <div className="space-y-3">{card.content}</div>
             </div>
-
-          </div>
-
-
+          ))}
         </div>
 
         {

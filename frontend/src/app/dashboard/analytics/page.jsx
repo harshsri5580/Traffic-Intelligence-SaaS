@@ -80,6 +80,14 @@ export default function AnalyticsPage() {
 
   };
 
+  const formatNumber = (num) => {
+    if (!num) return 0;
+
+    if (num >= 1_000_000) return (num / 1_000_000).toFixed(1) + "M";
+    if (num >= 1_000) return (num / 1_000).toFixed(1) + "K";
+
+    return num;
+  };
   useEffect(() => {
     setLoading(true);
     loadData();
@@ -254,36 +262,58 @@ export default function AnalyticsPage() {
         Traffic Analytics
       </h1>
 
-      {overview && (
+      <div className="space-y-6">
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full min-w-0">
+        {/* 🔥 ALL STATS IN ONE GRID */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
 
-          <StatCard title="Total Clicks" value={overview.total_clicks} />
-          <StatCard title="Passed" value={overview.passed} />
-          <StatCard title="Blocked" value={overview.blocked} />
-        </div>
+          <StatCard
+            title="👆 Total Clicks"
+            value={formatNumber(overview?.total_clicks || 0)}
+          />
 
-      )}
+          <StatCard
+            title="✅ Passed"
+            value={formatNumber(overview?.passed || 0)}
+          />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full min-w-0">
+          <StatCard
+            title="🚫 Blocked"
+            value={formatNumber(overview?.blocked || 0)}
+          />
 
-        <StatCard title="Human" value={botStats.human} color="green" />
-        <StatCard title="Suspicious" value={botStats.suspicious} color="yellow" />
-        <StatCard title="Bot" value={botStats.bot} color="red" />
+          <StatCard
+            title="🧑 Human"
+            value={formatNumber(botStats.human || 0)}
+            color="green"
+          />
 
-      </div>
+          <StatCard
+            title="⚠️ Suspicious"
+            value={formatNumber(botStats.suspicious || 0)}
+            color="yellow"
+          />
 
-      <div className="w-full min-w-0 bg-gradient-to-br from-gray-900 to-gray-700 text-white shadow-xl rounded-xl p-6">
+          <StatCard
+            title="🤖 Bot"
+            value={formatNumber(botStats.bot || 0)}
+            color="red"
+          />
 
-        <h2 className="text-lg font-semibold mb-6 text-white">
-          Traffic Quality
-        </h2>
+          <StatCard
+            title="🌐 VPN"
+            value={formatNumber(overview?.vpn || 0)}
+          />
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 w-full gap-6">
+          <StatCard
+            title="🏢 Datacenter"
+            value={formatNumber(overview?.datacenter || 0)}
+          />
 
-          <StatMini title="VPN Traffic" value={overview?.vpn || 0} />
-          <StatMini title="Datacenter Traffic" value={overview?.datacenter || 0} />
-          <StatMini title="Residential Traffic" value={overview?.residential || 0} />
+          <StatCard
+            title="🏠 Residential"
+            value={formatNumber(overview?.residential || 0)}
+          />
 
         </div>
 

@@ -755,17 +755,31 @@ def advanced_profit(
     # =====================
     alerts = []
 
-    if total_clicks > 100 and total_conversions == 0:
-        alerts.append("🚨 No conversions — stop campaign")
+    profit = revenue - cost
 
-    elif roi < -30:
-        alerts.append("❌ Losing money badly")
+    if profit != 0:
 
-    if roi > 50:
-        alerts.append(f"🚀 Scale campaigns aggressively (ROI: {round(roi, 1)}%)")
+        if profit < 0:
+            if roi < -30:
+                alerts.append("❌ Losing money badly")
+            else:
+                alerts.append("⚠️ Campaign in loss")
 
-    if bot_percent > 30:
-        alerts.append("⚠️ High bot traffic")
+            if total_clicks > 100 and total_conversions == 0:
+                alerts.append("🚨 No conversions — stop campaign")
+
+        # 🔺 PROFIT CASE
+        elif profit > 0:
+            if roi > 50:
+                alerts.append(
+                    f"🚀 Scale campaigns aggressively (ROI: {round(roi, 1)}%)"
+                )
+            else:
+                alerts.append("🟢 Campaign profitable")
+
+        # 🤖 BOT ALERT (optional – both cases)
+        if bot_percent > 30:
+            alerts.append("⚠️ High bot traffic")
 
     return {
         "profit": profit,

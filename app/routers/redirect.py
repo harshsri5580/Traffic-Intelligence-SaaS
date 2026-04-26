@@ -418,30 +418,30 @@ async def redirect_campaign(
                 risk_score = visitor.bot_score
 
             # 🔥 LOG CHALLENGE HIT
-            try:
-                click = ClickLog(
-                    campaign_id=campaign.id,
-                    user_id=campaign.user_id,
-                    ip_address=ip,
-                    country=visitor.country,
-                    user_agent=visitor.user_agent_string,
-                    browser=visitor.browser,
-                    os=visitor.os,
-                    device_type=visitor.device_type,
-                    bot_score=visitor.bot_score,
-                    is_bot=visitor.is_bot,
-                    risk_score=risk_score,
-                    fingerprint="challenge",
-                    status="blocked",
-                    reason="challenge_failed",
-                    destination="/challenge",
-                )
+            # try:
+            #     click = ClickLog(
+            #         campaign_id=campaign.id,
+            #         user_id=campaign.user_id,
+            #         ip_address=ip,
+            #         country=visitor.country,
+            #         user_agent=visitor.user_agent_string,
+            #         browser=visitor.browser,
+            #         os=visitor.os,
+            #         device_type=visitor.device_type,
+            #         bot_score=visitor.bot_score,
+            #         is_bot=visitor.is_bot,
+            #         risk_score=risk_score,
+            #         fingerprint="challenge",
+            #         status="blocked",
+            #         reason="challenge_failed",
+            #         destination="/challenge",
+            #     )
 
-                db.add(click)
-                db.commit()
+            #     db.add(click)
+            #     db.commit()
 
-            except Exception:
-                db.rollback()
+            # except Exception:
+            #     db.rollback()
 
             # 🔥 REDIRECT TO CHALLENGE
             redirect_url = f"/challenge/{slug}"
@@ -1343,22 +1343,20 @@ async def redirect_campaign(
             reason = rule_reason or "fallback"
     redirect_url = append_click_id(redirect_url, click_id)
 
-    # 🔥 FINAL DEDUPE (FIXED ✅)
-
     # 🔥 FINAL HARD DEDUPE (NO DOUBLE LOG)
     log_key = f"log:{ip}:{campaign.id}:{fingerprint}"
 
-    # ❌ NEVER LOG CHALLENGE REDIRECT
-    if decision == "challenge":
+    should_log_final = True
+
+    if decision == "challenge" or (destination_url and "/challenge" in destination_url):
         should_log_final = False
 
     try:
         if redis_client.get(log_key):
-            # print("⚠️ FINAL DUPLICATE DETECTED (LOG SKIPPED)")
-            # ❌ DO NOT BLOCK FLOW
+            # 🚫 DUPLICATE → DO NOT LOG
             should_log_final = False
         else:
-            redis_client.setex(log_key, 10, "1")
+            redis_client.setex(log_key, 3, "1")  # थोड़ा increase
     except Exception:
         should_log_final = True
 
@@ -1410,7 +1408,7 @@ async def redirect_campaign(
         if destination_url and "/challenge" in destination_url:
             should_log_final = False
 
-        if should_log_final and request.method == "GET":
+        if request.method == "GET" and should_log_final:
 
             # print("🔥 REAL CLICK LOGGED")
 
