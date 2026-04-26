@@ -1008,10 +1008,15 @@ transition-all duration-200 disabled:opacity-50 transition"
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
 
           {/* 🌍 GEO ROI */}
-          {filteredGeo.length > 0 && (
-            <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-5 border border-gray-200/50 shadow-sm hover:shadow-lg transition">
-              <h3 className="text-lg font-semibold mb-4">🌍 Top GEO ROI</h3>
+          <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-5 border border-gray-200/50 shadow-sm hover:shadow-lg transition">
 
+            <h3 className="text-lg font-semibold mb-4">🌍 Top GEO ROI</h3>
+
+            {filteredGeo.length === 0 ? (
+              <div className="text-center text-gray-400 text-sm py-6">
+                No performance data yet 🚀
+              </div>
+            ) : (
               <div className="space-y-3">
                 {filteredGeo
                   .sort((a, b) => b.roi - a.roi)
@@ -1025,51 +1030,60 @@ transition-all duration-200 disabled:opacity-50 transition"
                     </div>
                   ))}
               </div>
-            </div>
-          )}
+            )}
+
+          </div>
 
           {/* 📊 Campaign Performance */}
           <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-5 border border-gray-200/50 shadow-sm hover:shadow-lg transition lg:col-span-2">
+
             <h2 className="text-lg font-semibold mb-4">📊 Campaign Performance</h2>
 
-            <div className="space-y-3">
-              {campaignSummary
-                .filter(c => (c.revenue - c.cost) !== 0)
-                .slice(0, 5)
-                .map((c, i) => {
+            {campaignSummary.filter(c => (c.revenue - c.cost) !== 0).length === 0 ? (
+              <div className="text-center text-gray-400 text-sm py-6">
+                No performance data yet 🚀
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {campaignSummary
+                  .filter(c => (c.revenue - c.cost) !== 0)
+                  .slice(0, 5)
+                  .map((c, i) => {
 
-                  const profit = c.revenue - c.cost;
-                  const roi = c.cost > 0 ? ((profit / c.cost) * 100) : 0;
+                    const profit = c.revenue - c.cost;
+                    const roi = c.cost > 0 ? ((profit / c.cost) * 100) : 0;
 
-                  return (
-                    <div key={i} className="p-4 bg-gray-50 rounded-xl flex flex-col md:flex-row justify-between gap-4 hover:bg-white hover:shadow transition">
+                    return (
+                      <div key={i} className="p-4 bg-gray-50 rounded-xl flex flex-col md:flex-row justify-between gap-4 hover:bg-white hover:shadow transition">
 
-                      <div className="flex flex-col gap-1">
-                        <span className="font-medium text-gray-800">{c.campaign}</span>
-                        <span className="text-xs text-gray-500">{c.clicks} clicks</span>
-                      </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="font-medium text-gray-800">{c.campaign}</span>
+                          <span className="text-xs text-gray-500">{c.clicks} clicks</span>
+                        </div>
 
-                      <div className="flex gap-4 text-sm items-center">
+                        <div className="flex gap-4 text-sm items-center">
 
-                        <span className="text-red-500">${c.cost.toFixed(2)}</span>
-                        <span className="text-green-600">${c.revenue.toFixed(2)}</span>
+                          <span className="text-red-500">${c.cost.toFixed(2)}</span>
+                          <span className="text-green-600">${c.revenue.toFixed(2)}</span>
 
-                        <span className={`font-semibold ${profit >= 0 ? "text-green-600" : "text-red-600"}`}>
-                          ${profit.toFixed(2)}
-                        </span>
+                          <span className={`font-semibold ${profit >= 0 ? "text-green-600" : "text-red-600"}`}>
+                            ${profit.toFixed(2)}
+                          </span>
 
-                        <span className={`px-2 py-1 rounded text-xs font-semibold
+                          <span className={`px-2 py-1 rounded text-xs font-semibold
                   ${roi > 50 ? "bg-green-100 text-green-700"
-                            : roi > 0 ? "bg-yellow-100 text-yellow-700"
-                              : "bg-red-100 text-red-700"}`}>
-                          {roi.toFixed(1)}%
-                        </span>
+                              : roi > 0 ? "bg-yellow-100 text-yellow-700"
+                                : "bg-red-100 text-red-700"}`}>
+                            {roi.toFixed(1)}%
+                          </span>
 
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
-            </div>
+                    );
+                  })}
+              </div>
+            )}
+
           </div>
 
         </div>
