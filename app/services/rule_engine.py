@@ -73,9 +73,13 @@ class RuleEngine:
 
                 # 🔥 BOT THRESHOLD (FIXED)
                 if final_threshold is not None:
-                    if self.visitor.bot_score >= final_threshold:
+                    if self.visitor.bot_score >= final_threshold and (
+                        getattr(self.visitor, "is_datacenter", False)
+                        or getattr(self.visitor, "is_proxy", False)
+                        or getattr(self.visitor, "is_vpn", False)
+                    ):
                         last_fail_reason = "AI Bot Detect"
-                        continue  # ❗ skip this rule, don't kill all rules
+                        continue
 
                 # ---------------------------------
                 # NORMAL MATCH
@@ -387,17 +391,17 @@ class RuleEngine:
 
             # 🔥 DATACENTER / PROXY
             if getattr(v, "is_datacenter", False):
-                return 40
+                return 45
 
             if getattr(v, "is_proxy", False) or getattr(v, "is_vpn", False):
-                return 50
+                return 55
 
             # 🔥 RETURNING USER TRUST BOOST
             if getattr(v, "is_returning", False):
                 return 80
 
             # DEFAULT SAFE
-            return 60
+            return 65
 
         except Exception:
             return None
