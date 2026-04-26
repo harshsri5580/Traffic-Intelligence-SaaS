@@ -104,6 +104,7 @@ export default function RulesPage() {
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [countrySearch, setCountrySearch] = useState("");
+  const [saving, setSaving] = useState(false);
   const offerOptions = offers.map(o => ({
     value: o.id,
     label: o.url
@@ -251,7 +252,8 @@ export default function RulesPage() {
       toast.error("Priority already used");
       return;
     }
-
+    if (saving) return; // prevent double click
+    setSaving(true);
     try {
 
       if (!formData.name) {
@@ -375,6 +377,9 @@ export default function RulesPage() {
 
     } catch (err) {
       console.error(err);
+    }
+    finally {
+      setSaving(false);
     }
     toast.success("Rule saved successfully 🚀");
 
@@ -840,11 +845,20 @@ focus:ring-2 focus:ring-blue-500 outline-none"
 
             <button
               onClick={saveRule}
-              className="px-4 py-2 rounded-lg text-white text-sm font-medium
-bg-gradient-to-r from-green-500 to-emerald-600
-hover:shadow-lg hover:scale-[1.03] transition-all duration-200"
+              disabled={saving}
+              className={`px-4 py-2 rounded-lg text-white text-sm font-medium
+  bg-gradient-to-r from-green-500 to-emerald-600
+  transition-all duration-200 flex items-center gap-2 justify-center
+  ${saving ? "opacity-70 cursor-not-allowed" : "hover:shadow-lg hover:scale-[1.03]"}`}
             >
-              {editingRuleId ? "Update Rule" : "Save Rule"}
+              {saving ? (
+                <>
+                  <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+                  Saving...
+                </>
+              ) : (
+                editingRuleId ? "Update Rule" : "Save Rule"
+              )}
             </button>
 
             <button

@@ -223,6 +223,7 @@ export default function Campaigns() {
     //   return;
     // }
 
+    if (creating) return; // prevent double click
     setCreating(true);
 
     try {
@@ -272,7 +273,9 @@ export default function Campaigns() {
       toast.error("Campaign creation failed");
     }
 
-    setCreating(false);
+    finally {
+      setCreating(false);
+    }
   };
 
   if (loading) {
@@ -459,11 +462,19 @@ ${autoOptimize ? "bg-green-500" : "bg-gray-300"}`}
         <button
           onClick={createCampaign}
           disabled={creating}
-          className="mt-5 px-6 py-2.5 rounded-lg text-white text-sm font-medium
-bg-gradient-to-r from-indigo-500 to-blue-600
-hover:shadow-lg hover:scale-[1.03] transition-all duration-200"
+          className={`mt-5 px-6 py-2.5 rounded-lg text-white text-sm font-medium
+  bg-gradient-to-r from-indigo-500 to-blue-600
+  transition-all duration-200 flex items-center gap-2 justify-center
+  ${creating ? "opacity-70 cursor-not-allowed" : "hover:shadow-lg hover:scale-[1.03]"}`}
         >
-          {creating ? "Creating..." : "Create Campaign"}
+          {creating ? (
+            <>
+              <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+              Creating...
+            </>
+          ) : (
+            "Create Campaign"
+          )}
         </button>
 
       </div>

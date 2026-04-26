@@ -197,6 +197,7 @@ export default function OffersPage() {
       toast.error(`Total weight cannot exceed 100%. Current: ${currentTotal}%`);
       return;
     }
+    if (creating) return;
     setCreating(true);
 
     try {
@@ -230,11 +231,32 @@ export default function OffersPage() {
         weight: 50,
         redirect_mode: "direct"
       });
-
+      toast.success("Offer saved 🚀");
       setEditingOfferId(null);
       setShowForm(false);
 
-      loadOffers();
+      if (editingOfferId) {
+        // UPDATE instantly
+        setOffers(prev =>
+          prev.map(o =>
+            o.id === editingOfferId
+              ? { ...o, ...formData, weight: Number(formData.weight) }
+              : o
+          )
+        );
+      } else {
+        // ADD instantly
+        setOffers(prev => [
+          ...prev,
+          {
+            ...formData,
+            id: Date.now(), // temp id
+            campaign_id: Number(formData.campaign_id),
+            weight: Number(formData.weight),
+            is_active: true
+          }
+        ]);
+      }
 
     } catch (err) {
 
@@ -246,7 +268,7 @@ export default function OffersPage() {
       setCreating(false);
 
     }
-    toast.success("Offer saved successfully 🚀");
+
 
   };
 
@@ -474,11 +496,19 @@ focus:ring-2 focus:ring-blue-500 outline-none"
             <button
               onClick={saveOffer}
               disabled={creating}
-              className="px-4 py-2 rounded-lg text-white text-sm font-medium
-bg-gradient-to-r from-green-500 to-emerald-600
-hover:shadow-lg hover:scale-[1.03] transition-all duration-200"
+              className={`px-4 py-2 rounded-lg text-white text-sm font-medium
+  bg-gradient-to-r from-green-500 to-emerald-600
+  transition-all duration-200 flex items-center gap-2 justify-center
+  ${creating ? "opacity-70 cursor-not-allowed" : "hover:shadow-lg hover:scale-[1.03]"}`}
             >
-              {creating ? "Saving..." : "Save"}
+              {creating ? (
+                <>
+                  <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+                  Saving...
+                </>
+              ) : (
+                "Save Offer"
+              )}
             </button>
 
             <button
