@@ -517,17 +517,40 @@ ${log.risk_score >= 70 ? "bg-red-500/10 text-red-400 border border-red-500/20" :
 
                       {visibleColumns.reason && (
                         <td className="px-3 py-2 border text-xs">
-                          {log.reason ? log.reason : "-"}
+                          {(() => {
+                            if (!log.reason) return "-";
+
+                            const r = log.reason.toLowerCase();
+
+                            if (r.includes("vpn")) return "Datacenter";
+                            if (r.includes("proxy")) return "Proxy";
+                            if (r.includes("datacenter")) return "VPN";
+                            if (r.includes("high bot")) return "High Bot";
+                            if (r.includes("rule")) return "Rule Match";
+
+                            return log.reason.split(",")[0]; // fallback
+                          })()}
                         </td>
                       )}
 
                       {visibleColumns.flags && (
                         <td className="px-3 py-2 border text-xs">
                           <div className="flex flex-wrap gap-1 justify-center">
-                            {log.connection_type === "vpn" && <span className="bg-yellow-100 text-yellow-700 px-2 py-1 rounded">VPN</span>}
-                            {log.connection_type === "datacenter" && <span className="bg-red-100 text-red-700 px-2 py-1 rounded">DC</span>}
-                            {log.connection_type === "tor" && <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded">TOR</span>}
-                            {log.bot_score >= 70 && <span className="bg-red-100 text-red-700 px-2 py-1 rounded">BOT</span>}
+
+                            {log.connection_type === "vpn" ? (
+                              <span className="bg-yellow-100 text-yellow-700 px-2 py-1 rounded">VPN</span>
+
+                            ) : log.connection_type === "tor" ? (
+                              <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded">TOR</span>
+
+                            ) : log.connection_type === "datacenter" ? (
+                              <span className="bg-red-100 text-red-700 px-2 py-1 rounded">DC</span>
+
+                            ) : log.bot_score >= 70 ? (
+                              <span className="bg-red-100 text-red-700 px-2 py-1 rounded">BOT</span>
+
+                            ) : null}
+
                           </div>
                         </td>
                       )}
