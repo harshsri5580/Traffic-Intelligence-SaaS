@@ -98,10 +98,10 @@ const copy = async (text) => {
 const getScript = () => {
 
   if(activeTab === "auto"){
-  return scripts.hybrid_script || scripts.php_script;
+  return scripts.script || scripts.php_script;
 }
 
-  if(activeTab === "php") return scripts.php_script;
+  if(activeTab === "php") return scripts.script || scripts.php_script;
   if(activeTab === "js") return scripts.js_loader;
   if(activeTab === "iframe") return scripts.iframe_cloak;
   if(activeTab === "wp") return scripts.wordpress_snippet;
@@ -128,7 +128,11 @@ return(
 <h1 className="text-3xl font-bold mb-8">
 Script Generator
 </h1>
-
+<p className="text-gray-500 mb-6">
+  Campaign: <span className="font-semibold text-gray-800">
+    {scripts?.campaign_name || slug}
+  </span>
+</p>
 <div className="flex gap-2 mb-6">
 
   {["auto","hybrid","php","js","iframe","wp"].map(tab => (

