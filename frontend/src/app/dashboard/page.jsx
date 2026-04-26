@@ -1226,10 +1226,20 @@ transition-all duration-200 disabled:opacity-50 transition"
             {
               title: "Top Zone Performance",
               content: (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <ZoneList title="🟢 Best" data={profitZones} type="good" />
-                  <ZoneList title="🔴 Worst" data={lossZones} type="bad" />
-                </div>
+                (profitZones?.length || 0) === 0 && (lossZones?.length || 0) === 0 ? (
+
+                  <div className="text-center text-gray-400 text-sm py-6">
+                    No Zone data yet 🚀
+                  </div>
+
+                ) : (
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <ZoneList title="🟢 Best" data={profitZones} type="good" />
+                    <ZoneList title="🔴 Worst" data={lossZones} type="bad" />
+                  </div>
+
+                )
               ),
             },
 
