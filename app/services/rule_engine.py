@@ -74,7 +74,7 @@ class RuleEngine:
                 # 🔥 BOT THRESHOLD (FIXED)
                 if final_threshold is not None:
                     if self.visitor.bot_score >= final_threshold:
-                        last_fail_reason = "bot_score_high"
+                        last_fail_reason = "AI Bot Detect"
                         continue  # ❗ skip this rule, don't kill all rules
 
                 # ---------------------------------

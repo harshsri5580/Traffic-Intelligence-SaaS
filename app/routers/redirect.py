@@ -736,7 +736,7 @@ async def redirect_campaign(
         # PROXY
         if campaign.block_proxy and visitor.is_proxy:
             decision = "blocked"
-            reason = "proxy_block"
+            reason = "Proxy Block"
             redirect_url = campaign.safe_page_url or "/decoy"
             destination_url = redirect_url
             is_blocked_final = True
