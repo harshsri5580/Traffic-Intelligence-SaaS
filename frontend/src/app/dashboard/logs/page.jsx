@@ -14,6 +14,7 @@ export default function LogsPage() {
   const [loading, setLoading] = useState(true);
   const [blockedIPs, setBlockedIPs] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
+  const [pageLoading, setPageLoading] = useState(false);
   const [filters, setFilters] = useState({
     campaign_id: "",
     ip: "",
@@ -119,8 +120,10 @@ export default function LogsPage() {
 
   const loadData = async () => {
 
-    try {
+    setLoading(true); // ✅ ADD THIS (FIRST LOAD)
+    setPageLoading(true);
 
+    try {
       const cid = filters.campaign_id || localStorage.getItem("campaign_id");
 
       const [logsRes, campaignsRes, blockedRes] = await Promise.all([
@@ -135,13 +138,11 @@ export default function LogsPage() {
       setCampaigns(campaignsRes.data || []);
 
     } catch (err) {
-
       console.error("Logs load error", err);
-
     }
 
-    setLoading(false);
-
+    setLoading(false);      // ✅ 🔥 THIS WAS MISSING
+    setPageLoading(false);
   };
 
   const exportCSV = () => {
@@ -235,9 +236,12 @@ export default function LogsPage() {
 
   // const currentLogs = filteredLogs.slice(indexOfFirstRow, indexOfLastRow);
 
-  const totalPages = Math.ceil(totalCount / rowsPerPage);
+  const totalPages = Math.min(
+    Math.ceil(totalCount / rowsPerPage),
+    500
+  );
 
-  if (loading) {
+  if (loading && logs.length === 0) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-gray-800">
         <div className="animate-spin h-10 w-10 border-2 border-indigo-500 border-t-transparent rounded-full"></div>
@@ -516,16 +520,16 @@ ${log.risk_score >= 70 ? "bg-red-500/10 text-red-400 border border-red-500/20" :
                       )}
 
                       {visibleColumns.reason && (
-                        <td className="px-3 py-2 border text-xs">
-                          <span className="px-2 py-1 rounded bg-gray-100 text-gray-700">
+                        <td className="px-3 py-2 border text-xs align-middle text-center">
+                          <span className="px-2 py-1 rounded bg-gray-100 text-gray-700 inline-block">
                             {(() => {
                               if (!log.reason) return "-";
 
                               const r = log.reason.toLowerCase();
 
-                              if (r.includes("vpn")) return "Datacenter";
+                              if (r.includes("vpn")) return "VPN";
                               if (r.includes("proxy")) return "Proxy";
-                              if (r.includes("datacenter")) return "VPN";
+                              if (r.includes("datacenter")) return "Datacenter";
                               if (r.includes("high bot")) return "High Bot";
                               if (r.includes("rule")) return "Rule Match";
 
@@ -640,8 +644,12 @@ transition shadow-sm hover:shadow"
         <div className="flex items-center gap-2">
 
           <button
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage(p => p - 1)}
+            disabled={pageLoading || currentPage === 1}
+            onClick={() => {
+              if (pageLoading) return;
+              setCurrentPage(p => p - 1);
+              { pageLoading ? "Loading..." : "Prev" }
+            }}
             className="px-3 py-1 text-sm border rounded-md bg-white hover:bg-gray-100 disabled:opacity-40"
           >
             Prev
@@ -652,8 +660,12 @@ transition shadow-sm hover:shadow"
           </span>
 
           <button
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage(p => p + 1)}
+            disabled={pageLoading || currentPage === totalPages || currentPage >= 500}
+            onClick={() => {
+              if (pageLoading) return; // extra safety
+              setCurrentPage(p => p + 1);
+              { pageLoading ? "Loading..." : "Next" }
+            }}
             className="px-3 py-1 text-sm border rounded-md bg-white hover:bg-gray-100 disabled:opacity-40"
           >
             Next
