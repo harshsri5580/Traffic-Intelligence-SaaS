@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, DateTime, ForeignKey, String, Boolean
 from sqlalchemy.orm import relationship
 from app.database import Base
 import datetime
+from app.models.plan import Plan  # ✅ ADD THIS
 
 
 class Subscription(Base):
@@ -27,4 +28,4 @@ class Subscription(Base):
 
     # relationships
     user = relationship("User")
-    plan = relationship("Plan")
+    plan = relationship("Plan", lazy="joined")

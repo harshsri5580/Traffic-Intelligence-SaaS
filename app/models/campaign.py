@@ -65,7 +65,7 @@ class Campaign(Base):
     # ----------------------
     # Relationships
     # ----------------------
-
+    user = relationship("User", back_populates="campaigns")
     offers = relationship(
         "Offer", back_populates="campaign", cascade="all, delete-orphan"
     )

@@ -1,17 +1,20 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from app.database import SessionLocal
 from app.models.subscription import Subscription
 
 
-def run():
+def expire_subscriptions():
     db = SessionLocal()
 
     try:
+        now = datetime.now(timezone.utc)  # ✅ FIXED (timezone safe)
+
         expired_subs = (
             db.query(Subscription)
             .filter(
                 Subscription.status == "active",
-                Subscription.expire_date < datetime.utcnow(),
+                Subscription.expire_date != None,  # ✅ safety
+                Subscription.expire_date < now,
             )
             .all()
         )
@@ -23,12 +26,12 @@ def run():
         db.commit()
 
     except Exception as e:
-        print("❌ Error:", str(e))
+        print("❌ Error in expire_subscriptions:", str(e))
 
     finally:
         db.close()
 
 
-# 🔥 IMPORTANT ENTRYPOINT
+# 🔥 OPTIONAL TEST RUN (SAFE)
 if __name__ == "__main__":
-    run()
+    expire_subscriptions()

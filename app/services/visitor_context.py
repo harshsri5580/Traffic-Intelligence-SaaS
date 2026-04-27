@@ -554,14 +554,13 @@ class VisitorContext:
         # ================================
 
         if self.org:
-
             vpn_keywords = ["vpn", "proxy", "hosting", "server"]
 
             if any(k in self.org.lower() for k in vpn_keywords):
-
                 self.connection_type = "vpn"
                 self.is_vpn = True
-                self.bot_score += 15
+                self.bot_score += 40  # 🔥 from 15 → 40
+                self.reasons.append("vpn_detected")
 
         # ================================
         # VPN / PROXY / TOR DETECTION
@@ -577,9 +576,17 @@ class VisitorContext:
 
         # 🔥 HARD BOT BOOST (DC / PROXY / TOR)
 
-        if self.is_datacenter or self.is_proxy or self.is_tor:
-            self.bot_score += 30
-            self.reasons.append("network_risk")
+        if self.is_tor:
+            self.bot_score = max(self.bot_score, 95)
+            self.reasons.append("tor_network")
+
+        elif self.is_proxy:
+            self.bot_score += 50
+            self.reasons.append("proxy_network")
+
+        elif self.is_datacenter:
+            self.bot_score += 60
+            self.reasons.append("datacenter_network")
         # ================================
         # 🔥 UNKNOWN NETWORK BOOST (ADD HERE)
         # ================================
@@ -594,10 +601,20 @@ class VisitorContext:
 
             self.ip_type = "residential"
             self.connection_type = "residential"
-        # 🔥 REAL USER SAFE (RESIDENTIAL)
-        if self.connection_type == "residential" and not self.is_automation:
-            if self.bot_score < 80:
-                self.bot_score *= 0.6
+            # 🔥 REAL USER SAFE (RESIDENTIAL)
+            # if self.connection_type == "residential" and not self.is_automation:
+            #     if self.bot_score < 80:
+            #         self.bot_score *= 0.6
+            # 🔥 SAFE REAL USER PROTECTION (SMART)
+            if (
+                self.connection_type == "residential"
+                and not self.is_vpn
+                and not self.is_proxy
+                and not self.is_datacenter
+                and not self.is_automation
+            ):
+                if self.bot_score < 70:
+                    self.bot_score *= 0.7
         # ================================
         # TRAFFIC SOURCE
         # ================================

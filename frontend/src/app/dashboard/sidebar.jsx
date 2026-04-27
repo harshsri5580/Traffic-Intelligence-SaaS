@@ -21,6 +21,7 @@ export default function Sidebar({ collapsed, setCollapsed }) {
     { name: "Traffic Logs", path: "/dashboard/logs", icon: "activity" },
     { name: "Traffic Filters", path: "/dashboard/filters", icon: "shield" },
     { name: "Analytics", path: "/dashboard/analytics", icon: "bar" },
+    { name: "Reports", path: "/dashboard/reports", icon: "report" },
     { name: "Pricing", path: "/dashboard/pricing", icon: "dollar" },
     { name: "Settings", path: "/dashboard/settings", icon: "settings" },
     { name: "Docs", path: "/dashboard/docs", icon: "book" }, // 
@@ -49,6 +50,13 @@ export default function Sidebar({ collapsed, setCollapsed }) {
         return <svg className={base} fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2l8 4v6c0 5-3 9-8 10-5-1-8-5-8-10V6l8-4z" /></svg>;
       case "bar":
         return <svg className={base} fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20V10M18 20V4M6 20v-6" /></svg>;
+      case "report":
+        return (
+          <svg className={base} fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M6 2h9l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" />
+            <path d="M14 2v6h6" />
+          </svg>
+        );
       case "dollar":
         return <svg className={base} fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 1v22M17 5H9a4 4 0 0 0 0 8h6a4 4 0 0 1 0 8H7" /></svg>;
       case "settings":

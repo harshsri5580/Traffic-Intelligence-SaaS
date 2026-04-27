@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, DateTime
 from sqlalchemy.orm import relationship
 from datetime import datetime
-
+from app.models.rule_offer import RuleOffer
 from app.database import Base
 
 

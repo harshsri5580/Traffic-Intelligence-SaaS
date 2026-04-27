@@ -113,7 +113,7 @@ class RiskEngine:
         # DATACENTER
         # ---------------------------------
         if getattr(self.visitor, "is_datacenter", False):
-            self.score += 40
+            self.score += 70
 
         # ---------------------------------
         # VPN / PROXY (SAFE CACHE)
@@ -131,13 +131,16 @@ class RiskEngine:
 
             if vpn_info:
                 if vpn_info.get("is_tor"):
-                    self.score += 80
+                    self.score += 100  # 🔥 HARD BLOCK
+
                 if vpn_info.get("is_vpn"):
-                    self.score += 25
+                    self.score += 60  # 🔥 strong
+
                 if vpn_info.get("is_proxy"):
-                    self.score += 25
+                    self.score += 60  # 🔥 strong
+
                 if vpn_info.get("is_residential_proxy"):
-                    self.score += 30
+                    self.score += 70  # 🔥 MOST IMPORTANT
 
         except Exception:
             pass
@@ -316,8 +319,14 @@ class RiskEngine:
         # 🔥 FINAL RESIDENTIAL PROTECTION (YAHI ADD KARO)
         try:
             if getattr(self.visitor, "ip_type", "") == "residential":
-                if self.score < 90:
-                    self.score *= 0.7
+                if (
+                    not getattr(self.visitor, "is_vpn", False)
+                    and not getattr(self.visitor, "is_proxy", False)
+                    and not getattr(self.visitor, "is_datacenter", False)
+                ):
+
+                    if self.score < 80:
+                        self.score *= 0.7
         except Exception:
             pass
 

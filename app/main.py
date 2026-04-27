@@ -9,10 +9,11 @@ from slowapi.errors import RateLimitExceeded
 
 # ✅ DATABASE (ONLY THIS)
 from app.database import engine, Base, SessionLocal
+from app.tasks.report_tasks import start_scheduler
 
 # ✅ MODELS
 from app.models.system_log import SystemLog
-from app.models import user
+import app.models  # ✅ THIS LOADS ALL MODELS
 
 # ✅ ROUTERS (ONLY app.)
 from app.routers import (
@@ -36,6 +37,7 @@ from app.routers import (
     realtime,
     user,
     behavior,
+    reports,
 )
 
 # Models (important for table creation)
@@ -147,6 +149,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 # ===============================
 
 app.include_router(auth.router, prefix="/api/auth")
+app.include_router(reports.router, prefix="/api")  # ✅ ADD THIS
 
 app.include_router(admin.router, prefix="/api/admin")
 app.include_router(billing.router, prefix="/api")
@@ -177,6 +180,7 @@ app.include_router(challenge.router)
 app.include_router(decoy.router)
 app.include_router(tools.router, prefix="/api")
 app.include_router(behavior.router, prefix="/api/behavior")
+app.include_router(reports.router, prefix="/api")
 
 # ===============================
 # ROOT ENDPOINT
@@ -196,3 +200,4 @@ def root():
 @app.on_event("startup")
 async def startup_event():
     logging.info("🚀 Traffic Intelligence SaaS started")
+    start_scheduler()
