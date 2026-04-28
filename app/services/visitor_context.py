@@ -1029,16 +1029,10 @@ class VisitorContext:
         if self.bot_score > 0:
             self.bot_score += self.bot_score % 3
         # ================================
-        # DEBUG LOG
+        # DEBUG LOGS
         # ================================
 
         # print("----- VISITOR DEBUG -----")
-        # print("IP:", self.ip)
-        # print("Country:", self.country_code)
-        # print("Device:", self.device_type)
-        # print("ASN:", self.asn)
-        # print("Connection:", self.connection_type)
-        # print("VPN:", self.is_vpn)
         # print("Proxy:", self.is_proxy)
         # print("Tor:", self.is_tor)
         # print("Datacenter:", self.is_datacenter)
