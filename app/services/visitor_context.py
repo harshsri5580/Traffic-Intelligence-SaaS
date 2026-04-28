@@ -922,6 +922,16 @@ class VisitorContext:
         if signals >= 3:
             self.bot_score += 15
         # ================================
+        # 🔥 MICRO VARIATION (ANTI PATTERN)
+        # ================================
+
+        import random
+        import time
+
+        # small random noise
+        if self.signal_strength >= 2 or self.bot_score >= 30:
+            self.bot_score += random.randint(0, 3)
+        # ================================
         # FINAL BOT SCORE
         # ================================
 
@@ -978,6 +988,19 @@ class VisitorContext:
             pass
 
         # ================================
+        # 🔥 FINGERPRINT REPEAT DETECTION
+        # ================================
+
+        if hasattr(self, "fingerprint"):
+            key = f"fp:{self.fingerprint}"
+
+            count = redis_client.incr(key)
+            redis_client.expire(key, 60)
+
+            if count > 3:
+                self.bot_score += 15
+
+        # ================================
         # SESSION FINGERPRINT
         # ================================
 
@@ -1001,6 +1024,10 @@ class VisitorContext:
         # 🔥 FINAL BOT SCORE NORMALIZATION (FINAL STEP)
         # =========================================
         self.bot_score = int(max(0, min(100, self.bot_score)))
+
+        # 🔥 BREAK STATIC PATTERN
+        if self.bot_score > 0:
+            self.bot_score += self.bot_score % 3
         # ================================
         # DEBUG LOG
         # ================================

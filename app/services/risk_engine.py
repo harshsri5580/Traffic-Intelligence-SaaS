@@ -308,6 +308,23 @@ class RiskEngine:
         # 🔥 strong signal → boost
         if signals >= 3:
             self.score += 15
+        # ================================
+        # 🔥 DYNAMIC BEHAVIOR SIGNAL
+        # ================================
+
+        import time
+        import random
+
+        # rapid request detection
+        if hasattr(self.visitor, "last_request_time"):
+            gap = time.time() - self.visitor.last_request_time
+            if gap < 2:
+                self.score += 8
+
+        self.visitor.last_request_time = time.time()
+
+        # small randomness
+        self.score += random.randint(0, 5)
         # ---------------------------------
         # NORMALIZE
         # ---------------------------------
