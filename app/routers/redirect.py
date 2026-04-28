@@ -261,6 +261,7 @@ async def redirect_campaign(
         )
         .first()
     )
+    # check_traffic_filters(visitor, db, campaign.user_id)
     # 🔥 BLOCK CHECK (EARLY EXIT - CRITICAL)
     is_blocked_final = False  # ✅ yaha add karo
     blocked = db.query(BlockedIP).filter(BlockedIP.ip_address == ip).first()
@@ -276,8 +277,13 @@ async def redirect_campaign(
 
     # 🔥 BLOCKED IP
     if blocked:
-        # print("🚫 BLOCKED IP HIT:", ip)
-        return RedirectResponse(campaign.safe_page_url or "/decoy")
+        decision = "blocked"
+        reason = "blocked_ip"
+
+        redirect_url = campaign.safe_page_url or "/decoy"
+        destination_url = redirect_url
+
+        is_blocked_final = True
 
     # campaign = (
     #     db.query(Campaign)
@@ -502,6 +508,7 @@ async def redirect_campaign(
     selected_offer = None
     click_id = hashlib.md5(f"{ip}{datetime.utcnow()}".encode()).hexdigest()
     matched_rule = None
+    rule_reason = None
     reason = None
     redirect_url = None
     destination_url = None
@@ -591,6 +598,10 @@ async def redirect_campaign(
         for f in filters:
 
             val = (f.value or "").lower()
+            # 🔥 DEBUG ADD HERE (EXACT)
+            print("🔍 ISP:", isp)
+            print("🔍 FILTER:", val)
+            print("🔍 WHITELIST:", getattr(visitor, "is_whitelisted", False))
 
             # USER AGENT FILTER
             if f.category == "ua" and val in ua:
@@ -601,10 +612,15 @@ async def redirect_campaign(
 
             # ISP FILTER
             elif f.category == "isp" and val in isp:
-                # print("🚫 ISP FILTER HIT")
 
-                decision = "blocked"
-                reason = "isp_filter"
+                # 🔥 WHITELIST OVERRIDE (FINAL FIX)
+                if getattr(visitor, "is_whitelisted", False):
+                    print("✅ WHITELIST BYPASS ISP BLOCK")
+
+                    decision = "allow"  # ✅ ADD
+                    reason = "whitelisted"  # ✅ ADD
+
+                    continue
 
             # DOMAIN FILTER
             elif f.category.lower() == "domain" and val in ref:
@@ -619,6 +635,7 @@ async def redirect_campaign(
 
                 decision = "blocked"
                 reason = "ip_filter"
+                is_blocked_final = True
 
             else:
                 continue
@@ -654,7 +671,7 @@ async def redirect_campaign(
 
         if session_score >= 60:
             decision = set_decision(decision, "blocked")
-            reason = "filter_block"
+            reason = "Filter Block"
             redirect_url = "/decoy"
             destination_url = redirect_url
 
@@ -681,7 +698,7 @@ async def redirect_campaign(
 
     if blocked:
         decision = set_decision(decision, "blocked")
-        reason = "filter_block"
+        reason = "Filter Block"
         redirect_url = "/decoy"
         destination_url = redirect_url
 
@@ -689,21 +706,21 @@ async def redirect_campaign(
     # LOAD CAMPAIGN
     # -------------------------------------------------
     # 🔥 HARD BLOCK (TOP PRIORITY)
-    if visitor.is_datacenter:
-        visitor.bot_score += 25
+    # if visitor.is_datacenter:
+    #     visitor.bot_score += 25
 
-    if visitor.is_proxy:
-        visitor.bot_score += 20
+    # if visitor.is_proxy:
+    #     visitor.bot_score += 20
 
-    if visitor.is_vpn:
-        visitor.bot_score += 10
+    # if visitor.is_vpn:
+    #     visitor.bot_score += 10
 
-    if visitor.is_tor:
-        visitor.bot_score += 40
+    # if visitor.is_tor:
+    #     visitor.bot_score += 40
 
     if not campaign:
         decision = set_decision(decision, "blocked")
-        reason = "filter_block"
+        reason = "Filter block"
         redirect_url = "/decoy"
         destination_url = redirect_url
 
@@ -1029,7 +1046,7 @@ async def redirect_campaign(
         if hits > 10:
 
             decision = set_decision(decision, "blocked")
-            reason = "filter_block"
+            reason = "Filter Block"
             redirect_url = "/decoy"
             destination_url = redirect_url
 
@@ -1042,13 +1059,13 @@ async def redirect_campaign(
 
     try:
 
-        filter_hit = check_traffic_filters(visitor, db)
+        filter_hit = check_traffic_filters(visitor, db, campaign.user_id)
 
         if filter_hit:
 
             decision = set_decision(decision, "blocked")
-            reason = "filter_block"
-            redirect_url = "/decoy"
+            reason = "Filter Block"
+            redirect_url = campaign.bot_url or campaign.safe_page_url or "/decoy"
             destination_url = redirect_url
 
     except Exception:
@@ -1107,8 +1124,7 @@ async def redirect_campaign(
         risk_score = visitor.bot_score
 
     # 🔥 HIGH RISK BLOCK
-    # 🔥 HIGH RISK BLOCK
-    if risk_score >= 90 or visitor.bot_score >= 85:
+    if risk_score >= 90 and visitor.signal_strength >= 2:
         # print("🚫 HIGH RISK BLOCK")
 
         decision = set_decision(decision, "blocked")
@@ -1219,35 +1235,26 @@ async def redirect_campaign(
             rule_engine = RuleEngine(db, campaign, visitor)
             matched_rule, rule_reason = rule_engine.evaluate()
 
+            # 🔥 ONLY SET DATA (NO FINAL DECISION HERE)
+
             if matched_rule:
-                # 🔥 HARD LOCK
+
                 if not reason and rule_reason:
                     reason = rule_reason
-                is_bot_traffic = is_bot_traffic
 
                 if matched_rule.action_type == "block":
-
-                    decision = set_decision(decision, "blocked")
-                    reason = f"rule_match:{matched_rule.name}"
-
-                    redirect_url = "/decoy"
-                    destination_url = redirect_url
+                    is_blocked_final = True
 
                 elif matched_rule.action_type == "rotate":
 
                     selected_offer = choose_offer_for_rule(db, matched_rule.id)
 
-                    if matched_rule and selected_offer:
-
-                        decision = "offer"
-                        reason = "offer"
-
+                    if selected_offer:
+                        # ❌ DO NOT SET decision here
                         redirect_url = selected_offer.url
-                        # print("🔥 FINAL DECISION:", decision)
-                        # print("🔥 USING URL:", redirect_url)
+
                         redirect_url = append_click_id(redirect_url, click_id)
 
-                        # MACRO REPLACE
                         redirect_url = redirect_url.replace("{sub1}", sub1 or "")
                         redirect_url = redirect_url.replace("{sub2}", sub2 or "")
                         redirect_url = redirect_url.replace("{sub3}", sub3 or "")
@@ -1291,45 +1298,64 @@ async def redirect_campaign(
             decision = "fallback"
 
     # -------------------------------------------------
-    # FINAL DECISION LOGIC (CLEAN + SAFE)
+    # FINAL DECISION LOGIC (FINAL STABLE)
     # -------------------------------------------------
 
-    if matched_rule:
+    is_whitelisted = getattr(visitor, "is_whitelisted", False)
 
-        if matched_rule.action_type == "block":
+    rule_pass = False
 
-            decision = set_decision(decision, "blocked")
-            reason = f"rule_match:{matched_rule.name}"
+    if matched_rule and matched_rule.action_type == "rotate" and selected_offer:
+        rule_pass = True
 
-            redirect_url = "/decoy"
-            destination_url = redirect_url
+    # ==============================
+    # FINAL DECISION
+    # ==============================
 
-        elif matched_rule.action_type == "rotate" and selected_offer:
+    if is_whitelisted:
 
+        # 🔥 FULL BYPASS (NO BLOCK / NO RULE FAIL)
+        is_blocked_final = False
+
+        decision = "offer"
+        reason = "whitelist_override"
+
+        # 🔥 FORCE OFFER
+        if not selected_offer:
+            offer_url = choose_offer_for_campaign(db, campaign.id)
+
+            if offer_url:
+                selected_offer = offer_url
+                redirect_url = offer_url.url
+
+                redirect_url = redirect_url.replace("{sub1}", sub1 or "")
+                redirect_url = redirect_url.replace("{sub2}", sub2 or "")
+                redirect_url = redirect_url.replace("{sub3}", sub3 or "")
+                redirect_url = redirect_url.replace("{sub4}", sub4 or "")
+                redirect_url = redirect_url.replace("{sub5}", sub5 or "")
+
+                destination_url = redirect_url
+
+            else:
+                decision = "fallback"
+                redirect_url = campaign.fallback_url or "/decoy"
+                destination_url = redirect_url
+
+    else:
+
+        if is_blocked_final:
+            decision = "blocked"
+
+        elif rule_pass:
             decision = "offer"
-            reason = "Rule Match"
+            reason = f"rule_pass:{matched_rule.name}"
 
-            redirect_url = selected_offer.url
-            # print("🔥 FINAL DECISION:", decision)
-            # print("🔥 USING URL:", redirect_url)
+        else:
+            decision = "fallback"
+            reason = rule_reason or "no_rule_match"
 
-            redirect_url = redirect_url.replace("{sub1}", sub1 or "")
-            redirect_url = redirect_url.replace("{sub2}", sub2 or "")
-            redirect_url = redirect_url.replace("{sub3}", sub3 or "")
-            redirect_url = redirect_url.replace("{sub4}", sub4 or "")
-            redirect_url = redirect_url.replace("{sub5}", sub5 or "")
-
+            redirect_url = campaign.fallback_url or campaign.safe_page_url or "/decoy"
             destination_url = redirect_url
-
-    # 🔥 NO RULE MATCH → SAFE PAGE (STRICT MODE)
-    elif not is_bot_traffic and not is_blocked_final and not proxied_url:
-        print("🔥 RULE FAIL REASON:", rule_reason)
-
-        decision = "fallback"
-        reason = rule_reason or "no_rule_match"
-
-        redirect_url = campaign.fallback_url or campaign.safe_page_url or "/decoy"
-        destination_url = redirect_url
     # -------------------------------------------------
     # FALLBACK (only if no offer selected)
     # -------------------------------------------------
@@ -1528,15 +1554,13 @@ async def redirect_campaign(
     # print("🔥 BOT:", visitor.is_bot)
     if decision == "blocked":
 
-        # print("🚫 FINAL BLOCK EXECUTED")
-
-        # 🔥 ALWAYS FORCE SAFE URL (NO LEAK)
         safe_url = campaign.safe_page_url or "/decoy"
 
-        if is_bot_traffic or visitor.is_datacenter:
-            return RedirectResponse(campaign.bot_url or safe_url)
-
-        return RedirectResponse(safe_url)
+        # ❌ DO NOT RETURN HERE
+        redirect_url = (
+            campaign.bot_url if (is_bot_traffic or visitor.is_datacenter) else safe_url
+        )
+        destination_url = redirect_url
 
     # -------------------------------------------------
     # OFFER REDIRECT MODES
@@ -1634,11 +1658,19 @@ async def redirect_campaign(
         #         return RedirectResponse(
         #             redirect_url or campaign.fallback_url or "/decoy"
         #         )
-
+    # 🔥 WHITELIST OVERRIDE (GLOBAL)
+    # if getattr(visitor, "is_whitelisted", False):
+    #     print("🟢 WHITELIST GLOBAL BYPASS")
+    #     visitor.is_datacenter = False
+    #     visitor.is_suspicious = False
+    #     is_blocked_final = False
+    #     decision = "offer"
+    #     rule_reason = "whitelist_override"
     # =========================================
     # 🔥 FINAL BLOCK LOCK (FAST + SAFE)
     # =========================================
-    if is_blocked_final:
+    if is_blocked_final and not reason:
+        reason = "blocked_by_filter"
         # print("🚫 FINAL BLOCK LOCK ACTIVE")
 
         # 🔥 BOT → safe page
@@ -1649,5 +1681,7 @@ async def redirect_campaign(
         else:
             final_url = campaign.bot_url or campaign.safe_page_url or "/decoy"
 
-        return RedirectResponse(final_url)
+        # ❌ DON'T RETURN
+        redirect_url = final_url
+        destination_url = final_url
     return smart_redirect(redirect_url or campaign.fallback_url or "/decoy")

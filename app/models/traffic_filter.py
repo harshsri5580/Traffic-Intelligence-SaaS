@@ -11,5 +11,7 @@ class TrafficFilter(Base):
     category = Column(String, nullable=False)
     value = Column(String, nullable=False)
 
+    filter_type = Column(String(10), default="block")  # ✅ NEW
+
     is_active = Column(Boolean, default=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)

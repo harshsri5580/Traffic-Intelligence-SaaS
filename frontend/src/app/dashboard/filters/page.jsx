@@ -7,7 +7,9 @@ export default function FiltersPage() {
 
     const [filters, setFilters] = useState([]);
     const [value, setValue] = useState("");
+    const [statusFilter, setStatusFilter] = useState("all"); // all | block | allow
     const [category, setCategory] = useState("ip");
+    const [filterType, setFilterType] = useState("block"); // NEW
     const [form, setForm] = useState({ category: "domain", value: "" });
 
     useEffect(() => {
@@ -44,16 +46,33 @@ export default function FiltersPage() {
                 .replace(/^https?:\/\//, "")
                 .replace(/\/$/, "");
         }
+        // ❌ SAME VALUE CHECK (no duplicate)
+        const exists = filters.find(
+            f => f.category === category && f.value === val
+        );
 
+        if (exists) {
+            // ❌ same type
+            if (exists.filter_type === filterType) {
+                toast.error("Already exists");
+                return;
+            }
+
+            // ❌ conflict (block vs allow)
+            toast.error("Same value can't be in Block & Allow");
+            return;
+        }
         try {
             await api.post("/filters/", {
                 category,
-                value: val
+                value: val,
+                filter_type: filterType // NEW
             });
 
             toast.success(`${category.toUpperCase()} filter added`);
 
             setValue("");
+            setFilterType("block");
             loadFilters();
 
         } catch (err) {
@@ -75,7 +94,10 @@ export default function FiltersPage() {
         }
     };
 
-
+    const filteredData = filters.filter(f => {
+        if (statusFilter === "all") return true;
+        return f.filter_type === statusFilter;
+    });
 
     return (
 
@@ -94,7 +116,15 @@ export default function FiltersPage() {
             <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5 mb-8">
 
                 <div className="flex flex-wrap gap-3 items-center">
-
+                    <select
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                        className="px-3 py-2 rounded-lg border border-gray-300 text-sm shadow-sm"
+                    >
+                        <option value="all">All</option>
+                        <option value="block">Blocked </option>
+                        <option value="allow">Allowed </option>
+                    </select>
                     <select
                         value={category}
                         onChange={(e) => setCategory(e.target.value)}
@@ -106,11 +136,19 @@ export default function FiltersPage() {
                         <option value="isp">ISP</option>
                         <option value="ua">User Agent</option>
                     </select>
+                    <select
+                        value={filterType}
+                        onChange={(e) => setFilterType(e.target.value)}
+                        className="px-3 py-2 rounded-lg border border-gray-300 text-sm shadow-sm"
+                    >
+                        <option value="block">Block (Blacklist) </option>
+                        <option value="allow">Allow (Whitelist) </option>
+                    </select>
 
                     <input
                         value={value}
                         onChange={(e) => setValue(e.target.value)}
-                        placeholder="Enter value..."
+                        placeholder={`Enter ${category}...`}
                         className="flex-1 px-3 py-2 rounded-lg border border-gray-300 
                 text-sm shadow-sm focus:ring-2 focus:ring-indigo-500 outline-none"
                     />
@@ -130,7 +168,9 @@ export default function FiltersPage() {
 
             {/* TABLE CARD */}
             <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
-
+                <div className="px-4 py-2 text-sm text-gray-500">
+                    Showing {filteredData.length} filters
+                </div>
                 <div className="overflow-x-auto">
 
                     <table className="w-full text-sm">
@@ -154,50 +194,52 @@ export default function FiltersPage() {
                                         No filters added yet
                                     </td>
                                 </tr>
-                            ) : filters.map(f => (
 
-                                <tr key={f.id} className="border-t hover:bg-gray-50 transition">
+                            ) :
+                                filteredData.map(f => (
 
-                                    <td className="p-3 font-medium uppercase text-gray-700">
-                                        {f.category}
-                                    </td>
+                                    <tr key={f.id} className="border-t hover:bg-gray-50 transition">
 
-                                    <td className="p-3 font-mono text-xs text-gray-600 max-w-[250px] truncate">
-                                        {f.value}
-                                    </td>
+                                        <td className="p-3 font-medium uppercase text-gray-700">
+                                            {f.category}
+                                        </td>
 
-                                    <td className="p-3 text-center">
+                                        <td className="p-3 font-mono text-xs text-gray-600 max-w-[250px] truncate">
+                                            {f.value}
+                                        </td>
 
-                                        <span className={`inline-flex items-center justify-center
-                                w-[90px] h-[28px]
-                                text-xs font-medium rounded-full
-                                ${f.is_active
-                                                ? "bg-red-100 text-red-600"
-                                                : "bg-green-100 text-green-600"
-                                            }`}>
+                                        <td className="p-3 text-center">
 
-                                            {f.is_active ? "Blocked" : "Allowed"}
+                                            <span className={`inline-flex items-center justify-center
+    w-[90px] h-[28px]
+    text-xs font-medium rounded-full
+    ${f.filter_type === "allow"
+                                                    ? "bg-green-100 text-green-600"
+                                                    : "bg-red-100 text-red-600"
+                                                }`}>
 
-                                        </span>
+                                                {f.filter_type === "allow" ? "Allowed" : "Blocked"}
 
-                                    </td>
+                                            </span>
 
-                                    <td className="p-3 text-center">
+                                        </td>
 
-                                        <button
-                                            onClick={() => deleteFilter(f)}
-                                            className="px-3 py-1 text-xs rounded-lg
+                                        <td className="p-3 text-center">
+
+                                            <button
+                                                onClick={() => deleteFilter(f)}
+                                                className="px-3 py-1 text-xs rounded-lg
                                     bg-red-50 text-red-600
                                     hover:bg-red-100 transition"
-                                        >
-                                            Delete
-                                        </button>
+                                            >
+                                                Delete
+                                            </button>
 
-                                    </td>
+                                        </td>
 
-                                </tr>
+                                    </tr>
 
-                            ))}
+                                ))}
 
                         </tbody>
 

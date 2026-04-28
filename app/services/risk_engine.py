@@ -28,7 +28,7 @@ class RiskEngine:
         # 🔥 ULTRA FAST PASS (ADSPECT LEVEL)
         try:
             if redis_client.get(f"fast_pass:{ip}"):
-                return getattr(self.visitor, "bot_score", 0)
+                return 0
         except Exception:
             pass
 
@@ -85,9 +85,8 @@ class RiskEngine:
         bot_score = getattr(self.visitor, "bot_score", 0) or 0
 
         # 🔥 HARD BOT BLOCK (NO ESCAPE)
-        if bot_score >= 85:
-            if getattr(self.visitor, "ip_type", "") != "residential":
-                return 100
+        if bot_score >= 85 and getattr(self.visitor, "signal_strength", 0) >= 2:
+            return 100
 
         elif bot_score >= 70:
             if getattr(self.visitor, "ip_type", "") != "residential":
@@ -113,7 +112,7 @@ class RiskEngine:
         # DATACENTER
         # ---------------------------------
         if getattr(self.visitor, "is_datacenter", False):
-            self.score += 70
+            self.score += 50
 
         # ---------------------------------
         # VPN / PROXY (SAFE CACHE)
@@ -134,13 +133,13 @@ class RiskEngine:
                     self.score += 100  # 🔥 HARD BLOCK
 
                 if vpn_info.get("is_vpn"):
-                    self.score += 60  # 🔥 strong
+                    self.score += 35  # 🔥 strong
 
                 if vpn_info.get("is_proxy"):
-                    self.score += 60  # 🔥 strong
+                    self.score += 50  # 🔥 strong
 
                 if vpn_info.get("is_residential_proxy"):
-                    self.score += 70  # 🔥 MOST IMPORTANT
+                    self.score += 60  # 🔥 MOST IMPORTANT
 
         except Exception:
             pass
@@ -283,6 +282,32 @@ class RiskEngine:
         except Exception:
             pass
 
+        # ================================
+        # 🔥 CONFIDENCE SYSTEM
+        # ================================
+
+        signals = 0
+
+        if getattr(self.visitor, "is_datacenter", False):
+            signals += 1
+        if getattr(self.visitor, "is_proxy", False):
+            signals += 1
+        if getattr(self.visitor, "is_vpn", False):
+            signals += 1
+        if getattr(self.visitor, "is_tor", False):
+            signals += 1
+        if getattr(self.visitor, "is_automation", False):
+            signals += 1
+        if getattr(self.visitor, "bot_score", 0) > 70:
+            signals += 1
+
+        # 🔥 weak signal → reduce
+        if signals <= 1 and self.score < 80:
+            self.score *= 0.6
+
+        # 🔥 strong signal → boost
+        if signals >= 3:
+            self.score += 15
         # ---------------------------------
         # NORMALIZE
         # ---------------------------------
@@ -318,15 +343,19 @@ class RiskEngine:
             pass
         # 🔥 FINAL RESIDENTIAL PROTECTION (YAHI ADD KARO)
         try:
+            # ================================
+            # 🔥 REAL USER HARD PROTECTION
+            # ================================
+
             if getattr(self.visitor, "ip_type", "") == "residential":
                 if (
                     not getattr(self.visitor, "is_vpn", False)
                     and not getattr(self.visitor, "is_proxy", False)
                     and not getattr(self.visitor, "is_datacenter", False)
+                    and not getattr(self.visitor, "is_automation", False)
                 ):
-
-                    if self.score < 80:
-                        self.score *= 0.7
+                    if self.score < 70:
+                        self.score *= 0.5
         except Exception:
             pass
 

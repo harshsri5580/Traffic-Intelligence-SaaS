@@ -11,3 +11,4 @@ from app.models.system_log import SystemLog
 from app.models.traffic_filter import TrafficFilter
 from app.models.traffic_source import TrafficSource
 from app.models.plan import Plan
+from .whitelist_rule import WhitelistRule

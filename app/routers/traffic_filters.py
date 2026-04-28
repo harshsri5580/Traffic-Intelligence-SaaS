@@ -12,6 +12,7 @@ router = APIRouter(prefix="/filters", tags=["Traffic Filters"])
 class FilterCreate(BaseModel):
     category: str
     value: str
+    filter_type: str = "block"
 
 
 # GET ALL FILTERS
@@ -49,15 +50,33 @@ def add_filter(
     )
 
     if existing:
-        return existing  # already exists → no duplicate
+        if existing.filter_type == data.filter_type:
+            return existing  # same → ignore
+
+        # ❌ conflict block vs allow
+        raise HTTPException(
+            status_code=400,
+            detail="Same value can't be in Block & Allow",
+        )  # already exists → no duplicate
 
     # ✅ create new
     f = TrafficFilter(
         category=data.category,
         value=clean_value,
+        filter_type=data.filter_type,  # ✅ ADD
         is_active=True,
         user_id=current_user.id,
     )
+
+    # 🔥 AUTO SYNC WITH BlockedIP (ONLY FOR BLOCK)
+    if data.category == "ip" and data.filter_type == "block":
+
+        exists_block = (
+            db.query(BlockedIP).filter(BlockedIP.ip_address == clean_value).first()
+        )
+
+        if not exists_block:
+            db.add(BlockedIP(ip_address=clean_value))
 
     db.add(f)
     db.commit()

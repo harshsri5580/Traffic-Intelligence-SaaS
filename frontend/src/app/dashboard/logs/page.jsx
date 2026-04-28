@@ -13,6 +13,7 @@ export default function LogsPage() {
   const blockedReasons = ["bot_detected", "fallback", "safe_page", "fraud_traffic"];
   const [loading, setLoading] = useState(true);
   const [blockedIPs, setBlockedIPs] = useState([]);
+  const MAX_LOGS = 15000;
   const [totalCount, setTotalCount] = useState(0);
   const [pageLoading, setPageLoading] = useState(false);
   const [filters, setFilters] = useState({
@@ -134,7 +135,8 @@ export default function LogsPage() {
 
       setBlockedIPs(blockedRes.data.ips || []);
       setLogs(logsRes.data.logs || []);
-      setTotalCount(logsRes.data.total || 0);
+      const backendTotal = logsRes.data.total || 0;
+      setTotalCount(Math.min(backendTotal, MAX_LOGS));
       setCampaigns(campaignsRes.data || []);
 
     } catch (err) {
@@ -236,10 +238,9 @@ export default function LogsPage() {
 
   // const currentLogs = filteredLogs.slice(indexOfFirstRow, indexOfLastRow);
 
-  const totalPages = Math.min(
-    Math.ceil(totalCount / rowsPerPage),
-    500
-  );
+  const totalPages = Math.ceil(totalCount / rowsPerPage);
+  const start = totalCount === 0 ? 0 : (currentPage - 1) * rowsPerPage + 1;
+  const end = Math.min(currentPage * rowsPerPage, totalCount);
 
   if (loading && logs.length === 0) {
     return (
@@ -514,7 +515,7 @@ ${log.status === "offer"
 ${log.risk_score >= 70 ? "bg-red-500/10 text-red-400 border border-red-500/20" :
                               log.risk_score >= 40 ? "bg-yellow-100 text-yellow-700" :
                                 "bg-green-100 text-green-700 border border-green-500/20"}`}>
-                            {log.risk_score ?? 0}
+                            {Math.min(log.risk_score ?? 0, 100)}
                           </span>
                         </td>
                       )}
@@ -630,16 +631,17 @@ transition shadow-sm hover:shadow"
 
       <div className="flex justify-between items-center mt-4 px-2 flex-wrap gap-2">
 
-        <div className="text-sm text-gray-800">
-          Showing <span className="font-medium">
-            {(currentPage - 1) * rowsPerPage + 1}
-          </span>{" "}
-          –
-          <span className="font-medium">
-            {Math.min(currentPage * rowsPerPage, totalCount)}
-          </span>{" "}
-          of <span className="font-medium">{totalCount}</span>
-        </div>
+        {totalCount === 0 ? (
+          <div className="text-sm text-gray-500">
+            No logs available
+          </div>
+        ) : (
+          <div className="text-sm text-gray-800">
+            Showing <span className="font-medium">{start}</span> –{" "}
+            <span className="font-medium">{end}</span> of{" "}
+            <span className="font-medium">{totalCount}</span>
+          </div>
+        )}
 
         <div className="flex items-center gap-2">
 
@@ -660,7 +662,7 @@ transition shadow-sm hover:shadow"
           </span>
 
           <button
-            disabled={pageLoading || currentPage === totalPages || currentPage >= 500}
+            disabled={pageLoading || currentPage === totalPages || currentPage >= totalPages}
             onClick={() => {
               if (pageLoading) return; // extra safety
               setCurrentPage(p => p + 1);

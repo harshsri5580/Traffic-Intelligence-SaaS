@@ -583,6 +583,8 @@ export default function Dashboard() {
       green: "from-green-500 to-emerald-500",
       red: "from-red-500 to-pink-500",
     };
+    {/* 🔴 Expired */ }
+
 
     return (
       <div className="w-full bg-gray-200/70 h-2.5 rounded-full overflow-hidden">
@@ -593,6 +595,7 @@ export default function Dashboard() {
       </div>
     );
   };
+
 
   return (
 
@@ -614,7 +617,22 @@ export default function Dashboard() {
         </h1>
         {/* 🟢 FREE TRIAL ACTIVE */}
 
+        {
+          hasSubscription && expired && (
+            <div className="bg-red-50 border border-red-300 text-red-800 px-6 py-3 rounded text-center font-medium">
+              🚫 Your plan has expired. Upgrade now.
+            </div>
+          )
+        }
 
+        {/* ⚠️ Expiring soon */}
+        {
+          hasSubscription && daysLeft > 0 && daysLeft <= 3 && (
+            <div className="bg-yellow-50 border border-yellow-300 text-yellow-800 px-6 py-3 rounded text-center font-medium">
+              ⚠️ Your plan is expiring in {daysLeft} days. Upgrade now.
+            </div>
+          )
+        }
         {advancedProfit && (
           <div className="space-y-6">
 
@@ -758,29 +776,6 @@ export default function Dashboard() {
           </div>
         )}
 
-
-
-
-        {/* 🔴 Expired */}
-        {hasSubscription && expired && (
-          <div className="bg-red-50 border border-red-300 text-red-800 px-6 py-3 rounded text-center font-medium">
-            🚫 Your plan has expired. Upgrade now.
-          </div>
-        )}
-
-        {/* ⚠️ Expiring soon */}
-        {hasSubscription && daysLeft > 0 && daysLeft <= 3 && (
-          <div className="bg-yellow-50 border border-yellow-300 text-yellow-800 px-6 py-3 rounded text-center font-medium">
-            ⚠️ Your plan is expiring in {daysLeft} days. Upgrade now.
-          </div>
-        )}
-
-        {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-
-
-         
-
-        </div> */}
 
 
 

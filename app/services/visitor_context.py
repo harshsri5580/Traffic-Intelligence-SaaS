@@ -546,7 +546,7 @@ class VisitorContext:
             self.connection_type = "datacenter"
             self.ip_type = "datacenter"
 
-            self.bot_score += 40  # 🔥 increase
+            self.bot_score += 30  # 🔥 increase
             self.reasons.append("datacenter_ip")
 
         # ================================
@@ -581,11 +581,11 @@ class VisitorContext:
             self.reasons.append("tor_network")
 
         elif self.is_proxy:
-            self.bot_score += 50
+            self.bot_score = max(self.bot_score, 70)
             self.reasons.append("proxy_network")
 
         elif self.is_datacenter:
-            self.bot_score += 60
+            self.bot_score = max(self.bot_score, 60)
             self.reasons.append("datacenter_network")
         # ================================
         # 🔥 UNKNOWN NETWORK BOOST (ADD HERE)
@@ -615,6 +615,20 @@ class VisitorContext:
             ):
                 if self.bot_score < 70:
                     self.bot_score *= 0.7
+
+        # ================================
+        # 🔥 REAL USER HARD PROTECTION
+        # ================================
+
+        if (
+            self.connection_type == "residential"
+            and not self.is_vpn
+            and not self.is_proxy
+            and not self.is_datacenter
+            and not self.is_automation
+        ):
+            if self.bot_score < 60:
+                self.bot_score *= 0.5
         # ================================
         # TRAFFIC SOURCE
         # ================================
@@ -877,7 +891,36 @@ class VisitorContext:
         ]
 
         if self.isp and any(t in self.isp.lower() for t in trusted_isp):
-            self.bot_score -= 20
+            self.bot_score -= 30
+
+        # ================================
+        # 🔥 CONFIDENCE SYSTEM (VERY IMPORTANT)
+        # ================================
+
+        signals = 0
+
+        if self.is_datacenter:
+            signals += 1
+        if self.is_proxy:
+            signals += 1
+        if self.is_vpn:
+            signals += 1
+        if self.is_tor:
+            signals += 1
+        if self.is_automation:
+            signals += 1
+        if self.bot_score > 70:
+            signals += 1
+
+        self.signal_strength = signals
+
+        # 🔥 weak signal → reduce score
+        if signals <= 1 and self.bot_score < 80:
+            self.bot_score *= 0.7
+
+        # 🔥 strong signal → boost
+        if signals >= 3:
+            self.bot_score += 15
         # ================================
         # FINAL BOT SCORE
         # ================================
@@ -945,8 +988,14 @@ class VisitorContext:
         ).hexdigest()
 
         # 🔥 SESSION VARIATION
-        session_seed = hash(self.session_fingerprint) % 10
-        self.bot_score += session_seed
+        # session_seed = hash(self.session_fingerprint) % 10
+        # self.bot_score += session_seed
+        # ================================
+        # 🔥 FINAL SAFETY CHECK
+        # ================================
+
+        if self.signal_strength <= 1 and self.bot_score > 70:
+            self.bot_score = 55  # 🔥 avoid false block
 
         # =========================================
         # 🔥 FINAL BOT SCORE NORMALIZATION (FINAL STEP)

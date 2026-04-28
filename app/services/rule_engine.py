@@ -36,7 +36,9 @@ class RuleEngine:
         )
 
         # print("TOTAL RULES:", len(rules))
-
+        # 🔥 WHITELIST CHECK (ADD THIS BLOCK)
+        if hasattr(self.visitor, "is_whitelisted") and self.visitor.is_whitelisted:
+            return None, "whitelisted"
         # 🔥 calculate risk once
         self._risk_score = self._get_risk_score()
         last_fail_reason = None
