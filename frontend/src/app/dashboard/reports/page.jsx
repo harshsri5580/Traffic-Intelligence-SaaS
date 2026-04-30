@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import api from "../../../services/api"; // ✅ IMPORTANT
+import api from "../../../services/api";
 
 export default function ReportsPage() {
 
@@ -9,6 +9,10 @@ export default function ReportsPage() {
     const [loading, setLoading] = useState(true);
     const [deleting, setDeleting] = useState(null);
     const [error, setError] = useState("");
+
+    // 🔥 SAFE API BASE (NO UNDEFINED BUG)
+    const API_BASE =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
     useEffect(() => {
         load();
@@ -20,7 +24,7 @@ export default function ReportsPage() {
     const load = async () => {
         try {
             setError("");
-            const res = await api.get("/reports"); // ✅ no hardcoded URL
+            const res = await api.get("/reports");
             setFiles(res.data.reports || []);
         } catch (err) {
             console.error("Failed to load reports", err);
@@ -30,17 +34,35 @@ export default function ReportsPage() {
         }
     };
 
+    const downloadFile = async (file) => {
+        try {
+            const res = await api.get(`/reports/download/${file}`, {
+                responseType: "blob", // 🔥 important
+            });
+
+            const url = window.URL.createObjectURL(new Blob([res.data]));
+            const link = document.createElement("a");
+            link.href = url;
+            link.setAttribute("download", file);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        } catch (err) {
+            console.error("Download failed", err);
+            alert("Download failed (auth issue?)");
+        }
+    };
+
     // ===============================
     // 🗑 DELETE REPORT
     // ===============================
     const handleDelete = async (file) => {
-
         if (!confirm(`Delete ${file}?`)) return;
 
         try {
             setDeleting(file);
 
-            await api.delete(`/reports/delete/${file}`); // ✅ auth safe
+            await api.delete(`/reports/delete/${file}`);
 
             // UI update
             setFiles(prev => prev.filter(f => f !== file));
@@ -102,12 +124,14 @@ export default function ReportsPage() {
                         {/* ACTIONS */}
                         <div className="flex gap-2 flex-shrink-0">
 
-                            {/* DOWNLOAD */}
+                            {/* ✅ DOWNLOAD FIX */}
                             <a
-                                href={`${process.env.NEXT_PUBLIC_API_URL}/api/reports/download/${f}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm transition"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    downloadFile(f);
+                                }}
+                                href="#"
+                                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm cursor-pointer"
                             >
                                 Download
                             </a>

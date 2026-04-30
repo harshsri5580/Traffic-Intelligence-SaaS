@@ -16,7 +16,7 @@ redis_client = redis.from_url(os.getenv("REDIS_URL"))
 # =========================
 # CLICKHOUSE
 # =========================
-clickhouse = get_client(host="localhost", port=8123)
+clickhouse = get_client(host="clickhouse", port=8123)
 
 batch = []
 

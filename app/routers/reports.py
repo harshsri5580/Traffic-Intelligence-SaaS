@@ -43,11 +43,11 @@ def download_report(filename: str, current_user=Depends(get_current_user)):
 
     user_id = current_user.id
 
-    # 🔒 ownership check
+    # 🔥 ensure user only accesses own file
     if not filename.startswith(f"user_{user_id}_"):
-        raise HTTPException(status_code=403, detail="Not allowed")
+        raise HTTPException(status_code=403, detail="Unauthorized")
 
-    path = get_safe_path(filename)
+    path = os.path.join(REPORT_DIR, filename)
 
     if not os.path.exists(path):
         raise HTTPException(status_code=404, detail="File not found")

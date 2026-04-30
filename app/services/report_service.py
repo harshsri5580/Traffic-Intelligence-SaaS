@@ -3,7 +3,7 @@ import os
 import zipfile
 from datetime import datetime, timedelta
 from collections import defaultdict
-
+from app.models.campaign import Campaign
 from app.models.click_log import ClickLog
 
 REPORT_DIR = "reports"
@@ -18,6 +18,19 @@ def generate_user_report(db, user_id):
         .filter(ClickLog.user_id == user_id, ClickLog.created_at >= cutoff)
         .all()
     )
+    # 🔥 Campaign ID → Name mapping (FAST + SAFE)
+    campaign_ids = {l.campaign_id for l in logs if l.campaign_id}
+
+    campaign_map = {}
+
+    if campaign_ids:
+        campaigns = (
+            db.query(Campaign.id, Campaign.name)
+            .filter(Campaign.id.in_(campaign_ids))
+            .all()
+        )
+
+        campaign_map = {c.id: c.name for c in campaigns}
 
     # ===============================
     # 🔥 AGGREGATIONS
@@ -36,6 +49,7 @@ def generate_user_report(db, user_id):
     # ===============================
     for l in logs:
         cid = getattr(l, "campaign_id", "unknown")
+        cname = campaign_map.get(cid, f"Campaign-{cid}")
         country = getattr(l, "country_code", "unknown") or "unknown"
         device = getattr(l, "device", "unknown") or "unknown"
 
@@ -45,12 +59,12 @@ def generate_user_report(db, user_id):
         is_blocked = getattr(l, "blocked", False)
 
         # -------- Campaign --------
-        campaign_summary[cid]["clicks"] += 1
-        campaign_summary[cid]["revenue"] += revenue
-        campaign_summary[cid]["cost"] += cost
+        campaign_summary[cname]["clicks"] += 1
+        campaign_summary[cname]["revenue"] += revenue
+        campaign_summary[cname]["cost"] += cost
 
         if is_blocked:
-            campaign_summary[cid]["blocked"] += 1
+            campaign_summary[cname]["blocked"] += 1
 
         # -------- Country --------
         country_summary[country]["clicks"] += 1
@@ -80,7 +94,7 @@ def generate_user_report(db, user_id):
         writer.writerow(["Campaign Summary"])
         writer.writerow(["Campaign", "Clicks", "Revenue", "Cost", "Profit", "Blocked"])
 
-        for cid, data in sorted(campaign_summary.items()):
+        for cname, data in sorted(campaign_summary.items()):
             profit = data["revenue"] - data["cost"]
 
             writer.writerow(
