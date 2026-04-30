@@ -2,7 +2,7 @@ import json
 import redis
 import os
 import time
-
+from datetime import datetime
 from app.models import *
 from app.services.analytics import update_daily_stats
 
@@ -11,12 +11,12 @@ from clickhouse_connect import get_client
 # =========================
 # REDIS
 # =========================
-redis_client = redis.from_url(os.getenv("REDIS_URL"))
+redis_client = redis.from_url(os.getenv("REDIS_URL", "redis://localhost:6379/0"))
 
 # =========================
 # CLICKHOUSE
 # =========================
-clickhouse = get_client(host="clickhouse", port=8123)
+clickhouse = get_client(host=os.getenv("CLICKHOUSE_HOST", "localhost"), port=8123)
 
 batch = []
 
@@ -55,7 +55,7 @@ while True:
                 "cost": float(data.get("cost", 0) or 0),
                 "is_bot": int(data.get("is_bot", 0)),
                 "is_proxy": int(data.get("is_proxy", 0)),
-                "created_at": data.get("created_at"),
+                "created_at": data.get("created_at") or datetime.utcnow(),
             }
         )
 
@@ -63,7 +63,11 @@ while True:
         # 3. BATCH INSERT (IMPORTANT)
         # =========================
         if len(batch) >= 1000:
-            clickhouse.insert("traffic.click_logs", batch)
+            try:
+                clickhouse.insert("traffic.click_logs", batch)
+                batch.clear()
+            except Exception as e:
+                print("❌ ClickHouse insert failed:", e)
             batch.clear()
 
     except Exception as e:
@@ -72,5 +76,15 @@ while True:
     # =========================
     # 4. SAFETY FLUSH
     # =========================
-    if len(batch) > 0 and len(batch) < 1000:
+    if len(batch) >= 1000:
+        clickhouse.insert("traffic.click_logs", batch)
+        batch.clear()
+
+    # 🔥 idle flush (important)
+    elif len(batch) > 0:
         time.sleep(0.01)
+
+        # flush if queue empty
+        if redis_client.llen("click_queue") == 0:
+            clickhouse.insert("traffic.click_logs", batch)
+            batch.clear()
