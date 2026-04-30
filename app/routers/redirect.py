@@ -55,8 +55,7 @@ from fastapi.responses import HTMLResponse
 
 
 def smart_redirect(url: str):
-    return HTMLResponse(
-        f"""
+    return HTMLResponse(f"""
     <html>
       <head>
         <meta name="referrer" content="unsafe-url">
@@ -66,8 +65,7 @@ def smart_redirect(url: str):
         </script>
       </head>
     </html>
-    """
-    )
+    """)
 
 
 def set_decision(current, new):
@@ -169,7 +167,20 @@ async def redirect_campaign(
 
     visitor = VisitorContext(request)
     # 🔥 EARLY EXIT (SUPER IMPORTANT)
-    if visitor.is_bot and visitor.bot_score > 90:
+    if visitor.is_bot and visitor.bot_score > 85:
+        try:
+            push_click(
+                {
+                    "user_id": campaign.user_id if campaign else 0,
+                    "campaign_id": campaign.id if campaign else 0,
+                    "decision": "blocked",
+                    "is_bot": 1,
+                    "created_at": datetime.utcnow().isoformat(),
+                }
+            )
+        except:
+            pass
+
         return RedirectResponse("/decoy")
 
     # ✅ DEBUG + FIX (yahi jagah correct hai)
@@ -215,12 +226,12 @@ async def redirect_campaign(
     # print("🔥 XFF:", forwarded_for)
     # print("🔥 CF-IP:", cf_ip)
     # print("🔥 FINAL IP:", ip)
-    print("🌍 REAL IP:", ip)
+    # print("🌍 REAL IP:", ip)
     # 🔥 REDIS TEST
-    try:
-        print("🔥 REDIS TEST:", redis_client.ping())
-    except Exception as e:
-        print("❌ REDIS ERROR:", e)
+    # try:
+    #     print("🔥 REDIS TEST:", redis_client.ping())
+    # except Exception as e:
+    #     print("❌ REDIS ERROR:", e)
 
     # print("🔥 Clean IP:", ip)
     # 🔥 DEFINE REAL NAVIGATION (FIX)
@@ -382,12 +393,12 @@ async def redirect_campaign(
             challenge_pass = False  # 🔥 TEMP FIX (NO LOOP, NO BLOCK)
     except Exception:
         challenge_pass = False
-    print("IP:", ip)
+    # print("IP:", ip)
     try:
         val = redis_client.get(f"challenge_pass:{ip}")
-        print("CHALLENGE KEY:", val)
+        # print("CHALLENGE KEY:", val)
     except Exception as e:
-        print("REDIS ERROR:", e)
+        # print("REDIS ERROR:", e)
         val = None
     # print("🔥 DEBUG CHALLENGE CHECK")
     # print("bot_score:", visitor.bot_score)

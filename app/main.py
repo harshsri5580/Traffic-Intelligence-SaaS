@@ -180,7 +180,7 @@ app.include_router(challenge.router)
 app.include_router(decoy.router)
 app.include_router(tools.router, prefix="/api")
 app.include_router(behavior.router, prefix="/api/behavior")
-app.include_router(reports.router, prefix="/api")
+
 
 # ===============================
 # ROOT ENDPOINT

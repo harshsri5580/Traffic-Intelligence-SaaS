@@ -695,6 +695,30 @@ class VisitorContext:
             self.bot_score += 40
 
         # ================================
+        # 🔥 UNKNOWN BOT DETECTION (SAFE)
+        # ================================
+
+        suspicion = 0
+
+        if not self.browser:
+            suspicion += 1
+
+        if not self.language:
+            suspicion += 1
+
+        if not self.os:
+            suspicion += 1
+
+        if self.device_type == "desktop" and "mobile" in self.user_agent_string.lower():
+            suspicion += 1
+
+        # 🔥 apply only if already suspicious
+        if suspicion >= 2 and self.signal_strength >= 1:
+            self.is_bot = True
+            self.bot_score += 25
+            self.reasons.append("unknown_bot_pattern")
+
+        # ================================
         # ADVANCED FINGERPRINT (ADSPECT+)
         # ================================
 
@@ -724,6 +748,29 @@ class VisitorContext:
                     },
                 )
                 redis_client.expire(f"fingerprint:{self.ip}", 3600)
+        except Exception:
+            pass
+
+        # ================================
+        # 🔥 RESIDENTIAL PROXY DETECTION
+        # ================================
+
+        try:
+            if self.full_fingerprint:
+
+                key = f"fp_ip_mix:{self.full_fingerprint}"
+
+                redis_client.sadd(key, self.ip)
+                redis_client.expire(key, 300)
+
+                total_ips = redis_client.scard(key)
+
+                # 🔥 multiple IPs for same fingerprint
+                if total_ips > 3 and self.signal_strength >= 1:
+                    self.is_proxy = True
+                    self.bot_score += 20
+                    self.reasons.append("res_proxy_rotation")
+
         except Exception:
             pass
 

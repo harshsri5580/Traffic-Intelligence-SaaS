@@ -11,10 +11,7 @@ from app.services.report_service import generate_user_report
 from app.tasks.subscription_tasks import expire_subscriptions
 
 
-# ===============================
-# 🔥 GENERATE ALL USER REPORTS
-# ===============================
-def generate_all_reports():
+def daily_report_and_cleanup():
     db = SessionLocal()
 
     try:
@@ -27,22 +24,7 @@ def generate_all_reports():
             except Exception as e:
                 print(f"❌ Report failed for user {user.id}:", e)
 
-        db.commit()
-
-    except Exception as e:
-        print("❌ Error in generate_all_reports:", e)
-
-    finally:
-        db.close()
-
-
-# ===============================
-# 🧹 CLEAN OLD LOGS (7 DAYS)
-# ===============================
-def clean_old_logs():
-    db = SessionLocal()
-
-    try:
+        # 🔥 ALWAYS AFTER REPORT
         cutoff = datetime.utcnow() - timedelta(days=7)
 
         deleted = db.query(ClickLog).filter(ClickLog.created_at < cutoff).delete()
@@ -52,7 +34,7 @@ def clean_old_logs():
         print(f"🧹 Deleted {deleted} old logs")
 
     except Exception as e:
-        print("❌ Cleanup error:", e)
+        print("❌ Master job error:", e)
 
     finally:
         db.close()
@@ -83,18 +65,10 @@ def start_scheduler():
     )
 
     scheduler.add_job(
-        generate_all_reports,
+        daily_report_and_cleanup,
         "interval",
         hours=24,
-        id="generate_reports",
-        replace_existing=True,
-    )
-
-    scheduler.add_job(
-        clean_old_logs,
-        "interval",
-        hours=24,
-        id="clean_logs",
+        id="report_cleanup",
         replace_existing=True,
     )
 

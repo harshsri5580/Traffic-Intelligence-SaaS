@@ -255,6 +255,25 @@ class RiskEngine:
         except Exception:
             pass
 
+        # ================================
+        # 🔥 HUMAN BEHAVIOR CHECK (ADD HERE)
+        # ================================
+
+        try:
+            human_key = f"human_behavior:{ip}"
+
+            hits = redis_client.incr(human_key)
+
+            if hits == 1:
+                redis_client.expire(human_key, 10)
+
+            # 🔥 too fast = bot
+            if hits > 5 and getattr(self.visitor, "signal_strength", 0) >= 1:
+                self.score += 15
+
+        except Exception:
+            pass
+
         # ---------------------------------
         # RETURNING USER BONUS
         # ---------------------------------

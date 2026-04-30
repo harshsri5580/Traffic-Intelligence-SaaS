@@ -1,0 +1,37 @@
+version: "3.9"
+
+services:
+
+  api:
+    build: .
+    container_name: cloker_api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - clickhouse
+
+  worker:
+    build: .
+    container_name: cloker_worker
+    command: python worker.py
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - clickhouse
+
+  redis:
+    image: redis:7
+    container_name: cloker_redis
+    ports:
+      - "6379:6379"
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: cloker_clickhouse
+    ports:
+      - "8123:8123"
+      - "9000:9000"

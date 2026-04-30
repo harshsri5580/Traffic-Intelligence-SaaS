@@ -1,25 +1,33 @@
 import axios from "axios";
 
+// ✅ Clean base URL (no trailing slash)
 const cleanURL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
 
 const baseURL = cleanURL
   ? `${cleanURL}/api`
   : "http://127.0.0.1:8000/api";
 
+// ✅ Axios instance
 const api = axios.create({
   baseURL,
   timeout: 30000,
 });
 
 
-// ✅ Request interceptor (safe)
+// ===============================
+// 🔐 REQUEST INTERCEPTOR (SAFE)
+// ===============================
 api.interceptors.request.use(
   (config) => {
+
+    // ✅ ensure headers exists
+    config.headers = config.headers || {};
 
     if (typeof window !== "undefined") {
       const token = localStorage.getItem("token");
 
-      if (token) {
+      // ✅ attach only if valid
+      if (token && token !== "null" && token !== "undefined") {
         config.headers.Authorization = `Bearer ${token}`;
       }
     }
@@ -29,15 +37,24 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// ✅ Response interceptor (safe)
+
+// ===============================
+// 🚨 RESPONSE INTERCEPTOR (SAFE)
+// ===============================
 api.interceptors.response.use(
   (response) => response,
 
   (error) => {
 
+    // ✅ NETWORK ERROR (server down / no internet)
+    if (!error.response) {
+      console.error("Network error or server not reachable");
+      return Promise.reject(error);
+    }
+
+    // 🔐 UNAUTHORIZED (401)
     if (
       typeof window !== "undefined" &&
-      error.response &&
       error.response.status === 401
     ) {
       localStorage.removeItem("token");
