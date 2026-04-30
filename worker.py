@@ -3,9 +3,9 @@ import redis
 import os
 import time
 from datetime import datetime
+
 from app.models import *
 from app.services.analytics import update_daily_stats
-
 from clickhouse_connect import get_client
 
 # =========================
@@ -14,14 +14,27 @@ from clickhouse_connect import get_client
 redis_client = redis.from_url(os.getenv("REDIS_URL", "redis://localhost:6379/0"))
 
 # =========================
-# CLICKHOUSE
+# CLICKHOUSE (OPTIONAL SAFE)
 # =========================
-clickhouse = get_client(host=os.getenv("CLICKHOUSE_HOST", "localhost"), port=8123)
+clickhouse = None
 
+try:
+    clickhouse = get_client(host=os.getenv("CLICKHOUSE_HOST", "localhost"), port=8123)
+    print("✅ ClickHouse Connected")
+except Exception as e:
+    print("❌ ClickHouse Disabled:", e)
+
+# =========================
+# BATCH BUFFER
+# =========================
 batch = []
+BATCH_SIZE = 1000
 
 print("🚀 Worker started...")
 
+# =========================
+# MAIN LOOP
+# =========================
 while True:
     job = redis_client.brpop("click_queue", timeout=1)
 
@@ -60,31 +73,33 @@ while True:
         )
 
         # =========================
-        # 3. BATCH INSERT (IMPORTANT)
+        # 3. BATCH INSERT
         # =========================
-        if len(batch) >= 1000:
-            try:
-                clickhouse.insert("traffic.click_logs", batch)
-                batch.clear()
-            except Exception as e:
-                print("❌ ClickHouse insert failed:", e)
+        if len(batch) >= BATCH_SIZE:
+            if clickhouse:
+                try:
+                    clickhouse.insert("traffic.click_logs", batch)
+                except Exception as e:
+                    print("❌ ClickHouse insert failed:", e)
+
             batch.clear()
 
     except Exception as e:
         print("❌ WORKER ERROR:", e)
 
     # =========================
-    # 4. SAFETY FLUSH
+    # 4. IDLE FLUSH (VERY IMPORTANT)
     # =========================
-    if len(batch) >= 1000:
-        clickhouse.insert("traffic.click_logs", batch)
-        batch.clear()
+    if len(batch) > 0:
+        # short sleep (CPU बचाता है)
+        time.sleep(0.005)
 
-    # 🔥 idle flush (important)
-    elif len(batch) > 0:
-        time.sleep(0.01)
-
-        # flush if queue empty
+        # अगर queue empty है → flush कर दो
         if redis_client.llen("click_queue") == 0:
-            clickhouse.insert("traffic.click_logs", batch)
+            if clickhouse:
+                try:
+                    clickhouse.insert("traffic.click_logs", batch)
+                except Exception as e:
+                    print("❌ ClickHouse flush failed:", e)
+
             batch.clear()
