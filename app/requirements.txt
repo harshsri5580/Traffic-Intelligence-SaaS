@@ -11,19 +11,19 @@ clickhouse-connect==0.15.1
 python-dotenv==1.2.1
 
 pydantic==2.12.5
-
+beautifulsoup4==4.14.3
 passlib[bcrypt]==1.7.4
 python-jose==3.5.0
-python-slugify==8.0.4
-slowapi==0.1.9
 httpx==0.28.1
+slowapi==0.1.9
+python-slugify==8.0.4
 geoip2==5.2.0
 maxminddb==3.1.0
-beautifulsoup4==4.14.3
+
 apscheduler==3.11.2
 
 requests==2.32.5
 PyYAML==6.0.3
-
+bcrypt==4.0.1
 user-agents==2.2.0
 ua-parser==1.0.1
