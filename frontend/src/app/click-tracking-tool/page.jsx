@@ -13,7 +13,7 @@ export default function ClickTrackingPage() {
             {/* HERO */}
             <section className="py-24 text-center max-w-5xl mx-auto px-6">
                 <h1 className="text-5xl font-extrabold mb-6">
-                    Best Click Tracking Tool for Ads 🚀
+                    Best Click Tracking Tool for Ad 🚀
                 </h1>
 
                 <p className="text-gray-400 text-lg mb-8">
