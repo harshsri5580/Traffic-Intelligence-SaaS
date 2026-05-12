@@ -1491,21 +1491,21 @@ async def redirect_campaign(
 
             db.add(click)
 
-            asyncio.create_task(
-                asyncio.to_thread(
-                    push_click,
-                    {
-                        "campaign_id": campaign.id,
-                        "rule_id": matched_rule.id if matched_rule else None,
-                        "offer_id": selected_offer.id if selected_offer else None,
-                        "decision": decision,
-                        "ip": ip,
-                        "is_bot": visitor.is_bot,
-                    },
-                )
+            push_click(
+                {
+                    "campaign_id": campaign.id,
+                    "rule_id": matched_rule.id if matched_rule else None,
+                    "offer_id": selected_offer.id if selected_offer else None,
+                    "decision": decision,
+                    "ip": ip,
+                    "is_bot": visitor.is_bot,
+                }
             )
 
-            asyncio.create_task(asyncio.to_thread(db.commit))
+            try:
+                db.commit()
+            except:
+                db.rollback()
 
             # 🔥 ADD THIS HERE (ONLY HERE)
             try:
