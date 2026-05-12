@@ -25,6 +25,7 @@ export default function Sidebar({ collapsed, setCollapsed }) {
     { name: "Pricing", path: "/dashboard/pricing", icon: "dollar" },
     { name: "Settings", path: "/dashboard/settings", icon: "settings" },
     { name: "Docs", path: "/dashboard/docs", icon: "book" }, // 
+    { name: "Support", path: "/dashboard/support", icon: "support" },
   ];
 
   const isActive = (path) => {
@@ -71,6 +72,22 @@ export default function Sidebar({ collapsed, setCollapsed }) {
           <svg className={base} fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
             <path d="M20 22V6a2 2 0 0 0-2-2H6.5A2.5 2.5 0 0 0 4 6.5v13z" />
+          </svg>
+        );
+      case "support":
+        return (
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M18 10a6 6 0 10-12 0v4a2 2 0 002 2h1v-5H7v-1a5 5 0 0110 0v1h-2v5h1a2 2 0 002-2v-4z"
+            />
           </svg>
         );
       default:
