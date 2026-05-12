@@ -96,7 +96,7 @@ export default function ReportsPage() {
             {/* EMPTY */}
             {!loading && files.length === 0 && (
                 <div className="bg-gray-100 p-6 rounded-lg text-center text-gray-500">
-                    No reports available yet
+                    No reports available
                 </div>
             )}
 
