@@ -467,7 +467,9 @@ export default function Dashboard() {
           const roi = z.cost > 0 ? (((z.revenue - z.cost) / z.cost) * 100).toFixed(1) : 0;
           return (
             <div key={i} className="flex justify-between bg-gray-50 px-3 py-2 rounded-lg">
-              <span className="truncate text-gray-700">{z.campaign_name}</span>
+              <span className="truncate text-gray-700">
+                {z.zone_id || "Unknown Zone"}
+              </span>
               <span className={type === "good" ? "text-green-600" : "text-red-600"}>
                 {roi}%
               </span>
@@ -1365,7 +1367,7 @@ hover:scale-[1.01] transition duration-300">
       </p>
 
       <p className="text-2xl font-medium tracking-wider leading-tight">
-        {value || 0}
+        {value ?? 0}
       </p>
 
     </div>

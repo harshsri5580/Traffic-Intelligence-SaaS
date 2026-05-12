@@ -18,7 +18,6 @@ from sqlalchemy import case
 from sqlalchemy import Float
 from sqlalchemy import cast, Float
 
-
 router = APIRouter(prefix="/api/analytics", tags=["Analytics"])
 
 
@@ -177,6 +176,15 @@ def analytics_overview(
         .scalar()
     )
 
+    proxy = (
+        db.query(func.count(ClickLog.id))
+        .filter(
+            ClickLog.user_id == current_user.id,
+            func.lower(ClickLog.connection_type) == "proxy",
+        )
+        .scalar()
+    )
+
     datacenter = (
         db.query(func.count(ClickLog.id))
         .filter(
@@ -202,6 +210,7 @@ def analytics_overview(
         "blocked": blocked or 0,
         "bots": bots or 0,
         "vpn": vpn or 0,
+        "proxy": proxy or 0,
         "datacenter": datacenter or 0,
         "residential": residential or 0,
     }
@@ -368,9 +377,7 @@ def traffic_sources(
 @router.get("/offer-performance")
 def offer_performance(db: Session = Depends(get_db)):
 
-    rows = db.execute(
-        text(
-            """
+    rows = db.execute(text("""
 
 SELECT
     offers.name as offer_name,
@@ -389,9 +396,7 @@ ON offers.id = click_logs.offer_id
 
 GROUP BY click_logs.offer_id, offers.name
 
-"""
-        )
-    ).fetchall()
+""")).fetchall()
 
     result = []
 
@@ -755,7 +760,7 @@ def advanced_profit(
     # =====================
     alerts = []
 
-    profit = revenue - cost
+    profit = total_revenue - total_cost
 
     if profit != 0:
 
