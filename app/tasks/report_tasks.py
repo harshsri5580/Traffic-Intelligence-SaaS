@@ -25,7 +25,7 @@ def daily_report_and_cleanup():
                 print(f"❌ Report failed for user {user.id}:", e)
 
         # 🔥 ALWAYS AFTER REPORT
-        cutoff = datetime.utcnow() - timedelta(days=7)
+        cutoff = datetime.utcnow() - timedelta(days=14)
 
         deleted = db.query(ClickLog).filter(ClickLog.created_at < cutoff).delete()
 

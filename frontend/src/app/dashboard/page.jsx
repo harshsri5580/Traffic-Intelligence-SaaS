@@ -1245,8 +1245,11 @@ transition-all duration-200 disabled:opacity-50 transition"
                   {[
                     {
                       label: "Plan",
-                      value: 30 - daysLeft,
-                      max: 30,
+                      value:
+                        (plan?.plan?.duration_days || 30) - daysLeft,
+
+                      max:
+                        plan?.plan?.duration_days || 30,
                       display: expired
                         ? "Expired"
                         : daysLeft === 1

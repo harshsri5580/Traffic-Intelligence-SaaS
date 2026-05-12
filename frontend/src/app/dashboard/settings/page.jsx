@@ -24,6 +24,8 @@ export default function SettingsPage() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
 
   useEffect(() => {
 
@@ -337,21 +339,95 @@ export default function SettingsPage() {
 
         <div className="grid md:grid-cols-2 gap-4">
 
-          <input
-            type="password"
-            placeholder="Current Password"
-            className="input"
-            value={password.current_password}
-            onChange={(e) => setPassword({ ...password, current_password: e.target.value })}
-          />
+          <div className="relative">
+            <input
+              type={showCurrentPassword ? "text" : "password"}
+              placeholder="Current Password"
+              className="input pr-10"
+              value={password.current_password}
+              onChange={(e) =>
+                setPassword({
+                  ...password,
+                  current_password: e.target.value,
+                })
+              }
+            />
 
-          <input
-            type="password"
-            placeholder="New Password"
-            className="input"
-            value={password.new_password}
-            onChange={(e) => setPassword({ ...password, new_password: e.target.value })}
-          />
+            <button
+              type="button"
+              onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-5 h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                {showCurrentPassword ? (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13.875 18.825A10.05 10.05 0 0112 19c-5 0-9-7-9-7a17.3 17.3 0 014.38-4.94M9.88 9.88a3 3 0 104.24 4.24M6.1 6.1L18 18"
+                  />
+                ) : (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm6 0s-4 7-9 7-9-7-9-7 4-7 9-7 9 7 9 7z"
+                  />
+                )}
+              </svg>
+            </button>
+          </div>
+
+          <div className="relative">
+            <input
+              type={showNewPassword ? "text" : "password"}
+              placeholder="New Password"
+              className="input pr-10"
+              value={password.new_password}
+              onChange={(e) =>
+                setPassword({
+                  ...password,
+                  new_password: e.target.value,
+                })
+              }
+            />
+
+            <button
+              type="button"
+              onClick={() => setShowNewPassword(!showNewPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-5 h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                {showNewPassword ? (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13.875 18.825A10.05 10.05 0 0112 19c-5 0-9-7-9-7a17.3 17.3 0 014.38-4.94M9.88 9.88a3 3 0 104.24 4.24M6.1 6.1L18 18"
+                  />
+                ) : (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm6 0s-4 7-9 7-9-7-9-7 4-7 9-7 9 7 9 7z"
+                  />
+                )}
+              </svg>
+            </button>
+          </div>
 
         </div>
 

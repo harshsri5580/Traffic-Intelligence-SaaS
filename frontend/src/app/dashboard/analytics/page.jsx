@@ -151,6 +151,7 @@ export default function AnalyticsPage() {
     const deviceMap = {};
     const fraudMap = {
       vpn: 0,
+      proxy: 0,
       datacenter: 0,
       residential: 0
     };
@@ -171,9 +172,18 @@ export default function AnalyticsPage() {
         deviceMap[log.device_type] = (deviceMap[log.device_type] || 0) + 1;
       }
 
-      if (log.connection_type === "vpn") fraudMap.vpn++
-      else if (log.connection_type === "datacenter") fraudMap.datacenter++
-      else fraudMap.residential++
+      if (log.connection_type === "vpn") {
+        fraudMap.vpn++;
+      }
+      else if (log.connection_type === "proxy") {
+        fraudMap.proxy++;
+      }
+      else if (log.connection_type === "datacenter") {
+        fraudMap.datacenter++;
+      }
+      else {
+        fraudMap.residential++;
+      }
 
     });
 
@@ -304,7 +314,10 @@ export default function AnalyticsPage() {
             title="🌐 VPN"
             value={formatNumber(overview?.vpn || 0)}
           />
-
+          <StatCard
+            title="🛡️ Proxy"
+            value={formatNumber(overview?.proxy || 0)}
+          />
           <StatCard
             title="🏢 Datacenter"
             value={formatNumber(overview?.datacenter || 0)}

