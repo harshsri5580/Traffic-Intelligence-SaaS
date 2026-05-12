@@ -581,6 +581,9 @@ class VisitorContext:
             self.reasons.append("tor_network")
 
         elif self.is_proxy:
+            self.connection_type = "proxy"
+            self.ip_type = "proxy"
+
             self.bot_score = max(self.bot_score, 70)
             self.reasons.append("proxy_network")
 
