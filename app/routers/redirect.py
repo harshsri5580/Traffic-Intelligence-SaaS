@@ -741,7 +741,7 @@ async def redirect_campaign(
         # print("⛔ CAMPAIGN PAUSED")
 
         decision = "blocked"
-        reason = "campaign_paused"
+        reason = "Campaign Paused"
 
         redirect_url = campaign.safe_page_url or campaign.fallback_url or "/decoy"
         destination_url = redirect_url
@@ -1491,21 +1491,21 @@ async def redirect_campaign(
 
             db.add(click)
 
-            push_click(
-                {
-                    "campaign_id": campaign.id,
-                    "rule_id": matched_rule.id if matched_rule else None,
-                    "offer_id": selected_offer.id if selected_offer else None,
-                    "decision": decision,
-                    "ip": ip,
-                    "is_bot": visitor.is_bot,
-                }
+            asyncio.create_task(
+                asyncio.to_thread(
+                    push_click,
+                    {
+                        "campaign_id": campaign.id,
+                        "rule_id": matched_rule.id if matched_rule else None,
+                        "offer_id": selected_offer.id if selected_offer else None,
+                        "decision": decision,
+                        "ip": ip,
+                        "is_bot": visitor.is_bot,
+                    },
+                )
             )
 
-            try:
-                db.commit()
-            except:
-                db.rollback()
+            asyncio.create_task(asyncio.to_thread(db.commit))
 
             # 🔥 ADD THIS HERE (ONLY HERE)
             try:
