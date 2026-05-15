@@ -78,93 +78,157 @@ export default function AdminSystemPage() {
   };
 
   return (
-    <div>
+    <div className="min-h-screen bg-[#F3F4F6]">
 
-      <h1 className="text-3xl font-bold mb-8">
-        Admin Panel
-      </h1>
+      <div className="flex items-center justify-between mb-8">
 
-      {loading && <p>Loading...</p>}
+        <div>
+          <h1 className="text-4xl font-semibold tracking-tight text-[#111827]">
+            System Settings
+          </h1>
+
+          <p className="text-sm text-gray-500 mt-2">
+            Configure platform limits and administrator access
+          </p>
+        </div>
+
+        <div className="bg-white border border-gray-200 rounded-2xl px-4 py-2 text-sm font-medium text-gray-700 shadow-sm">
+          Core System Control
+        </div>
+
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+
+        <div className="bg-[#111827] rounded-[28px] px-6 py-5">
+
+          <div className="text-xs uppercase tracking-[0.18em] text-gray-400 mb-4">
+            Max Campaigns
+          </div>
+
+          <div className="text-3xl font-semibold text-white">
+            {settings.max_campaigns}
+          </div>
+
+        </div>
+
+        <div className="bg-white border border-gray-200 rounded-[28px] px-6 py-5 shadow-sm">
+
+          <div className="text-xs uppercase tracking-[0.18em] text-gray-400 mb-4">
+            Max Offers
+          </div>
+
+          <div className="text-3xl font-semibold text-[#111827]">
+            {settings.max_offers}
+          </div>
+
+        </div>
+
+        <div className="bg-white border border-gray-200 rounded-[28px] px-6 py-5 shadow-sm">
+
+          <div className="text-xs uppercase tracking-[0.18em] text-gray-400 mb-4">
+            Max Rules
+          </div>
+
+          <div className="text-3xl font-semibold text-[#111827]">
+            {settings.max_rules}
+          </div>
+
+        </div>
+
+      </div>
+      {loading && (
+        <div className="bg-white border border-gray-200 rounded-[28px] p-10 text-center text-gray-500 shadow-sm">
+          Loading system configuration...
+        </div>
+      )}
 
       {!loading && (
-        <div className="space-y-8">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
 
           {/* 🔐 ADMIN PROFILE */}
-          <div className="bg-white shadow rounded p-6 space-y-4">
-            <h2 className="text-xl font-semibold">
+          <div className="bg-white border border-gray-200 rounded-[28px] p-7 shadow-sm">
+            <h2 className="text-2xl font-semibold tracking-tight text-[#111827] mb-6">
               Admin Profile
             </h2>
 
             <div>
-              <label className="block text-sm mb-1">Email</label>
+              <label className="block text-sm font-medium text-gray-600 mb-2">Email</label>
               <input
-                className="border p-2 w-full rounded"
+                className="w-full h-12 bg-[#F9FAFB] border border-gray-200 rounded-2xl px-4 text-sm text-gray-700 outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="New email"
                 onChange={(e) => handleAdminChange("email", e.target.value)}
               />
             </div>
 
             <div>
-              <label className="block text-sm mb-1">New Password</label>
+              <label className="block text-sm font-medium text-gray-600 mb-2">New Password</label>
               <input
                 type="password"
-                className="border p-2 w-full rounded"
+                className="w-full h-12 bg-[#F9FAFB] border border-gray-200 rounded-2xl px-4 text-sm text-gray-700 outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="New password"
                 onChange={(e) => handleAdminChange("password", e.target.value)}
               />
             </div>
 
-            <button
-              onClick={updateAdmin}
-              className="bg-green-600 text-white px-4 py-2 rounded"
-            >
-              Update Admin
-            </button>
+            <div className="pt-4">
+
+              <button
+                onClick={updateAdmin}
+                className="h-12 px-5 rounded-2xl bg-[#111827] hover:bg-black transition-all text-white text-sm font-medium shadow-sm"
+              >
+                Update Admin
+              </button>
+
+            </div>
           </div>
 
           {/* ⚙ SYSTEM SETTINGS */}
-          <div className="bg-white shadow rounded p-6 space-y-4">
+          <div className="bg-white border border-gray-200 rounded-[28px] p-7 shadow-sm">
 
-            <h2 className="text-xl font-semibold">
+            <h2 className="text-2xl font-semibold tracking-tight text-[#111827] mb-6">
               System Settings
             </h2>
 
             <div>
-              <label className="block text-sm mb-1">Max Campaigns</label>
+              <label className="block text-sm font-medium text-gray-600 mb-2">Max Campaigns</label>
               <input
                 type="number"
-                className="border p-2 w-full rounded"
+                className="w-full h-12 bg-[#F9FAFB] border border-gray-200 rounded-2xl px-4 text-sm text-gray-700 outline-none focus:ring-2 focus:ring-blue-500"
                 value={settings.max_campaigns}
                 onChange={(e) => handleChange("max_campaigns", e.target.value)}
               />
             </div>
 
             <div>
-              <label className="block text-sm mb-1">Max Offers</label>
+              <label className="block text-sm font-medium text-gray-600 mb-2">Max Offers</label>
               <input
                 type="number"
-                className="border p-2 w-full rounded"
+                className="w-full h-12 bg-[#F9FAFB] border border-gray-200 rounded-2xl px-4 text-sm text-gray-700 outline-none focus:ring-2 focus:ring-blue-500"
                 value={settings.max_offers}
                 onChange={(e) => handleChange("max_offers", e.target.value)}
               />
             </div>
 
             <div>
-              <label className="block text-sm mb-1">Max Rules</label>
+              <label className="block text-sm font-medium text-gray-600 mb-2">Max Rules</label>
               <input
                 type="number"
-                className="border p-2 w-full rounded"
+                className="w-full h-12 bg-[#F9FAFB] border border-gray-200 rounded-2xl px-4 text-sm text-gray-700 outline-none focus:ring-2 focus:ring-blue-500"
                 value={settings.max_rules}
                 onChange={(e) => handleChange("max_rules", e.target.value)}
               />
             </div>
 
-            <button
-              onClick={saveSettings}
-              className="bg-blue-500 text-white px-4 py-2 rounded"
-            >
-              Save Settings
-            </button>
+            <div className="pt-4">
+
+              <button
+                onClick={saveSettings}
+                className="h-12 px-5 rounded-2xl bg-blue-600 hover:bg-blue-700 transition-all text-white text-sm font-medium shadow-sm"
+              >
+                Save Settings
+              </button>
+
+            </div>
 
           </div>
 

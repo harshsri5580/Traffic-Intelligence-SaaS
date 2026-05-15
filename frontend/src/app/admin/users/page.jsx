@@ -41,68 +41,83 @@ export default function AdminUsersPage() {
 
   };
 
-const deleteUser = async (id, status) => {
+  const deleteUser = async (id, status) => {
 
-  if (status) {
-    alert("❌ Block user first");
-    return;
-  }
-
-  if (!confirm("Delete this user?")) return;
-
-  try {
-    await api.delete(`/admin/user/${id}`);
-    loadUsers();
-  } catch (err) {
-    console.error("FULL ERROR:", err.response?.data || err);
-  }
-};
-
-const toggleUserStatus = async (user) => {
-  try {
-
-    if (user.status) {
-      await api.post(`/admin/user/${user.id}/block`);
-    } else {
-      await api.post(`/admin/user/${user.id}/unblock`);
+    if (status) {
+      alert("❌ Block user first");
+      return;
     }
 
-    // 🔥 instant UI update
-    setUsers(prev =>
-      prev.map(u =>
-        u.id === user.id ? { ...u, status: !user.status } : u
-      )
-    );
+    if (!confirm("Delete this user?")) return;
 
-  } catch (err) {
-    console.error("status error", err);
-  }
-};
+    try {
+      await api.delete(`/admin/user/${id}`);
+      loadUsers();
+    } catch (err) {
+      console.error("FULL ERROR:", err.response?.data || err);
+    }
+  };
+
+  const toggleUserStatus = async (user) => {
+    try {
+
+      if (user.status) {
+        await api.post(`/admin/user/${user.id}/block`);
+      } else {
+        await api.post(`/admin/user/${user.id}/unblock`);
+      }
+
+      // 🔥 instant UI update
+      setUsers(prev =>
+        prev.map(u =>
+          u.id === user.id ? { ...u, status: !user.status } : u
+        )
+      );
+
+    } catch (err) {
+      console.error("status error", err);
+    }
+  };
 
   return (
 
-    <div>
+    <div className="min-h-screen bg-[#F3F4F6]">
 
-      <h1 className="text-3xl font-bold mb-8">
-        Users
-      </h1>
+      <div className="flex items-center justify-between mb-8">
 
-      <div className="bg-white shadow rounded overflow-x-auto">
+        <div>
+          <h1 className="text-4xl font-semibold tracking-tight text-[#111827]">
+            Users
+          </h1>
 
-        <table className="w-full text-sm">
+          <p className="text-sm text-gray-500 mt-2">
+            Manage platform users and suspicious accounts
+          </p>
+        </div>
 
-          <thead className="bg-gray-100">
+        <div className="bg-white border border-gray-200 rounded-2xl px-4 py-2 text-sm font-medium text-gray-700 shadow-sm">
+          {users.length} Total Users
+        </div>
+
+      </div>
+
+      <div className="bg-white border border-gray-200 rounded-[28px] overflow-hidden shadow-sm">
+
+        <table className="w-full text-sm text-left">
+
+          <thead className="bg-[#F9FAFB] border-b border-gray-200">
 
             <tr>
-  <th className="p-3 border">ID</th>
-  <th className="p-3 border">Email</th>
-  <th className="p-3 border">Plan</th>
-  <th className="p-3 border">Status</th>
-  <th className="p-3 border">Campaigns</th>
-  <th className="p-3 border">Active</th>
-  <th className="p-3 border">Clicks</th>
-  <th className="p-3 border">Actions</th>
-</tr>
+              <th className="px-6 py-4 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">ID</th>
+              <th className="px-6 py-4 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">Email</th>
+              <th className="px-6 py-4 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">Plan</th>
+              <th className="px-6 py-4 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">Status</th>
+              <th className="px-6 py-4 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">Campaigns</th>
+              <th className="px-6 py-4 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">Active</th>
+              <th className="px-6 py-4 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">IP</th>
+              <th className="px-6 py-4 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">Clicks</th>
+              <th className="px-6 py-4 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">Actions</th>
+            </tr>
 
           </thead>
 
@@ -111,7 +126,7 @@ const toggleUserStatus = async (user) => {
             {loading && (
 
               <tr>
-                <td colSpan="8" className="text-center p-6">
+                <td colSpan="9" className="text-center py-12 text-gray-500">
                   Loading users...
                 </td>
               </tr>
@@ -120,63 +135,67 @@ const toggleUserStatus = async (user) => {
 
             {!loading && users.map((user) => (
 
-              <tr key={user.id} className="text-center">
+              <tr
+                key={user.id}
+                className="border-b border-gray-100 hover:bg-gray-50 transition-all"
+              >
 
-                <td className="p-2 border">
+                <td className="px-6 py-5 text-gray-700">
                   {user.id}
                 </td>
 
-                <td className="p-2 border">
+                <td className="px-6 py-5 font-medium text-[#111827]">
                   {user.email}
                 </td>
 
-                <td className="p-2 border">
+                <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-medium">
                   {user.plan || "free"}
+                </span>
+
+                <td className="px-6 py-5 text-gray-700">
+                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${user.status ? "bg-green-500" : "bg-red-500"
+                    }`}>
+                    {user.status ? "Active" : "Disabled"}
+                  </span>
                 </td>
 
-                <td className="p-2 border">
-                  <span className={`px-2 py-1 rounded text-white text-xs ${
-  user.status ? "bg-green-500" : "bg-red-500"
-}`}>
-  {user.status ? "Active" : "Disabled"}
-</span>
+                <td className="px-6 py-5 text-gray-700">
+                  {user.campaigns || 0}
                 </td>
 
-<td className="p-2 border">
-  {user.campaigns || 0}
-</td>
 
+                <td className="px-6 py-5 text-gray-700">
+                  {user.active_campaigns || 0}
+                </td>
+                <td className="px-6 py-5 text-gray-700">
+                  {user.latest_ip || "No IP"}
+                </td>
+                <td className="px-6 py-5 text-gray-700">
+                  {user.clicks || 0}
+                </td>
 
-<td className="p-2 border text-green-600 font-bold">
-  {user.active_campaigns || 0}
-</td>
-<td className="p-2 border">
-  {user.clicks || 0}
-</td>
+                <td className="px-6 py-5 flex gap-3">
 
-               <td className="p-2 border flex gap-2 justify-center">
+                  {/* Block / Unblock */}
+                  <button
+                    onClick={() => toggleUserStatus(user)}
+                    className={`px-4 py-2 rounded-xl text-sm font-medium text-white transition-all ${user.status ? "bg-red-500" : "bg-green-500"
+                      }`}
+                  >
+                    {user.status ? "Block" : "Unblock"}
+                  </button>
 
-  {/* Block / Unblock */}
-  <button
-    onClick={() => toggleUserStatus(user)}
-    className={`px-3 py-1 rounded text-white ${
-      user.status ? "bg-red-500" : "bg-green-500"
-    }`}
-  >
-    {user.status ? "Block" : "Unblock"}
-  </button>
+                  {/* Delete ONLY if blocked */}
+                  {!user.status && (
+                    <button
+                      onClick={() => deleteUser(user.id, user.status)}
+                      className="bg-[#111827] hover:bg-black transition-all text-white px-4 py-2 rounded-xl text-sm font-medium"
+                    >
+                      Delete
+                    </button>
+                  )}
 
-  {/* Delete ONLY if blocked */}
-  {!user.status && (
-    <button
-      onClick={() => deleteUser(user.id, user.status)}
-      className="bg-black text-white px-3 py-1 rounded"
-    >
-      Delete
-    </button>
-  )}
-
-</td>
+                </td>
 
               </tr>
 

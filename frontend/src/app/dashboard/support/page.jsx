@@ -154,6 +154,7 @@ export default function ContactPage() {
                 {/* EXTRA CARDS */}
                 <div className="grid md:grid-cols-3 gap-6 mt-8">
 
+
                     <div className="
                     bg-white rounded-2xl p-6
                     border border-gray-200
@@ -203,6 +204,119 @@ export default function ContactPage() {
                             Subscription upgrades, invoices,
                             payments, and account assistance.
                         </p>
+                    </div>
+
+                </div>
+
+                {/* BAN REPORT */}
+                <div className="
+mt-8
+bg-gradient-to-r
+from-red-50
+to-orange-50
+border border-red-100
+rounded-3xl
+p-8
+shadow-sm
+">
+
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+
+                        <div>
+
+                            <div className="text-4xl mb-4">
+                                🚨
+                            </div>
+
+                            <h2 className="text-2xl font-bold text-gray-900 mb-3">
+                                Report a Ban
+                            </h2>
+
+                            <p className="text-gray-600 max-w-2xl leading-relaxed">
+                                If your advertising account, campaign, or business manager
+                                gets restricted or banned, send us the details so we can
+                                review suspicious traffic, possible reviewer activity,
+                                and improve platform protection.
+                            </p>
+
+                        </div>
+
+                        <a
+                            href={`https://mail.google.com/mail/?view=cm&fs=1&to=support@trafficintelai.com&su=Ban%20Report&body=Campaign:%0ATraffic%20Source:%0ABan%20Reason:%0ATime:%0AClick%20ID:%0AScreenshot:`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="
+            inline-flex items-center justify-center
+            px-7 py-4
+            rounded-2xl
+            bg-red-500
+            hover:bg-red-600
+            text-white
+            font-semibold
+            shadow-sm
+            transition
+            whitespace-nowrap
+        "
+                        >
+                            Submit Ban Report
+                        </a>
+
+                    </div>
+
+                </div>
+
+                {/* FEEDBACK */}
+                <div className="
+mt-8
+bg-gradient-to-r
+from-indigo-50
+to-blue-50
+border border-indigo-100
+rounded-3xl
+p-8
+shadow-sm
+">
+
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+
+                        <div>
+
+                            <div className="text-4xl mb-4">
+                                💡
+                            </div>
+
+                            <h2 className="text-2xl font-bold text-gray-900 mb-3">
+                                Suggest Features & Improvements
+                            </h2>
+
+                            <p className="text-gray-600 max-w-2xl leading-relaxed">
+                                TrafficIntelAI is actively evolving. Share feature requests,
+                                UI improvements, bug reports, or ideas that could make the
+                                platform better for your campaigns.
+                            </p>
+
+                        </div>
+
+                        <a
+                            href={`https://mail.google.com/mail/?view=cm&fs=1&to=support@trafficintelai.com&su=Feature%20Request%20%2F%20Feedback&body=Feature%20Idea:%0A%0AProblem:%0A%0AExpected%20Behavior:%0A%0AScreenshot%20(Optional):`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="
+            inline-flex items-center justify-center
+            px-7 py-4
+            rounded-2xl
+            bg-indigo-600
+            hover:bg-indigo-700
+            text-white
+            font-semibold
+            shadow-sm
+            transition
+            whitespace-nowrap
+        "
+                        >
+                            Send Feedback
+                        </a>
+
                     </div>
 
                 </div>

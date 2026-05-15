@@ -650,10 +650,10 @@ export default function Dashboard() {
                 title="📈 ROI"
                 value={
                   advancedProfit.roi > 50
-                    ? `🔥 ${advancedProfit.roi.toFixed(1)}%`
+                    ? ` ${advancedProfit.roi.toFixed(1)}%`
                     : advancedProfit.roi > 0
-                      ? `🟢 ${advancedProfit.roi.toFixed(1)}%`
-                      : `🔴 ${advancedProfit.roi.toFixed(1)}%`
+                      ? ` ${advancedProfit.roi.toFixed(1)}%`
+                      : ` ${advancedProfit.roi.toFixed(1)}%`
                 }
               />
 
@@ -1232,8 +1232,8 @@ transition-all duration-200 disabled:opacity-50 transition"
                 ) : (
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <ZoneList title="🟢 Best" data={profitZones} type="good" />
-                    <ZoneList title="🔴 Worst" data={lossZones} type="bad" />
+                    <ZoneList title=" Best" data={profitZones} type="good" />
+                    <ZoneList title=" Worst" data={lossZones} type="bad" />
                   </div>
 
                 )

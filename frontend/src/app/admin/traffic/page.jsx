@@ -59,13 +59,13 @@ export default function AdminTrafficPage() {
     log.device_type?.toLowerCase().includes(search.toLowerCase())
   );
 
-useEffect(() => {
-  setPage(1);
-}, [search]);
+  useEffect(() => {
+    setPage(1);
+  }, [search]);
   const start = (page - 1) * limit;
-const paginatedLogs = filteredLogs.slice(start, start + limit);
+  const paginatedLogs = filteredLogs.slice(start, start + limit);
 
-const totalPages = Math.ceil(filteredLogs.length / limit);
+  const totalPages = Math.ceil(filteredLogs.length / limit);
 
   // 🎨 STATUS COLOR
   const statusColor = (status) => {
@@ -81,36 +81,58 @@ const totalPages = Math.ceil(filteredLogs.length / limit);
 
   return (
 
-    <div>
+    <div className="min-h-screen bg-[#F3F4F6]">
 
-      <h1 className="text-3xl font-bold mb-6">
-        Traffic Monitor
-      </h1>
+      <div className="flex items-center justify-between mb-8">
+
+        <div>
+          <h1 className="text-4xl font-semibold tracking-tight text-[#111827]">
+            Traffic Monitor
+          </h1>
+
+          <p className="text-sm text-gray-500 mt-2">
+            Live traffic intelligence and fraud monitoring
+          </p>
+        </div>
+
+        <div className="bg-white border border-gray-200 rounded-2xl px-4 py-2 text-sm font-medium text-gray-700 shadow-sm">
+          {filteredLogs.length} Traffic Logs
+        </div>
+
+      </div>
 
       {/* 🔍 SEARCH BAR */}
-      <input
-        type="text"
-        placeholder="Search IP / Country / Device..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="mb-4 p-2 border rounded w-full max-w-md"
-      />
+      <div className="mb-6 flex items-center gap-4">
 
-      <div className="bg-white shadow rounded overflow-x-auto">
+        <input
+          type="text"
+          placeholder="Search IP / Country / Device..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="bg-white border border-gray-200 rounded-2xl px-5 py-3 text-sm text-gray-700 shadow-sm outline-none focus:ring-2 focus:ring-blue-500 w-full max-w-md"
+        />
 
-        <table className="w-full text-sm">
+        <div className="bg-white border border-gray-200 rounded-2xl px-4 py-3 text-sm font-medium text-gray-600 shadow-sm">
+          Auto Refresh: 5s
+        </div>
 
-          <thead className="bg-gray-100">
+      </div>
+
+      <div className="bg-white border border-gray-200 rounded-[28px] overflow-hidden shadow-sm">
+
+        <table className="w-full text-sm text-left">
+
+          <thead className="bg-[#F9FAFB] border-b border-gray-200">
 
             <tr>
-              <th className="p-3 border">IP</th>
-              <th className="p-3 border">Country</th>
-              <th className="p-3 border">Device</th>
-              <th className="p-3 border">Campaign</th>
-              <th className="p-3 border">Offer</th>
-              <th className="p-3 border">Bot Score</th>
-              <th className="p-3 border">Decision</th>
-              <th className="p-3 border">Time</th>
+              <th className="px-6 py-4 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">IP</th>
+              <th className="px-6 py-4 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">Country</th>
+              <th className="px-6 py-4 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">Device</th>
+              <th className="px-6 py-4 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">Campaign</th>
+              <th className="px-6 py-4 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">Offer</th>
+              <th className="px-6 py-4 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">Bot Score</th>
+              <th className="px-6 py-4 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">Decision</th>
+              <th className="px-6 py-4 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">Time</th>
             </tr>
 
           </thead>
@@ -119,7 +141,7 @@ const totalPages = Math.ceil(filteredLogs.length / limit);
 
             {loading && (
               <tr>
-                <td colSpan="8" className="text-center p-6">
+                <td colSpan="8" className="text-center py-14 text-gray-500">
                   Loading traffic...
                 </td>
               </tr>
@@ -133,41 +155,49 @@ const totalPages = Math.ceil(filteredLogs.length / limit);
               </tr>
             )}
 
-           {!loading && paginatedLogs.map((log, i) => (
+            {!loading && paginatedLogs.map((log, i) => (
 
-              <tr key={i} className="text-center hover:bg-gray-50">
+              <tr
+                key={i}
+                className="border-b border-gray-100 hover:bg-gray-50 transition-all"
+              >
 
-                <td className="p-2 border font-mono text-xs">
+                <td className="px-6 py-5 font-mono text-xs text-gray-600">
                   {log.ip_address || "-"}
                 </td>
 
-                <td className="p-2 border">
+                <td className="px-6 py-5 text-gray-700">
                   {log.country || "Unknown"}
                 </td>
 
-                <td className="p-2 border">
+                <td className="px-6 py-5 text-gray-700">
                   {log.device_type || "Unknown"}
                 </td>
 
-                <td className="p-2 border text-xs">
+                <td className="px-6 py-5 text-xs font-medium text-gray-500">
                   {log.campaign_name || log.campaign_id}
                 </td>
 
-                <td className="p-2 border text-xs">
+                <td className="px-6 py-5 text-xs font-medium text-gray-500">
                   {log.offer_name || log.offer_id || "-"}
                 </td>
 
-                <td className="p-2 border font-bold">
+                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${(log.bot_score ?? 0) > 70
+                  ? "bg-red-100 text-red-600"
+                  : (log.bot_score ?? 0) > 40
+                    ? "bg-yellow-100 text-yellow-600"
+                    : "bg-green-100 text-green-600"
+                  }`}>
                   {log.bot_score ?? 0}
-                </td>
+                </span>
 
-                <td className="p-2 border">
-                  <span className={`text-white text-xs px-2 py-1 rounded ${statusColor(log.status)}`}>
+                <td className="px-6 py-5 text-gray-700">
+                  <span className={`text-white text-xs font-semibold px-3 py-1 rounded-full ${statusColor(log.status)}`}>
                     {log.status || "unknown"}
                   </span>
                 </td>
 
-                <td className="p-2 border text-xs">
+                <td className="px-6 py-5 text-xs font-medium text-gray-500">
                   {log.created_at
                     ? new Date(log.created_at).toLocaleString()
                     : "-"
@@ -182,29 +212,29 @@ const totalPages = Math.ceil(filteredLogs.length / limit);
 
         </table>
 
-        <div className="flex justify-center gap-2 mt-4">
+        <div className="flex items-center justify-between px-6 py-5 bg-[#FAFAFA]">
 
-  <button
-    onClick={() => setPage(page - 1)}
-    disabled={page === 1}
-    className="px-3 py-1 border rounded"
-  >
-    Prev
-  </button>
+          <button
+            onClick={() => setPage(page - 1)}
+            disabled={page === 1}
+            className="px-4 py-2 border border-gray-200 rounded-xl bg-white text-sm font-medium hover:bg-gray-50 transition-all disabled:opacity-50"
+          >
+            Prev
+          </button>
 
-  <span className="px-3 py-1">
-    Page {page} / {totalPages || 1}
-  </span>
+          <span className="text-sm font-medium text-gray-600">
+            Page {page} / {totalPages || 1}
+          </span>
 
-  <button
-    onClick={() => setPage(page + 1)}
-    disabled={page === totalPages}
-    className="px-3 py-1 border rounded"
-  >
-    Next
-  </button>
+          <button
+            onClick={() => setPage(page + 1)}
+            disabled={page === totalPages}
+            className="px-4 py-2 border border-gray-200 rounded-xl bg-white text-sm font-medium hover:bg-gray-50 transition-all disabled:opacity-50"
+          >
+            Next
+          </button>
 
-</div>
+        </div>
 
       </div>
 

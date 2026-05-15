@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import api from "../../../../services/api";
 import { useRouter } from "next/navigation";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function ManageCampaign(){
 const router = useRouter();
@@ -15,6 +16,11 @@ const [offers,setOffers] = useState([]);
 const [rules,setRules] = useState([]);
 const [stats,setStats] = useState({offers:0,rules:0});
 const [loading,setLoading] = useState(true);
+const [deleteModal,setDeleteModal] = useState({
+open:false,
+type:null,
+id:null
+});
 const [protection,setProtection]=useState({
 block_vpn:false,
 block_proxy:false,
@@ -131,16 +137,15 @@ console.error("Toggle offer error:",err);
 
 const deleteOffer = async(id)=>{
 
-if(!confirm("Delete offer?")) return;
+setDeleteModal({
+open:true,
+type:"offer",
+id
+});
 
-try{
+return;
 
-await api.delete(`/offers/${id}`);
-loadData();
 
-}catch(err){
-console.error("Delete offer error:",err);
-}
 
 };
 
@@ -197,79 +202,269 @@ console.error("Rule toggle error:",err);
 
 const deleteRule = async(id)=>{
 
-if(!confirm("Delete rule?")) return;
+setDeleteModal({
+open:true,
+type:"rule",
+id
+});
 
-try{
+return;
 
-await api.delete(`/rules/${id}`);
-loadData();
 
-}catch(err){
-console.error("Delete rule error:",err);
-}
 
 };
 
 if(!campaignId){
 return <div className="p-10">No campaign selected</div>
 }
+const confirmDelete = async()=>{
 
+try{
+
+if(deleteModal.type === "offer"){
+
+await api.delete(`/offers/${deleteModal.id}`);
+
+toast.success("Offer deleted");
+
+}
+
+if(deleteModal.type === "rule"){
+
+await api.delete(`/rules/${deleteModal.id}`);
+
+toast.success("Rule deleted");
+
+}
+
+setDeleteModal({
+open:false,
+type:null,
+id:null
+});
+
+loadData();
+
+}catch(err){
+
+console.error("Delete error:",err);
+
+toast.error("Delete failed");
+
+}
+
+};
 if(loading){
 return <div className="p-10">Loading campaign...</div>
 }
 
 return(
+<>
 
-<div className="p-8 space-y-8">
+<div className="p-8 space-y-8 bg-[#f6f8fc] min-h-screen">
 
 <h1 className="text-2xl font-semibold text-gray-800 tracking-tight">
   Manage Campaign
 </h1>
 
-<div className="bg-gradient-to-r from-indigo-500 to-blue-600 
-text-white rounded-2xl p-6 shadow-lg flex justify-between items-center">
+<div className="
+relative overflow-hidden
+rounded-[34px]
+border border-white/10
+bg-gradient-to-br
+from-[#0b1020]
+via-[#111827]
+to-[#312e81]
+p-7
+shadow-[0_20px_60px_rgba(15,23,42,0.45)]
+">
 
-  <div>
-    <div className="text-2xl font-semibold">
-      {campaign?.name}
+  {/* BACKGROUND GLOW */}
+  <div className="
+  absolute
+  -top-24
+  -right-24
+  w-72
+  h-72
+  bg-indigo-500/20
+  blur-3xl
+  rounded-full
+  " />
+
+  <div className="
+  relative z-10
+  flex flex-col lg:flex-row
+  lg:items-center
+  lg:justify-between
+  gap-6
+  ">
+
+    {/* LEFT */}
+    <div>
+
+      <div className="
+      inline-flex
+      items-center
+      gap-2
+      px-4
+      py-1.5
+      rounded-full
+      bg-white/10
+      border border-white/10
+      text-xs
+      tracking-[0.18em]
+      uppercase
+      text-gray-300
+      mb-5
+      backdrop-blur-xl
+      ">
+        Campaign Overview
+      </div>
+
+      <h1 className="
+      text-2xl
+      md:text-4xl
+      font-semibold
+      tracking-tight
+      text-white
+      leading-tight
+      ">
+        {campaign?.name}
+      </h1>
+
+      <div className="
+      flex flex-wrap
+      items-center
+      gap-3
+      mt-4
+      ">
+
+        <div className="
+        px-4
+        py-2
+        rounded-xl
+        bg-white/5
+        border border-white/10
+        text-sm
+        text-gray-300
+        backdrop-blur-xl
+        ">
+          Slug:
+          <span className="text-white ml-2 font-medium">
+            {campaign?.slug}
+          </span>
+        </div>
+
+        <div className="
+        px-4
+        py-2
+        rounded-xl
+        bg-white/5
+        border border-white/10
+        text-sm
+        text-gray-300
+        backdrop-blur-xl
+        ">
+          Campaign ID:
+          <span className="text-white ml-2 font-medium">
+            #{campaign?.id}
+          </span>
+        </div>
+
+      </div>
+
     </div>
 
-    <div className="text-white/80 text-sm mt-1">
-      Slug: {campaign?.slug}
+    {/* RIGHT */}
+    <div className="flex items-center gap-4">
+
+      <button
+        onClick={toggleCampaign}
+        className={`
+        relative
+        inline-flex
+        items-center
+        justify-center
+        min-w-[140px]
+        h-[52px]
+        rounded-2xl
+        px-6
+        font-semibold
+        text-sm
+        transition-all
+        duration-300
+        shadow-lg
+        border
+
+        ${campaign?.is_active
+          ? `
+          bg-gradient-to-r
+          from-emerald-400
+          to-green-500
+          text-black
+          border-green-300
+          hover:scale-[1.03]
+          `
+          : `
+          bg-white/10
+          text-white
+          border-white/10
+          hover:bg-white/20
+          `
+        }
+      `}
+      >
+       
+
+        {campaign?.is_active ? "Active" : "Paused"}
+      </button>
+
     </div>
+
   </div>
-
-  <button
-    onClick={toggleCampaign}
-    className={`px-5 py-2 rounded-full text-sm font-medium shadow
-    ${campaign?.is_active
-      ? "bg-green-400 text-black"
-      : "bg-gray-800 text-white"}
-    transition`}
-  >
-    {campaign?.is_active ? "Active" : "Paused"}
-  </button>
-
 </div>
 
-<div className="grid grid-cols-2 md:grid-cols-4 gap-5">
 
-<StatCard title="Offers" value={stats.offers} />
-<StatCard title="Rules" value={stats.rules} />
-<StatCard title="Pass Traffic" value={campaign?.pass_count} />
-<StatCard title="Blocked Traffic" value={campaign?.block_count} />
+{/* STATS */}
+<div className="grid grid-cols-2 xl:grid-cols-4 gap-5">
 
+  <StatCard
+    title="Offers"
+    value={stats.offers}
+    icon="🎯"
+    color="from-indigo-500 to-violet-500"
+  />
 
+  <StatCard
+    title="Rules"
+    value={stats.rules}
+    icon="🛡️"
+    color="from-cyan-500 to-blue-500"
+  />
+
+  <StatCard
+    title="Passed Traffic"
+    value={campaign?.pass_count}
+    icon="✅"
+    color="from-emerald-500 to-green-500"
+  />
+
+  <StatCard
+    title="Blocked Traffic"
+    value={campaign?.block_count}
+    icon="🚫"
+    color="from-rose-500 to-red-500"
+  />
 
 </div>
 
 {/* OFFERS SECTION */}
 
-<div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 hover:shadow-md transition">
+<div className="bg-white rounded-[28px] border border-gray-100 shadow-sm p-8 hover:shadow-xl transition-all duration-300">
 
   {/* HEADER */}
   <div className="flex justify-between items-center mb-5">
-    <h2 className="text-lg font-semibold text-gray-800">
+    <h2 className="text-xl font-bold text-gray-900 tracking-tight">
       Offers
     </h2>
   </div>
@@ -277,10 +472,10 @@ text-white rounded-2xl p-6 shadow-lg flex justify-between items-center">
   {/* TABLE */}
   <div className="overflow-x-auto">
 
-    <table className="w-full text-sm">
+    <table className="w-full text-sm table-auto">
 
       {/* HEAD */}
-      <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
+      <thead className="bg-[#f8fafc] text-gray-400 text-[11px] uppercase tracking-[0.14em]">
         <tr>
           <th className="px-4 py-3 text-left">URL</th>
           <th className="px-4 py-3 text-center">Weight</th>
@@ -291,7 +486,7 @@ text-white rounded-2xl p-6 shadow-lg flex justify-between items-center">
       </thead>
 
       {/* BODY */}
-      <tbody className="divide-y">
+      <tbody className="space-y-3">
 
         {offers.length === 0 ? (
           <tr>
@@ -302,14 +497,38 @@ text-white rounded-2xl p-6 shadow-lg flex justify-between items-center">
         ) : (
           offers.map(o => (
 
-            <tr key={o.id} className="hover:bg-gray-50 transition-all duration-200">
+            <tr
+  key={o.id}
+  className="
+  border-b border-gray-100
+  hover:bg-indigo-50/50
+  transition-all duration-200
+  align-middle
+"
+>
 
               {/* URL */}
-              <td className="px-4 py-3 max-w-[220px]">
-                <div className="truncate font-medium text-gray-700">
-                  {o.url}
-                </div>
-              </td>
+             <td className="px-4 py-4 min-w-[320px]">
+
+  <a
+    href={o.url}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="
+    font-semibold
+    text-[14px]
+    leading-relaxed
+    text-indigo-600
+    hover:text-indigo-700
+    hover:underline
+    break-all
+    transition
+    "
+  >
+    {o.url}
+  </a>
+
+</td>
 
               {/* WEIGHT */}
               <td className="px-4 py-3 text-center">
@@ -320,7 +539,7 @@ text-white rounded-2xl p-6 shadow-lg flex justify-between items-center">
 
               {/* MODE */}
               <td className="px-4 py-3 text-center">
-                <span className="text-xs px-2 py-1 rounded-md bg-blue-50 text-blue-600 capitalize">
+                <span className="inline-flex items-center justify-center h-[32px] px-3 text-xs rounded-lg bg-cyan-50 text-cyan-700 border border-cyan-100 capitalize">
                   {o.redirect_mode || "-"}
                 </span>
               </td>
@@ -329,11 +548,11 @@ text-white rounded-2xl p-6 shadow-lg flex justify-between items-center">
               <td className="px-4 py-3 text-center">
                 <button
                   onClick={() => toggleOffer(o.id, o.is_active)}
-                  className={`w-[90px] h-[30px] flex items-center justify-center
+                  className={`mx-auto w-[92px] h-[34px] inline-flex items-center justify-center
                   rounded-full text-xs font-medium transition-all duration-200
                   ${o.is_active
-                    ? "bg-green-100 text-green-700 hover:bg-green-200"
-                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
+                    ? "bg-green-50 text-green-700 border border-green-100 hover:bg-green-200"
+                    : "bg-gray-100 text-gray-500 border border-gray-200 hover:bg-gray-300"}`}
                 >
                   {o.is_active ? "Active" : "Paused"}
                 </button>
@@ -342,7 +561,7 @@ text-white rounded-2xl p-6 shadow-lg flex justify-between items-center">
               {/* ACTIONS */}
               <td className="px-4 py-3">
 
-                <div className="flex justify-center gap-2">
+                <div className="flex items-center justify-center gap-2 h-full">
 
                   <button
                     onClick={() => !o.is_active && deleteOffer(o.id)}
@@ -375,11 +594,11 @@ text-white rounded-2xl p-6 shadow-lg flex justify-between items-center">
 
 {/* RULES SECTION */}
 
-<div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 hover:shadow-md transition">
+<div className="bg-white rounded-[28px] border border-gray-100 shadow-sm p-8 hover:shadow-xl transition-all duration-300">
 
   {/* HEADER */}
   <div className="flex justify-between items-center mb-5">
-    <h2 className="text-lg font-semibold text-gray-800">
+   <h2 className="text-xl font-bold text-gray-900 tracking-tight">
       Rules
     </h2>
   </div>
@@ -387,10 +606,10 @@ text-white rounded-2xl p-6 shadow-lg flex justify-between items-center">
   {/* TABLE */}
   <div className="overflow-x-auto">
 
-    <table className="w-full text-sm">
+   <table className="w-full text-sm table-auto">
 
       {/* HEAD */}
-      <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
+      <thead className="bg-[#f8fafc] text-gray-400 text-[11px] uppercase tracking-[0.14em]">
         <tr>
           <th className="px-4 py-3 text-left">Name</th>
           <th className="px-4 py-3 text-center">Country</th>
@@ -412,11 +631,19 @@ text-white rounded-2xl p-6 shadow-lg flex justify-between items-center">
         ) : (
           rules.map(r => (
 
-            <tr key={r.id} className="hover:bg-gray-50 transition-all duration-200">
+            <tr
+  key={r.id}
+  className="
+  border-b border-gray-100
+  hover:bg-indigo-50/50
+  transition-all duration-200
+  align-middle
+"
+>
 
               {/* NAME */}
-              <td className="px-4 py-3 text-left max-w-[180px]">
-                <div className="truncate font-medium text-gray-700">
+              <td className="px-4 py-4 min-w-[240px]">
+                <div className="font-medium text-gray-800 break-all">
                   {r.name}
                 </div>
               </td>
@@ -432,8 +659,8 @@ text-white rounded-2xl p-6 shadow-lg flex justify-between items-center">
               <td className="px-4 py-3 text-center">
                 <span className={`text-xs px-2 py-1 rounded-md capitalize
                   ${r.action_type === "block"
-                    ? "bg-red-50 text-red-600"
-                    : "bg-blue-50 text-blue-600"}`}
+                    ? "bg-red-50 text-red-600 border border-red-100"
+                    : "bg-blue-50 text-blue-600 border border-blue-100"}`}
                 >
                   {r.action_type}
                 </span>
@@ -443,11 +670,11 @@ text-white rounded-2xl p-6 shadow-lg flex justify-between items-center">
               <td className="px-4 py-3 text-center">
                 <button
                   onClick={() => toggleRule(r.id, r.is_active)}
-                  className={`w-[90px] h-[30px] flex items-center justify-center
+                  className={`mx-auto w-[92px] h-[34px] inline-flex items-center justify-center
                   rounded-full text-xs font-medium transition-all duration-200
                   ${r.is_active
-                    ? "bg-green-100 text-green-700 hover:bg-green-200"
-                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
+                    ? "bg-green-50 text-green-700 border border-green-100 hover:bg-green-200"
+                    : "bg-gray-100 text-gray-500 border border-gray-200 hover:bg-gray-300"}`}
                 >
                   {r.is_active ? "Active" : "Paused"}
                 </button>
@@ -456,7 +683,7 @@ text-white rounded-2xl p-6 shadow-lg flex justify-between items-center">
               {/* ACTIONS */}
               <td className="px-4 py-3">
 
-                <div className="flex justify-center gap-2">
+                <div className="flex items-center justify-center gap-2 h-full">
 
                   <button
                     onClick={() => !r.is_active && deleteRule(r.id)}
@@ -465,7 +692,7 @@ text-white rounded-2xl p-6 shadow-lg flex justify-between items-center">
                     className={`px-3 py-1.5 rounded-lg text-xs font-medium transition
                     ${r.is_active
                       ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                      : "bg-red-50 text-red-600 hover:bg-red-100"}`}
+                      : "bg-red-50 text-red-500 hover:bg-red-100 border border-red-100"}`}
                   >
                     Delete
                   </button>
@@ -484,11 +711,25 @@ text-white rounded-2xl p-6 shadow-lg flex justify-between items-center">
     </table>
 
 
-<div className="bg-white shadow rounded p-6 mt-8">
 
-<h2 className="text-lg font-semibold mb-4">
-Traffic Protection
-</h2>
+
+</div>
+
+
+
+
+</div>
+<div className="bg-gradient-to-br from-[#0b1020] via-[#111827] to-[#1a1f35] rounded-3xl p-7 mt-10 shadow-xl border border-slate-700">
+
+<div className="mb-6">
+  <h2 className="text-2xl font-bold text-white">
+    Traffic Protection
+  </h2>
+
+  <p className="text-sm text-gray-400 mt-1">
+    Advanced protection layers for filtering unsafe and automated traffic.
+  </p>
+</div>
 
 <div className="grid sm:grid-cols-2 gap-4">
 
@@ -504,12 +745,12 @@ Traffic Protection
     <div
       key={item.key}
       className="flex items-center justify-between 
-      bg-white border border-gray-200 rounded-xl px-4 py-3
+      bg-[#1f2937]/70 border border-[#374151] backdrop-blur-xl rounded-xl px-4 py-3
       hover:shadow-sm transition"
     >
 
       {/* LABEL */}
-      <span className="text-sm font-medium text-gray-700">
+      <span className="text-sm font-medium text-white">
         {item.label}
       </span>
 
@@ -517,7 +758,9 @@ Traffic Protection
       <button
         onClick={() => toggleProtection(item.key)}
         className={`relative w-12 h-6 flex items-center rounded-full p-1 transition-all duration-300
-        ${protection[item.key] ? "bg-green-500" : "bg-gray-300"}`}
+        ${protection[item.key]
+  ? "bg-gradient-to-r from-indigo-500 to-violet-500"
+  : "bg-gray-600"}`}
       >
         <div
           className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-all duration-300
@@ -532,28 +775,83 @@ Traffic Protection
 </div>
 
 </div>
+</div>
+
+{deleteModal.open && (
+
+<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+
+  <div className="w-full max-w-md bg-white rounded-3xl p-7 shadow-2xl border border-gray-100 animate-in fade-in zoom-in duration-200">
+
+    <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-red-50 mx-auto mb-5">
+      <span className="text-3xl">🗑️</span>
+    </div>
+
+    <h2 className="text-2xl font-bold text-center text-gray-900">
+      Delete {deleteModal.type}
+    </h2>
+
+    <p className="text-gray-500 text-center mt-3 leading-relaxed">
+      This action cannot be undone.
+      The selected {deleteModal.type} will be permanently removed.
+    </p>
+
+    <div className="flex gap-3 mt-7">
+
+      <button
+        onClick={() =>
+          setDeleteModal({
+            open:false,
+            type:null,
+            id:null
+          })
+        }
+        className="flex-1 h-11 rounded-xl border border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition"
+      >
+        Cancel
+      </button>
+
+      <button
+        onClick={confirmDelete}
+        className="flex-1 h-11 rounded-xl bg-red-500 hover:bg-red-600 text-white font-semibold shadow-sm transition"
+      >
+        Delete
+      </button>
+
+    </div>
+
+  </div>
 
 </div>
 
-</div>
-
-</div>
-
+)}
+<Toaster
+  position="top-right"
+  toastOptions={{
+    style: {
+      background: "#111827",
+      color: "#fff",
+      border: "1px solid #374151",
+      borderRadius: "14px",
+    },
+  }}
+/>
+</>
 );
 
 }
 
+
 function StatCard({title,value}){
 
 return(
-<div className="bg-white/70 backdrop-blur-xl 
-border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition">
+<div className="bg-white rounded-[24px] p-6 border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
 
-  <div className="text-gray-500 text-xs uppercase tracking-wide">
+  <div className="text-gray-400 text-[11px] uppercase tracking-[0.15em] font-medium">
     {title}
   </div>
 
-  <div className="text-2xl font-semibold mt-2">
+  <div className="text-3xl font-bold mt-3 text-gray-900">
     {value || 0}
   </div>
 

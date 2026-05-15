@@ -6,14 +6,14 @@ RESEND_API_KEY = os.getenv("RESEND_API_KEY")
 
 def send_email(to_email: str, otp: str):
 
-    subject = "🔐 Your OTP Code - Traffic Intelligence"
+    subject = "🔐 Your OTP Code - Trafficintel AI"
 
     html = f"""
     <html>
       <body style="margin:0;padding:0;background:#f4f6f8;font-family:Arial,sans-serif;">
         <div style="max-width:500px;margin:40px auto;background:#ffffff;border-radius:12px;padding:30px;text-align:center;box-shadow:0 10px 25px rgba(0,0,0,0.05);">
 
-          <h2 style="color:#4f46e5;">🚀 Traffic Intelligence</h2>
+          <h2 style="color:#4f46e5;">🚀 Trafficintel AI</h2>
           <p style="color:#6b7280;">Verify your email address</p>
 
           <p>Your OTP code is:</p>
@@ -49,7 +49,7 @@ def send_email(to_email: str, otp: str):
                 "Content-Type": "application/json",
             },
             json={
-                "from": "Traffic Intelligence <no-reply@trafficintelai.com>",
+                "from": "Trafficintel AI <no-reply@trafficintelai.com>",
                 "to": to_email,
                 "subject": subject,
                 "html": html,

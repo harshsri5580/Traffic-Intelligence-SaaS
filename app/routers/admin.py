@@ -23,6 +23,7 @@ from datetime import datetime
 from sqlalchemy import func
 from datetime import datetime, timedelta
 from app.models.traffic_filter import TrafficFilter
+import re
 
 router = APIRouter(tags=["Admin"])
 
@@ -238,6 +239,23 @@ def users_overview(
         # clicks count
         total_clicks = db.query(ClickLog).filter(ClickLog.user_id == u.id).count()
 
+        # latest login IP
+        latest_login = (
+            db.query(SystemLog)
+            .filter(SystemLog.message.contains(f"LOGIN | {u.email}"))
+            .order_by(SystemLog.created_at.desc())
+            .first()
+        )
+
+        latest_ip = None
+
+        if latest_login and latest_login.message:
+
+            match = re.search(r"IP:\s*([0-9a-fA-F\:\.]+)", latest_login.message)
+
+            if match:
+                latest_ip = match.group(1)
+
         # revenue (SAFE JOIN + CAST)
         revenue = (
             db.query(func.coalesce(func.sum(Conversion.payout), 0))
@@ -258,6 +276,7 @@ def users_overview(
                 "campaigns": total_campaigns or 0,
                 "active_campaigns": active_campaigns or 0,  # ✅ ADD THIS
                 "clicks": total_clicks or 0,
+                "latest_ip": latest_ip,
                 "revenue": float(revenue or 0),
             }
         )

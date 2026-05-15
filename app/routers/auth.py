@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from jose import jwt, JWTError
 from datetime import datetime, timedelta
@@ -175,10 +175,16 @@ class LoginRequest(BaseModel):
 
 
 @router.post("/login")
-def login(data: LoginRequest, db: Session = Depends(get_db)):
+def login(request: Request, data: LoginRequest, db: Session = Depends(get_db)):
 
     email = data.email.strip().lower()
     password = data.password
+
+    ip_address = (
+        request.headers.get("cf-connecting-ip")
+        or request.headers.get("x-forwarded-for")
+        or request.client.host
+    )
 
     user = db.query(User).filter(User.email == email).first()
 
@@ -186,7 +192,9 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
     if not user or not verify_password(password, user.hashed_password):
 
         # 🔴 FAIL LOG
-        log = SystemLog(type="WARNING", message=f"Failed login attempt for {email}")
+        log = SystemLog(
+            type="WARNING", message=f"FAILED LOGIN | {email} | IP: {ip_address}"
+        )
         db.add(log)
         db.commit()
 
@@ -204,7 +212,7 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
     access_token = create_access_token(data={"sub": str(user.id), "role": user.role})
 
     # ✅ SUCCESS LOG
-    log = SystemLog(type="INFO", message=f"User {user.email} logged in")
+    log = SystemLog(type="INFO", message=f"LOGIN | {user.email} | IP: {ip_address}")
     db.add(log)
     db.commit()
 

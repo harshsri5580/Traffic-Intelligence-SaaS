@@ -240,7 +240,12 @@ export default function OffersPage() {
         setOffers(prev =>
           prev.map(o =>
             o.id === editingOfferId
-              ? { ...o, ...formData, weight: Number(formData.weight) }
+              ? {
+                ...o,
+                ...formData,
+                campaign_id: Number(formData.campaign_id),
+                weight: Number(formData.weight)
+              }
               : o
           )
         );

@@ -9,11 +9,11 @@ export default function AdminLogsPage() {
 
   useEffect(() => {
     loadLogs();
-     const interval = setInterval(() => {
-    loadLogs();
-  }, 5000); // every 5 sec
+    const interval = setInterval(() => {
+      loadLogs();
+    }, 5000); // every 5 sec
 
-  return () => clearInterval(interval);
+    return () => clearInterval(interval);
   }, []);
 
   const loadLogs = async () => {
@@ -38,25 +38,57 @@ export default function AdminLogsPage() {
   };
 
   return (
-    <div>
-      <h1 className="text-3xl font-bold mb-8">
-        System Logs
-      </h1>
+    <div className="min-h-screen bg-[#F3F4F6]">
+      <div className="flex items-center justify-between mb-8">
 
-      <div className="bg-white shadow rounded overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-100">
+        <div>
+          <h1 className="text-4xl font-semibold tracking-tight text-[#111827]">
+            System Logs
+          </h1>
+
+          <p className="text-sm text-gray-500 mt-2">
+            Monitor server activity, warnings and critical events
+          </p>
+        </div>
+
+        <div className="bg-white border border-gray-200 rounded-2xl px-4 py-2 text-sm font-medium text-gray-700 shadow-sm">
+          {logs.length} Logs
+        </div>
+
+      </div>
+
+      <div className="mb-6 flex items-center justify-between bg-white border border-gray-200 rounded-[24px] px-5 py-4 shadow-sm">
+
+        <div className="flex items-center gap-3">
+
+          <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse" />
+
+          <span className="text-sm font-medium text-gray-700">
+            Live Log Monitoring Enabled
+          </span>
+
+        </div>
+
+        <div className="text-xs text-gray-500">
+          Auto refresh every 5 seconds
+        </div>
+
+      </div>
+
+      <div className="bg-white border border-gray-200 rounded-[28px] overflow-hidden max-h-[720px] shadow-sm">
+        <table className="w-full text-sm text-left">
+          <thead className="bg-[#F9FAFB] border-b border-gray-200">
             <tr>
-              <th className="p-3 border">Type</th>
-              <th className="p-3 border">Message</th>
-              <th className="p-3 border">Time</th>
+              <th className="px-6 py-4 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">Type</th>
+              <th className="px-6 py-4 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">Message</th>
+              <th className="px-6 py-4 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">Time</th>
             </tr>
           </thead>
 
           <tbody>
             {loading && (
               <tr>
-                <td colSpan="3" className="text-center p-6">
+                <td colSpan="3" className="text-center py-14 text-gray-500">
                   Loading logs...
                 </td>
               </tr>
@@ -64,31 +96,35 @@ export default function AdminLogsPage() {
 
             {!loading && logs.length === 0 && (
               <tr>
-                <td colSpan="3" className="text-center p-6">
+                <td colSpan="3" className="text-center py-14 text-gray-500">
                   No logs found
                 </td>
               </tr>
             )}
 
             {!loading && logs.map((log, i) => (
-              <tr key={i}>
-                <td className="p-2 border">
-                  <span className={
-  log?.type === "ERROR"
-    ? "text-red-600 font-bold"
-    : log?.type === "WARNING"
-    ? "text-yellow-600 font-bold"
-    : "text-green-600 font-bold"
-}>
-  {log?.type || "N/A"}
-</span>
+              <tr
+                key={i}
+                className="border-b border-gray-100 hover:bg-gray-50 transition-all"
+              >
+                <td className="px-6 py-5 text-gray-700">
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-semibold ${log?.type === "ERROR"
+                      ? "bg-red-100 text-red-600"
+                      : log?.type === "WARNING"
+                        ? "bg-yellow-100 text-yellow-600"
+                        : "bg-green-100 text-green-600"
+                      }`}
+                  >
+                    {log?.type || "N/A"}
+                  </span>
                 </td>
 
-                <td className="p-2 border">
+                <td className="px-6 py-5 text-sm font-medium text-[#111827]">
                   {log?.message || "No message"}
                 </td>
 
-                <td className="p-2 border">
+                <td className="px-6 py-5 text-gray-700">
                   {log?.created_at
                     ? new Date(log.created_at).toLocaleString()
                     : "N/A"}
