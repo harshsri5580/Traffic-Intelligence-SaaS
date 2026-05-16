@@ -140,7 +140,7 @@ class VisitorContext:
 
                 # ❌ fake browser patterns
                 if "chrome" in ua_lower and not self.browser:
-                    self.bot_score += 20
+                    self.bot_score += 15
 
                 if "windows" in ua_lower and self.os and "windows" not in self.os:
                     self.bot_score += 15
@@ -337,7 +337,7 @@ class VisitorContext:
             self.reasons.append("automation_detected")
         # 🔥 AUTOMATION HARD FORCE
         if self.is_automation:
-            self.bot_score = max(self.bot_score, 80)
+            self.bot_score += 40
 
         if any(k in ua_lower for k in bot_keywords):
 
@@ -482,19 +482,19 @@ class VisitorContext:
         # =========================================
         # 🔥 GEO-ASN CONSISTENCY CHECK
         # =========================================
-        try:
-            if self.country_code and self.org:
+        # try:
+        #     if self.country_code and self.org:
 
-                org_lower = self.org.lower()
+        #         org_lower = self.org.lower()
 
-                if self.country_code == "IN" and "amazon" in org_lower:
-                    self.bot_score += 15
+        #         if self.country_code == "IN" and "amazon" in org_lower:
+        #             self.bot_score += 15
 
-                if self.country_code == "US" and "vps" in org_lower:
-                    self.bot_score += 20
+        #         if self.country_code == "US" and "vps" in org_lower:
+        #             self.bot_score += 20
 
-        except Exception:
-            pass
+        # except Exception:
+        #     pass
         # ================================
         # 🔥 FINAL DATACENTER DETECTION (CLEAN + STRONG)
         # ================================
@@ -688,7 +688,7 @@ class VisitorContext:
             self.connection_type = "datacenter"
             self.ip_type = "datacenter"
 
-            self.bot_score += 30  # 🔥 increase
+            # self.bot_score += 30  # 🔥 increase
             self.reasons.append("datacenter_ip")
 
         # ================================
@@ -696,7 +696,19 @@ class VisitorContext:
         # ================================
 
         if self.org:
-            vpn_keywords = ["vpn", "proxy", "hosting", "server"]
+            vpn_keywords = [
+                "vpn",
+                "proxy",
+                "nordvpn",
+                "surfshark",
+                "expressvpn",
+                "mullvad",
+                "ipvanish",
+                "protonvpn",
+                "server",
+                "tunnel",
+                "hosting",
+            ]
 
             if any(k in self.org.lower() for k in vpn_keywords):
                 self.connection_type = "vpn"
@@ -726,7 +738,7 @@ class VisitorContext:
             self.connection_type = "proxy"
             self.ip_type = "proxy"
 
-            self.bot_score = max(self.bot_score, 60)
+            self.bot_score += 40
             self.reasons.append("proxy_network")
 
         elif self.is_datacenter:
@@ -772,8 +784,8 @@ class VisitorContext:
             and not self.is_datacenter
             and not self.is_automation
         ):
-            if self.bot_score < 60:
-                self.bot_score *= 0.5
+            if self.bot_score < 40:
+                self.bot_score *= 0.7
         # ================================
         # TRAFFIC SOURCE
         # ================================
@@ -827,17 +839,17 @@ class VisitorContext:
         # HEADER ANOMALY
         # ================================
 
-        if not self.language and not self.is_datacenter:
-            self.bot_score += 5
+        # if not self.language and not self.is_datacenter:
+        #     self.bot_score += 5
 
-        if not self.browser:
-            self.bot_score += 10
+        # if not self.browser:
+        #     self.bot_score += 10
 
-        if not self.os:
-            self.bot_score += 10
+        # if not self.os:
+        #     self.bot_score += 10
 
-        if "headless" in ua_lower:
-            self.bot_score += 40
+        # if "headless" in ua_lower:
+        #     self.bot_score += 40
 
         # ================================
         # 🔥 UNKNOWN BOT DETECTION (SAFE)
@@ -911,7 +923,7 @@ class VisitorContext:
                 total_ips = redis_client.scard(key)
 
                 # 🔥 multiple IPs for same fingerprint
-                if total_ips > 3 and self.signal_strength >= 1:
+                if total_ips > 3:
                     self.is_proxy = True
                     self.bot_score += 20
                     self.reasons.append("res_proxy_rotation")
@@ -929,8 +941,8 @@ class VisitorContext:
         if not self.audio_fingerprint:
             missing_fp += 1
 
-        if missing_fp >= 3:
-            self.bot_score += 20
+        if missing_fp >= 3 and self.is_datacenter:
+            self.bot_score += 15
             self.reasons.append("fp_missing")
 
         # =========================================
@@ -944,7 +956,7 @@ class VisitorContext:
             if trust:
                 trust = int(trust)
 
-                if trust > 5 and self.traffic_quality == "clean":
+                if trust > 5:
                     self.bot_score -= 10
 
             else:
@@ -1113,8 +1125,8 @@ class VisitorContext:
         self.signal_strength = signals
 
         # 🔥 weak signal → reduce score
-        if signals <= 1 and self.bot_score < 80:
-            self.bot_score *= 0.7
+        if self.signal_strength <= 1:
+            self.bot_score *= 0.85
 
         # 🔥 strong signal → boost
         if signals >= 3:
@@ -1132,11 +1144,11 @@ class VisitorContext:
         # FINAL BOT SCORE
         # ================================
 
-        if self.is_bot and self.bot_score < 80:
-            self.bot_score += 30
+        if self.is_bot:
+            self.bot_score += 15
 
         if self.device_type == "bot":
-            self.bot_score += 20
+            self.bot_score += 10
 
         if self.bot_score > 100:
             self.bot_score = 100
@@ -1214,12 +1226,12 @@ class VisitorContext:
         # 🔥 FINAL SAFETY CHECK
         # ================================
 
-        if (
-            self.signal_strength <= 1
-            and self.connection_type == "residential"
-            and self.bot_score > 70
-        ):
-            self.bot_score = 50
+        # if (
+        #     self.signal_strength <= 1
+        #     and self.connection_type == "residential"
+        #     and self.bot_score > 70
+        # ):
+        #     self.bot_score = 50
         # =========================================
         # FINAL HARD RULES
         # =========================================
@@ -1231,19 +1243,47 @@ class VisitorContext:
             self.bot_score = max(self.bot_score, 90)
 
         elif self.is_proxy and self.signal_strength >= 2:
-            self.bot_score = max(self.bot_score, 75)
+            self.bot_score = max(self.bot_score, 70)
 
         elif self.is_vpn and self.signal_strength >= 2:
-            self.bot_score = max(self.bot_score, 65)
+            self.bot_score = max(self.bot_score, 55)
 
         # =========================================
-        # 🔥 FINAL BOT SCORE NORMALIZATION (FINAL STEP)
+        # REAL USER HARD PROTECTION
         # =========================================
-        self.bot_score = int(max(0, min(100, self.bot_score)))
+
+        if (
+            self.connection_type == "residential"
+            and not self.is_proxy
+            and not self.is_vpn
+            and not self.is_tor
+            and not self.is_automation
+        ):
+            self.bot_score *= 0.30
+
+        # =========================================
+        # FINGERPRINT CONSISTENCY
+        # =========================================
+
+        if self.canvas_fingerprint and self.webgl_fingerprint:
+
+            fp_key = f"fp_consistency:{self.canvas_fingerprint}"
+
+            old = redis_client.get(fp_key)
+
+            if old and old.decode() != self.webgl_fingerprint:
+                self.bot_score += 20
+                self.reasons.append("fp_mismatch")
+
+            redis_client.setex(fp_key, 3600, self.webgl_fingerprint)
 
         # 🔥 BREAK STATIC PATTERN
         # if self.bot_score > 0:
         #     self.bot_score += self.bot_score % 3
+        # =========================================
+        # 🔥 FINAL BOT SCORE NORMALIZATION (FINAL STEP)
+        # =========================================
+        self.bot_score = int(max(0, min(100, round(self.bot_score))))
         # ================================
         # DEBUG LOGS
         # ================================

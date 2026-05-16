@@ -22,18 +22,22 @@ class BotClassifier:
                 clicks = int(behavior.get("clicks", 0) or 0)
 
                 # softer penalties (avoid real user block)
+                interaction_score = 0
+
                 if mouse < 2:
-                    self.score += 10
+                    interaction_score += 4
 
                 if scroll == 0:
-                    self.score += 8
+                    interaction_score += 3
 
                 if clicks == 0:
-                    self.score += 8
+                    interaction_score += 3
 
-                # strong signal only if EVERYTHING zero
+                # only suspicious if absolutely dead session
                 if mouse == 0 and scroll == 0 and clicks == 0:
-                    self.score += 20
+                    interaction_score += 10
+
+                self.score += interaction_score
 
         except Exception:
             self.score += 3  # lighter fallback
@@ -75,12 +79,30 @@ class BotClassifier:
             "node-fetch",
         ]
 
-        if any(k in ua for k in bot_keywords):
-            self.score += 25  # reduced (avoid false positives)
+        matched_keywords = [k for k in bot_keywords if k in ua]
+
+        if matched_keywords:
+
+            # severe automation keywords
+            hard_keywords = [
+                "selenium",
+                "playwright",
+                "puppeteer",
+                "phantom",
+                "headless",
+                "curl",
+                "wget",
+                "scrapy",
+            ]
+
+            if any(k in matched_keywords for k in hard_keywords):
+                self.score += 45
+            else:
+                self.score += 20  # reduced (avoid false positives)
 
         # suspicious UA patterns
-        if len(ua) < 20:
-            self.score += 8
+        if len(ua) < 20 and "mozilla" not in ua:
+            self.score += 12
 
         if "mozilla" not in ua:
             self.score += 10
@@ -89,19 +111,19 @@ class BotClassifier:
         # 3. DEVICE CHECK
         # -----------------------------
         if getattr(self.visitor, "device_type", "") == "bot":
-            self.score += 35
+            self.score += 30
 
         # -----------------------------
         # 4. NETWORK QUALITY
         # -----------------------------
         if getattr(self.visitor, "is_datacenter", False):
-            self.score += 30  # stronger
+            self.score += 45  # stronger
 
         if getattr(self.visitor, "is_proxy", False):
-            self.score += 25
+            self.score += 40
 
         if getattr(self.visitor, "is_vpn", False):
-            self.score += 20
+            self.score += 28
 
         # -----------------------------
         # 5. VELOCITY CHECK (IMPROVED)
@@ -114,11 +136,11 @@ class BotClassifier:
                 if count == 1:
                     redis_client.expire(key, 60)
 
-                if count > 20:
-                    self.score += 15
+                if count > 30:
+                    self.score += 10
 
-                if count > 50:
-                    self.score += 30
+                if count > 80:
+                    self.score += 25
 
         except Exception:
             pass
@@ -128,16 +150,26 @@ class BotClassifier:
         # -----------------------------
         bot_score = getattr(self.visitor, "bot_score", 0) or 0
 
-        if bot_score >= 80:
-            self.score += 30
-        elif bot_score >= 50:
-            self.score += 12
+        if bot_score >= 85:
+            self.score += 35
+
+        elif bot_score >= 65:
+            self.score += 20
+
+        elif bot_score >= 45:
+            self.score += 8
 
         # -----------------------------
         # 7. HEADLESS + AUTOMATION SIGNAL
         # -----------------------------
-        if "headless" in ua or "phantomjs" in ua:
-            self.score += 35
+        if (
+            "headless" in ua
+            or "phantomjs" in ua
+            or "selenium" in ua
+            or "playwright" in ua
+            or "puppeteer" in ua
+        ):
+            self.score += 60
 
         # -----------------------------
         # 8. REAL USER PROTECTION (VERY IMPORTANT)
@@ -149,7 +181,23 @@ class BotClassifier:
             and not getattr(self.visitor, "is_vpn", False)
         ):
             # reduce risk for real users
-            self.score *= 0.7
+            if self.score < 45:
+                self.score *= 0.55
+
+        # =========================================
+        # FINAL HARD RULES
+        # =========================================
+
+        if getattr(self.visitor, "is_proxy", False) and getattr(
+            self.visitor, "is_datacenter", False
+        ):
+            self.score = max(self.score, 75)
+
+        if getattr(self.visitor, "is_proxy", False) and "headless" in ua:
+            self.score = max(self.score, 90)
+
+        if getattr(self.visitor, "is_datacenter", False) and "selenium" in ua:
+            self.score = max(self.score, 95)
 
         # -----------------------------
         # NORMALIZE
@@ -161,8 +209,10 @@ class BotClassifier:
     def classify(self):
         score = self.calculate()
 
-        if score >= 75:
+        if score >= 80:
             return "bot"
+
         elif score >= 45:
             return "suspicious"
+
         return "human"
