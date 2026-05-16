@@ -158,40 +158,182 @@ class VisitorContext:
         ua_lower = self.user_agent_string.lower()
 
         bot_keywords = [
+            # =========================================
+            # BASIC CLI / SCRIPT BOTS
+            # =========================================
             "curl",
             "wget",
             "python",
+            "python-requests",
+            "aiohttp",
             "scrapy",
-            "bot",
-            "crawler",
-            "spider",
+            "mechanize",
             "httpclient",
             "java",
             "libwww",
-            "node-fetch",
-            "axios",
+            "perl",
+            "ruby",
+            "php",
             "go-http-client",
             "okhttp",
-            "postman",
-            "headless",
-            "phantom",
+            "axios",
+            "node-fetch",
+            "guzzlehttp",
+            "powershell",
+            "http.rb",
+            "restsharp",
+            # =========================================
+            # AUTOMATION / HEADLESS
+            # =========================================
             "selenium",
             "playwright",
             "puppeteer",
+            "phantom",
+            "phantomjs",
+            "headless",
+            "headlesschrome",
+            "chromium",
+            "undetected_chromedriver",
+            "webdriver",
+            "electron",
+            "cefsharp",
+            "slimerjs",
+            # =========================================
+            # SCANNERS / SECURITY TOOLS
+            # =========================================
+            "sqlmap",
+            "nikto",
+            "nmap",
+            "nessus",
+            "masscan",
+            "acunetix",
+            "wpscan",
+            "netsparker",
+            "dirbuster",
+            "dirb",
+            "ffuf",
+            "gobuster",
+            "whatweb",
+            "arachni",
+            "zgrab",
+            "zap",
+            "burp",
+            "burpsuite",
+            # =========================================
+            # SEO / CRAWLERS
+            # =========================================
+            "crawler",
+            "spider",
+            "sitebot",
+            "linkchecker",
+            "crawler4j",
+            "semrush",
+            "ahrefs",
+            "mj12bot",
+            "dotbot",
+            "blexbot",
+            "yandexbot",
+            "petalbot",
+            "seznambot",
+            "sogou",
+            "bingbot",
+            "googlebot",
+            "duckduckbot",
+            "baiduspider",
+            # =========================================
+            # SOCIAL / PREVIEW BOTS
+            # =========================================
+            "facebookexternalhit",
+            "facebot",
+            "twitterbot",
+            "slackbot",
+            "discordbot",
+            "telegrambot",
+            "whatsapp",
+            "linkedinbot",
+            "embedly",
+            "quora link preview",
+            "pinterestbot",
+            "redditbot",
+            "skypeuripreview",
+            # =========================================
+            # HOSTING / SERVER / MONITORING
+            # =========================================
+            "uptimerobot",
+            "statuscake",
+            "pingdom",
+            "datadog",
+            "newrelic",
+            "cloudflare",
+            "amazonbot",
+            "gptbot",
+            "chatgpt-user",
+            "claudebot",
+            "anthropic-ai",
+            "ccbot",
+            # =========================================
+            # AD REVIEW / MODERATION / QA
+            # =========================================
+            "adreview",
+            "adscanner",
+            "creative-review",
+            "creative scanner",
+            "policybot",
+            "adsbot",
+            "google adsbot",
+            "adsbot-google",
+            "google-adwords",
+            "google web preview",
+            "google-inspectiontool",
+            "facebookcatalog",
+            "meta-externalagent",
+            "meta-externalfetcher",
+            "tiktokspider",
+            "bytedance",
+            "snapchat",
+            "snap url preview",
+            # =========================================
+            # GENERIC BAD WORDS
+            # =========================================
+            "bot",
+            "scanner",
+            "checker",
+            "validator",
+            "monitor",
+            "fetcher",
+            "scraper",
+            "analyzer",
+            "parser",
+            "validator",
         ]
 
         automation_keywords = [
             "selenium",
             "playwright",
             "puppeteer",
-            "headless",
             "phantom",
+            "phantomjs",
+            "headless",
+            "headlesschrome",
+            "webdriver",
+            "undetected_chromedriver",
+            "chromedriver",
+            "cefsharp",
+            "electron",
+            "slimerjs",
+            "nightmare",
+            "zombiejs",
+            "testcafe",
+            "cypress",
+            "marvin",
+            "browserless",
+            "automation",
         ]
 
         if any(a in ua_lower for a in automation_keywords):
 
             self.is_automation = True
-            self.bot_score += 40
+            self.bot_score += 30
             self.reasons.append("automation_detected")
         # 🔥 AUTOMATION HARD FORCE
         if self.is_automation:
@@ -584,7 +726,7 @@ class VisitorContext:
             self.connection_type = "proxy"
             self.ip_type = "proxy"
 
-            self.bot_score = max(self.bot_score, 70)
+            self.bot_score = max(self.bot_score, 60)
             self.reasons.append("proxy_network")
 
         elif self.is_datacenter:
@@ -716,7 +858,7 @@ class VisitorContext:
             suspicion += 1
 
         # 🔥 apply only if already suspicious
-        if suspicion >= 2 and self.signal_strength >= 1:
+        if suspicion >= 2:
             self.is_bot = True
             self.bot_score += 25
             self.reasons.append("unknown_bot_pattern")
@@ -940,8 +1082,14 @@ class VisitorContext:
             "community network center",
         ]
 
-        if self.isp and any(t in self.isp.lower() for t in trusted_isp):
-            self.bot_score -= 30
+        if (
+            self.isp
+            and any(t in self.isp.lower() for t in trusted_isp)
+            and not self.is_proxy
+            and not self.is_vpn
+            and not self.is_datacenter
+        ):
+            self.bot_score -= 25
 
         # ================================
         # 🔥 CONFIDENCE SYSTEM (VERY IMPORTANT)
@@ -975,12 +1123,11 @@ class VisitorContext:
         # 🔥 MICRO VARIATION (ANTI PATTERN)
         # ================================
 
-        import random
-        import time
+        # import random
+        # import time
 
-        # small random noise
-        if self.signal_strength >= 2 or self.bot_score >= 30:
-            self.bot_score += random.randint(0, 3)
+        # if self.signal_strength >= 2 or self.bot_score >= 30:
+        #     self.bot_score += random.randint(0, 3)
         # ================================
         # FINAL BOT SCORE
         # ================================
@@ -1067,8 +1214,27 @@ class VisitorContext:
         # 🔥 FINAL SAFETY CHECK
         # ================================
 
-        if self.signal_strength <= 1 and self.bot_score > 70:
-            self.bot_score = 55  # 🔥 avoid false block
+        if (
+            self.signal_strength <= 1
+            and self.connection_type == "residential"
+            and self.bot_score > 70
+        ):
+            self.bot_score = 50
+        # =========================================
+        # FINAL HARD RULES
+        # =========================================
+
+        if self.is_tor:
+            self.bot_score = 100
+
+        elif self.is_automation:
+            self.bot_score = max(self.bot_score, 90)
+
+        elif self.is_proxy and self.signal_strength >= 2:
+            self.bot_score = max(self.bot_score, 75)
+
+        elif self.is_vpn and self.signal_strength >= 2:
+            self.bot_score = max(self.bot_score, 65)
 
         # =========================================
         # 🔥 FINAL BOT SCORE NORMALIZATION (FINAL STEP)
@@ -1076,8 +1242,8 @@ class VisitorContext:
         self.bot_score = int(max(0, min(100, self.bot_score)))
 
         # 🔥 BREAK STATIC PATTERN
-        if self.bot_score > 0:
-            self.bot_score += self.bot_score % 3
+        # if self.bot_score > 0:
+        #     self.bot_score += self.bot_score % 3
         # ================================
         # DEBUG LOGS
         # ================================

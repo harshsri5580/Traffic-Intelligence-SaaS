@@ -1,7 +1,6 @@
 import ipaddress
 import re
 
-
 # =========================================
 # TOR EXIT NODES (extendable)
 # =========================================
@@ -71,11 +70,24 @@ SAFE_ISP = [
     "jio",
     "airtel",
     "vodafone",
+    "vi india",
     "bsnl",
     "comcast",
     "verizon",
     "att",
     "t-mobile",
+    "tmobile",
+    "reliance",
+    "spectrum",
+    "cox",
+    "charter",
+    "orange",
+    "telefonica",
+    "telstra",
+    "rogers",
+    "bell canada",
+    "shaw",
+    "vodafone india",
 ]
 
 
@@ -132,14 +144,25 @@ def detect_vpn(ip, org=None, asn=None):
         # ASN CHECK (STRONG SIGNAL)
         # ----------------------
         if asn_str in DATACENTER_ASN:
+
             result["is_proxy"] = True
-            result["confidence"] += 50
+            result["confidence"] += 70
+
+            # strong cloud providers
+            if asn_str in ["AS16509", "AS15169", "AS8075"]:
+                result["confidence"] += 10
 
         # ----------------------
         # ISP SAFE OVERRIDE
         # ----------------------
         if any(safe in org_norm for safe in SAFE_ISP):
-            return result  # 🔥 EXIT SAFE
+
+            result["confidence"] = 0
+            result["is_proxy"] = False
+            result["is_vpn"] = False
+            result["is_residential_proxy"] = False
+
+            return result
 
         # ----------------------
         # VPN KEYWORD MATCH
@@ -165,24 +188,28 @@ def detect_vpn(ip, org=None, asn=None):
         # ----------------------
 
         # cloud ranges (common)
-        if ip_str.startswith(("45.", "104.", "172.", "192.168")):
-            result["is_proxy"] = True
-            result["confidence"] += 15
+        # if ip_str.startswith(("45.", "104.", "172.", "192.168")):
+        #     result["is_proxy"] = True
+        #     result["confidence"] += 15
 
         # suspicious pattern
-        if ip_str.endswith(".1") or ip_str.endswith(".254"):
-            result["is_residential_proxy"] = True
-            result["confidence"] += 20
+        # if ip_str.endswith(".1") or ip_str.endswith(".254"):
+        #     result["is_residential_proxy"] = True
+        #     result["confidence"] += 20
 
         # ----------------------
         # FINAL DECISION LOGIC
         # ----------------------
 
-        if result["confidence"] >= 70:
+        if result["confidence"] >= 60:
             result["is_proxy"] = True
 
-        if result["confidence"] >= 90:
+        if result["confidence"] >= 85:
             result["is_vpn"] = True
+
+        # residential proxy protection
+        if result["is_proxy"] and not result["is_vpn"] and result["confidence"] < 80:
+            result["is_residential_proxy"] = False
 
     except Exception:
         pass

@@ -112,7 +112,7 @@ class RiskEngine:
         # DATACENTER
         # ---------------------------------
         if getattr(self.visitor, "is_datacenter", False):
-            self.score += 50
+            self.score += 60
 
         # ---------------------------------
         # VPN / PROXY (SAFE CACHE)
@@ -128,18 +128,17 @@ class RiskEngine:
                 if vpn_info:
                     redis_client.setex(cache_key, 3600, json.dumps(vpn_info))
 
-            if vpn_info:
-                if vpn_info.get("is_tor"):
-                    self.score += 100  # 🔥 HARD BLOCK
+            if vpn_info.get("is_tor"):
+                self.score = 100
 
-                if vpn_info.get("is_vpn"):
-                    self.score += 35  # 🔥 strong
+            if vpn_info.get("is_vpn"):
+                self.score += 55
 
-                if vpn_info.get("is_proxy"):
-                    self.score += 50  # 🔥 strong
+            if vpn_info.get("is_proxy"):
+                self.score += 65
 
-                if vpn_info.get("is_residential_proxy"):
-                    self.score += 60  # 🔥 MOST IMPORTANT
+            if vpn_info.get("is_residential_proxy"):
+                self.score += 75
 
         except Exception:
             pass
@@ -332,7 +331,8 @@ class RiskEngine:
         # ================================
 
         import time
-        import random
+
+        # import random
 
         # rapid request detection
         if hasattr(self.visitor, "last_request_time"):
@@ -343,7 +343,7 @@ class RiskEngine:
         self.visitor.last_request_time = time.time()
 
         # small randomness
-        self.score += random.randint(0, 5)
+        # self.score += random.randint(0, 5)
         # ---------------------------------
         # NORMALIZE
         # ---------------------------------
@@ -384,14 +384,17 @@ class RiskEngine:
             # ================================
 
             if getattr(self.visitor, "ip_type", "") == "residential":
-                if (
+
+                clean_residential = (
                     not getattr(self.visitor, "is_vpn", False)
                     and not getattr(self.visitor, "is_proxy", False)
                     and not getattr(self.visitor, "is_datacenter", False)
+                    and not getattr(self.visitor, "is_tor", False)
                     and not getattr(self.visitor, "is_automation", False)
-                ):
-                    if self.score < 70:
-                        self.score *= 0.5
+                )
+
+                if clean_residential and self.score < 70:
+                    self.score *= 0.45
         except Exception:
             pass
 
