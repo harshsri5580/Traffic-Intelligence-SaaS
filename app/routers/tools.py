@@ -29,7 +29,21 @@ def generate_script(slug: str, request: Request, db: Session = Depends(get_db)):
         source = campaign.traffic_source
 
     #  final redirect URL
-    redirect_url = f"{domain}/r/{slug}?utm_source={source}&utm_medium=paid"
+    # ✅ tracking domain first
+    tracking_domain = None
+
+    if campaign and campaign.tracking_domain:
+        tracking_domain = campaign.tracking_domain.strip()
+
+    # ✅ auto https
+    if tracking_domain and not tracking_domain.startswith("http"):
+        tracking_domain = "https://" + tracking_domain
+
+    # ✅ fallback
+    base_domain = tracking_domain or domain
+
+    # ✅ final redirect URL
+    redirect_url = f"{base_domain}/r/{slug}?utm_source={source}&utm_medium=paid"
 
     encoded = base64.b64encode(redirect_url.encode()).decode()
     encoded = encoded[::-1]  # reverse

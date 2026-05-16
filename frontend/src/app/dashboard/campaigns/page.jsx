@@ -84,17 +84,47 @@ export default function Campaigns() {
   };
 
   const generateTrackingLink = (c) => {
+
+    const getDomain = (url) => {
+      try {
+
+        if (!url) return null;
+
+        url = url.trim();
+
+        // ✅ auto https
+        if (!url.startsWith("http")) {
+          url = "https://" + url;
+        }
+
+        return new URL(url).origin;
+
+      } catch {
+        return null;
+      }
+    };
+
+    // ✅ tracking domain first
     const BASE_URL =
-      process.env.NEXT_PUBLIC_API_URL ||
-      (typeof window !== "undefined" && window.location.origin) ||
-      "http://127.0.0.1:8000";
+      getDomain(c.tracking_domain) ||
+      process.env.NEXT_PUBLIC_BASE_URL;
 
     if (!BASE_URL) {
-      console.error("❌ BASE URL missing");
-      return "⚠️ Base URL not set";
+      console.error("❌ Tracking domain missing");
+      return "⚠️ Tracking domain missing";
     }
 
-    const url = `${BASE_URL}/r/${c.slug}?sub1={zoneid}&sub2={cost}`;
+    let url = `${BASE_URL}/r/${c.slug}`;
+
+    const params = [];
+
+    if (c.sub1) params.push(`sub1={${c.sub1}}`);
+    if (c.sub2) params.push(`sub2={${c.sub2}}`);
+
+    if (params.length > 0) {
+      url += "?" + params.join("&");
+    }
+
     return url;
   };
 
