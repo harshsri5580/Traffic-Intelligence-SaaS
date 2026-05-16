@@ -85,34 +85,10 @@ export default function Campaigns() {
 
   const generateTrackingLink = (c) => {
 
-    const getDomain = (url) => {
-      try {
-
-        if (!url) return null;
-
-        url = url.trim();
-
-        // ✅ auto https
-        if (!url.startsWith("http")) {
-          url = "https://" + url;
-        }
-
-        return new URL(url).origin;
-
-      } catch {
-        return null;
-      }
-    };
-
-    // ✅ tracking domain first
+    // ✅ local + production support
     const BASE_URL =
-      getDomain(c.tracking_domain) ||
-      process.env.NEXT_PUBLIC_BASE_URL;
-
-    if (!BASE_URL) {
-      console.error("❌ Tracking domain missing");
-      return "⚠️ Tracking domain missing";
-    }
+      process.env.NEXT_PUBLIC_TRACKING_DOMAIN ||
+      "http://127.0.0.1:8000";
 
     let url = `${BASE_URL}/r/${c.slug}`;
 

@@ -3,6 +3,10 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.campaign import Campaign
 import base64
+import os
+
+# ✅ tracking domain
+TRACKING_DOMAIN = os.getenv("TRACKING_DOMAIN", "https://trkly.site")
 
 router = APIRouter(prefix="/tools", tags=["Tools"])
 
@@ -11,14 +15,7 @@ router = APIRouter(prefix="/tools", tags=["Tools"])
 def generate_script(slug: str, request: Request, db: Session = Depends(get_db)):
 
     #  detect domain safely
-    host = (
-        request.headers.get("x-forwarded-host")
-        or request.headers.get("host")
-        or "traffic-intelligence-saas.onrender.com"
-    )
-
-    proto = request.headers.get("x-forwarded-proto", "http")
-    domain = f"{proto}://{host}"
+    # ✅ HARD TRACKING DOMAIN
 
     #  get campaign
     campaign = db.query(Campaign).filter(Campaign.slug == slug).first()
@@ -29,21 +26,10 @@ def generate_script(slug: str, request: Request, db: Session = Depends(get_db)):
         source = campaign.traffic_source
 
     #  final redirect URL
-    # ✅ tracking domain first
-    tracking_domain = None
-
-    if campaign and campaign.tracking_domain:
-        tracking_domain = campaign.tracking_domain.strip()
-
-    # ✅ auto https
-    if tracking_domain and not tracking_domain.startswith("http"):
-        tracking_domain = "https://" + tracking_domain
-
-    # ✅ fallback
-    base_domain = tracking_domain or domain
 
     # ✅ final redirect URL
-    redirect_url = f"{base_domain}/r/{slug}?utm_source={source}&utm_medium=paid"
+    # ✅ ALWAYS use current request domain for scripts/proxy
+    redirect_url = f"{TRACKING_DOMAIN}/r/{slug}?utm_source={source}&utm_medium=paid"
 
     encoded = base64.b64encode(redirect_url.encode()).decode()
     encoded = encoded[::-1]  # reverse
