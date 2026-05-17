@@ -162,11 +162,9 @@ export default function PricingPage() {
             <div
               key={p.id}
               className={`relative p-8 rounded-2xl border shadow-lg transition
-              ${shouldHighlight
-                  ? "border-indigo-600 bg-indigo-50 scale-105 ring-2 ring-indigo-200"
-                  : isPopular
-                    ? "border-indigo-400 bg-white"
-                    : "bg-white border-gray-200"
+             ${isPopular
+                  ? "border-indigo-600 bg-white scale-105 shadow-2xl"
+                  : "bg-white border-gray-200"
                 }`}
             >
 
@@ -246,10 +244,10 @@ export default function PricingPage() {
 ${isCurrent && daysLeft > 0
                     ? "bg-gray-400 cursor-not-allowed text-white"
                     : isCurrent && daysLeft <= 0
-                      ? "bg-red-600 text-white hover:bg-red-700 hover:scale-[1.02] cursor-pointer shadow-lg hover:shadow-red-500/30"
+                      ? "bg-indigo-600 text-white hover:bg-indigo-700 hover:scale-[1.02] cursor-pointer shadow-lg hover:shadow-red-500/30"
                       : isPopular
                         ? "bg-indigo-600 text-white hover:bg-indigo-700 hover:scale-[1.02]"
-                        : "bg-gray-900 text-white hover:bg-black hover:scale-[1.02]"
+                        : "bg-indigo-600 text-white hover:bg-indigo-700 hover:scale-[1.02]"
                   }`}
               >
                 {isCurrent && daysLeft > 0
