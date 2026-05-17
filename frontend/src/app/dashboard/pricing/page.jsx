@@ -215,7 +215,7 @@ export default function PricingPage() {
               </div>
 
               <button
-                disabled={isCurrent && !expired}
+                disabled={isCurrent && daysLeft > 0}
                 onClick={async () => {
                   try {
                     const res = await api.post(`/billing/create-checkout/${p.id}`);
@@ -249,9 +249,9 @@ export default function PricingPage() {
                       : "bg-gray-900 text-white hover:bg-black"
                   }`}
               >
-                {isCurrent && !expired
+                {isCurrent && daysLeft > 0
                   ? "Current Plan"
-                  : expired && isCurrent
+                  : isCurrent && daysLeft <= 0
                     ? "Renew Plan"
                     : "Choose Plan"}
               </button>
