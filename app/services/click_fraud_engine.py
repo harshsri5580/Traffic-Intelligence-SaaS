@@ -85,8 +85,11 @@ class ClickFraudEngine:
 
             delta = now - int(last)
 
-            if delta < 1:
+            if delta < 1 and self.visitor.is_proxy:
                 return 50
+
+            if delta < 2:
+                return 15
 
             if delta < 3:
                 return 20
@@ -101,4 +104,11 @@ class ClickFraudEngine:
 
         score = self.calculate()
 
-        return score >= 60
+        return score >= 70 or (
+            score >= 50
+            and (
+                self.visitor.is_proxy
+                or self.visitor.is_vpn
+                or self.visitor.is_datacenter
+            )
+        )

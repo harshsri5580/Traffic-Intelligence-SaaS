@@ -17,21 +17,54 @@ TOR_EXIT_NODES = {
 # =========================================
 
 VPN_KEYWORDS = [
+    # MAJOR VPN
     "nordvpn",
     "expressvpn",
     "surfshark",
     "mullvad",
     "protonvpn",
     "purevpn",
-    "pia",
-    "private internet",
     "ipvanish",
     "windscribe",
     "tunnelbear",
+    "hide.me",
+    "hidemyass",
+    "hma vpn",
+    "cyberghost",
+    "vyprvpn",
+    "private internet access",
+    "pia vpn",
+    "atlasvpn",
+    "urbanvpn",
+    "hola vpn",
+    "adguard vpn",
+    "fastestvpn",
+    "ivacy",
+    "vpn unlimited",
+    "openvpn",
+    "wireguard",
+    # ENTERPRISE VPN
+    "fortinet",
+    "fortigate",
+    "forticlient",
+    "cisco anyconnect",
+    "openconnect",
+    "globalprotect",
+    "pulse secure",
+    # GENERIC
+    "vpn",
+    "secure tunnel",
+    "encrypted tunnel",
 ]
 
 PROXY_KEYWORDS = [
+    # GENERIC
     "proxy",
+    "anonymous proxy",
+    "elite proxy",
+    "transparent proxy",
+    "forward proxy",
+    "reverse proxy",
     "vpn",
     "hosting",
     "server",
@@ -41,28 +74,174 @@ PROXY_KEYWORDS = [
     "vps",
     "virtual",
     "instance",
+    # MAJOR HOSTING / VPS
+    "aws",
+    "amazon",
+    "google cloud",
+    "azure",
+    "oracle cloud",
+    "digitalocean",
+    "linode",
+    "ovh",
+    "hetzner",
+    "vultr",
+    "choopa",
+    "m247",
+    "contabo",
+    "leaseweb",
+    "psychz",
+    "quadranet",
+    "colocrossing",
     "hostroyale",
     "digi",
-    "m247",
-    "choopa",
+    "xtom",
+    "aeza",
+    "pq hosting",
+    "ipxo",
+    "timeweb",
+    "gthost",
+    "hosthatch",
+    "smartape",
+    "fozzy",
+    "bluevps",
+    "racknerd",
+    "buyvm",
+    "frantech",
+    "zenlayer",
+    "scaleway",
+    # RESIDENTIAL PROXY NETWORKS
+    "brightdata",
+    "bright data",
+    "luminati",
+    "oxylabs",
+    "smartproxy",
+    "soax",
+    "netnut",
+    "packetstream",
+    "honeygain",
+    "geosurf",
+    "proxyrack",
+    # REVIEWER / FILTER ABUSE
+    "scraper",
+    "crawler",
+    "automation",
+    "headless",
+    "selenium",
+    "playwright",
+    "puppeteer",
 ]
 
 
 # =========================================
 # ASN DATACENTER (EXTENDED)
 # =========================================
-
 DATACENTER_ASN = {
+    # =========================
+    # MAJOR CLOUD
+    # =========================
     "AS16509",  # AWS
+    "AS14618",  # Amazon
     "AS15169",  # Google
+    "AS396982",  # Google Cloud
+    "AS8075",  # Microsoft Azure
+    "AS8068",  # Microsoft
+    "AS31898",  # Oracle Cloud
+    "AS45102",  # Alibaba Cloud
+    "AS63949",  # Linode / Akamai
+    "AS20940",  # Akamai
+    "AS16625",  # Akamai
+    "AS13335",  # Cloudflare
+    # =========================
+    # VPS / HOSTING
+    # =========================
     "AS14061",  # DigitalOcean
     "AS16276",  # OVH
     "AS24940",  # Hetzner
-    "AS8075",  # Microsoft
-    "AS13335",  # Cloudflare
-    "AS9009",  # M247
     "AS20473",  # Choopa / Vultr
+    "AS9009",  # M247
+    "AS51167",  # Contabo
+    "AS197540",  # netcup
+    "AS12876",  # Online.net / Scaleway
+    "AS12874",  # Fastweb hosting
     "AS63949",  # Linode
+    "AS200019",  # Alexhost
+    "AS60068",  # CDN77 / DataCamp
+    "AS40676",  # Psychz
+    "AS8100",  # QuadraNet
+    "AS30633",  # Leaseweb USA
+    "AS60781",  # Leaseweb NL
+    "AS59253",  # Leaseweb APAC
+    "AS36352",  # ColoCrossing
+    "AS29802",  # Hivelocity
+    "AS46475",  # Limestone
+    "AS23470",  # ReliableSite
+    "AS55293",  # A2 Hosting
+    "AS54600",  # BigScoots
+    "AS63023",  # GTHost
+    "AS63018",  # Hydra
+    "AS395954",  # HostHatch
+    "AS202425",  # IP Volume
+    "AS8108",  # 1&1 / IONOS
+    "AS8560",  # IONOS
+    "AS49505",  # Selectel
+    "AS197695",  # REG.RU
+    "AS9123",  # Timeweb
+    "AS21100",  # ITL LLC
+    "AS47890",  # Unmanaged LTD
+    "AS44477",  # STARK Industries
+    "AS215540",  # PQ Hosting
+    "AS207713",  # Aeza
+    "AS206092",  # XTom
+    "AS40065",  # CNSERVERS
+    "AS21859",  # Zenlayer
+    "AS13213",  # UK2 / VPS
+    "AS47583",  # Hostinger VPS
+    "AS47589",  # Hostinger
+    "AS47598",  # Digital Energy
+    "AS199524",  # GCore
+    "AS201106",  # BlueVPS
+    "AS57976",  # BlazingFast
+    "AS62240",  # Clouvider
+    "AS58061",  # Scalaxy
+    "AS61317",  # SmartApe
+    "AS52000",  # MIRholding
+    "AS51395",  # RouteLabel
+    "AS211252",  # DataForest
+    "AS50340",  # Selectel SPB
+    # =========================
+    # VPN / PROXY / REVIEWER
+    # =========================
+    "AS60064",  # CDN77 VPN infra
+    "AS398101",  # NordVPN infra
+    "AS210644",  # Surfshark
+    "AS136787",  # ProtonVPN infra
+    "AS9002",  # RETN
+    "AS9008",  # M247 Proxy infra
+    "AS206264",  # FineProxy
+    "AS210083",  # Proxy6
+    "AS200651",  # DataCamp proxy infra
+    "AS213230",  # Proxy reseller infra
+    "AS205016",  # Proxy network infra
+    "AS212238",  # Proxy hosting
+    "AS208046",  # VPN backbone
+    "AS202425",  # IPXO
+    "AS210558",  # ProxyLine
+    "AS44477",  # STARK proxy infra
+    "AS49453",  # UpCloud
+    "AS51167",  # Contabo
+    "AS58057",  # SecureHost
+    "AS204601",  # VPN infra
+    "AS59692",  # IQWeb
+    "AS61317",  # SmartApe
+    "AS198953",  # HostRoyale
+    "AS215292",  # DIGI VPS
+    # =========================
+    # MOBILE / CGNAT ABUSE
+    # (DO NOT HARD BLOCK)
+    # =========================
+    # keep for scoring only
+    "AS21928",  # T-Mobile
+    "AS22394",  # Verizon Wireless
 }
 
 
@@ -159,7 +338,7 @@ def detect_vpn(ip, org=None, asn=None):
         # ----------------------
         # ISP SAFE OVERRIDE
         # ----------------------
-        if any(safe in org_norm for safe in SAFE_ISP):
+        if any(safe in org_norm for safe in SAFE_ISP) and asn_str not in DATACENTER_ASN:
 
             # only trust if NOT already strong proxy/datacenter signal
             if result["confidence"] < 60:
@@ -210,7 +389,7 @@ def detect_vpn(ip, org=None, asn=None):
         if result["confidence"] >= 60:
             result["is_proxy"] = True
 
-        if result["confidence"] >= 85:
+        if result["confidence"] >= 90:
             result["is_vpn"] = True
 
         # residential proxy protection

@@ -4,6 +4,7 @@ from app.routers import behavior
 from app.services.redis_client import redis_client
 from app.services.proxy_rotation_detector import detect_proxy_rotation
 from app.services.ip_reputation import get_ip_reputation, set_ip_reputation
+from app.services.firehol_service import is_firehol_flagged
 
 
 class RiskEngine:
@@ -115,6 +116,20 @@ class RiskEngine:
         # ---------------------------------
         if getattr(self.visitor, "is_datacenter", False):
             self.score += 85
+
+        # ---------------------------------
+        # FIREHOL THREAT FEED
+        # ---------------------------------
+        try:
+
+            if is_firehol_flagged(ip):
+
+                # only signal boost
+                # NEVER direct block
+                self.score += 25
+
+        except Exception:
+            pass
 
         # ---------------------------------
         # VPN / PROXY (SAFE CACHE)

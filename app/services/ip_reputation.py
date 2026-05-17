@@ -1,7 +1,7 @@
 from app.services.redis_client import redis_client
 import time
 
-TTL = 86400  # 24 hours
+TTL = 604800  # 24 hours
 
 
 # =========================================
@@ -41,7 +41,7 @@ def increase_ip_risk(ip: str, amount: int = 10):
         if current >= 70:
             amount = int(amount * 2)
         elif current <= 20:
-            amount = int(amount * 0.9)
+            amount = int(amount * 0.8)
 
         new_score = current + amount
 
@@ -82,8 +82,8 @@ def decay_ip_reputation(ip: str):
             diff = now - last
 
             # every 1 hour decay
-            if diff > 7600:
-                decrease_ip_risk(ip, 3)
+            if diff > 3600:
+                decrease_ip_risk(ip, 5)
                 redis_client.set(key, now)
 
         else:
@@ -98,6 +98,13 @@ def decay_ip_reputation(ip: str):
 # =========================================
 def is_high_risk(ip: str) -> bool:
     try:
-        return get_ip_reputation(ip) >= 60
+        return get_ip_reputation(ip) >= 75
+    except Exception:
+        return False
+
+
+def is_medium_risk(ip: str) -> bool:
+    try:
+        return get_ip_reputation(ip) >= 35
     except Exception:
         return False

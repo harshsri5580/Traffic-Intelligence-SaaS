@@ -873,7 +873,7 @@ class VisitorContext:
             suspicion += 1
 
         # 🔥 apply only if already suspicious
-        if suspicion >= 3:
+        if suspicion >= 3 and self.is_datacenter:
             self.is_bot = True
             self.bot_score += 15
             self.reasons.append("unknown_bot_pattern")
@@ -926,7 +926,7 @@ class VisitorContext:
                 total_ips = redis_client.scard(key)
 
                 # 🔥 multiple IPs for same fingerprint
-                if total_ips > 3:
+                if total_ips > 5:
                     self.is_proxy = True
                     self.bot_score += 20
                     self.reasons.append("res_proxy_rotation")
@@ -1193,7 +1193,7 @@ class VisitorContext:
                 if hits == 1:
                     redis_client.expire(key, 300)
 
-                if hits > 15:
+                if hits > 25:
                     self.bot_score += 20
                     self.reasons.append("fp_abuse")
         except Exception:
@@ -1262,6 +1262,20 @@ class VisitorContext:
         # =========================================
         # FINAL HARD RULES
         # =========================================
+
+        # =========================================
+        # SAFE RESIDENTIAL USER PROTECTION
+        # =========================================
+
+        if (
+            self.connection_type == "residential"
+            and not self.is_proxy
+            and not self.is_vpn
+            and not self.is_tor
+            and not self.is_automation
+            and self.signal_strength <= 1
+        ):
+            self.bot_score = min(self.bot_score, 35)
 
         # =========================================
         # FINAL HARD RULES

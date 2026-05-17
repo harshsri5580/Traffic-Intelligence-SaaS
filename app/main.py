@@ -10,6 +10,7 @@ from slowapi.errors import RateLimitExceeded
 # ✅ DATABASE (ONLY THIS)
 from app.database import engine, Base, SessionLocal
 from app.tasks.report_tasks import start_scheduler
+from app.services.firehol_service import load_firehol
 
 # ✅ MODELS
 from app.models.system_log import SystemLog
@@ -200,4 +201,10 @@ def root():
 @app.on_event("startup")
 async def startup_event():
     logging.info("🚀 Traffic Intelligence SaaS started")
+
+    # 🔥 LOAD FIREHOL LISTS
+    load_firehol()
+
+    logging.info("🔥 FireHOL threat feeds loaded")
+
     start_scheduler()

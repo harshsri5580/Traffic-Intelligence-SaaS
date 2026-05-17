@@ -13,12 +13,12 @@ def check_traffic_filters(visitor, db: Session, user_id: int):
     ip = (visitor.ip or "").strip().lower()
     isp = " ".join((visitor.isp or "").lower().split())
     # 🔥 DEBUG ADD HERE
-    print("ISP RAW:", repr(visitor.isp))
-    print("ISP CLEAN:", repr(isp))
+    # print("ISP RAW:", repr(visitor.isp))
+    # print("ISP CLEAN:", repr(isp))
 
     ua = (visitor.user_agent_string or "").strip().lower()
     ref = (visitor.referrer or "").strip().lower()
-    print("🔍 ISP:", isp)
+    # print("🔍 ISP:", isp)
     print(
         "🔍 FILTERS:",
         [(f.category, f.value, getattr(f, "filter_type", "block")) for f in filters],
