@@ -389,7 +389,7 @@ def detect_vpn(ip, org=None, asn=None):
         if result["confidence"] >= 60:
             result["is_proxy"] = True
 
-        if result["confidence"] >= 90:
+        if result["confidence"] >= 88:
             result["is_vpn"] = True
 
         # residential proxy protection
