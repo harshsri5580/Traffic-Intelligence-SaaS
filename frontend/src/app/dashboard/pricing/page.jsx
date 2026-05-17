@@ -153,15 +153,20 @@ export default function PricingPage() {
           const isCurrent =
             planName.toLowerCase().trim() === userPlan.trim();
 
+          const shouldHighlight =
+            isCurrent || (expired && isCurrent);
+
           const isPopular = planName.toLowerCase().includes("pro");
 
           return (
             <div
               key={p.id}
               className={`relative p-8 rounded-2xl border shadow-lg transition
-              ${isPopular
-                  ? "border-indigo-600 bg-white scale-105"
-                  : "bg-white border-gray-200"
+              ${shouldHighlight
+                  ? "border-indigo-600 bg-indigo-50 scale-105 ring-2 ring-indigo-200"
+                  : isPopular
+                    ? "border-indigo-400 bg-white"
+                    : "bg-white border-gray-200"
                 }`}
             >
 
