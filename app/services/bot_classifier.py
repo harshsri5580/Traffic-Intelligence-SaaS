@@ -117,13 +117,13 @@ class BotClassifier:
         # 4. NETWORK QUALITY
         # -----------------------------
         if getattr(self.visitor, "is_datacenter", False):
-            self.score += 45  # stronger
+            self.score += 65  # stronger
 
         if getattr(self.visitor, "is_proxy", False):
             self.score += 40
 
         if getattr(self.visitor, "is_vpn", False):
-            self.score += 28
+            self.score += 45
 
         # -----------------------------
         # 5. VELOCITY CHECK (IMPROVED)
@@ -181,8 +181,8 @@ class BotClassifier:
             and not getattr(self.visitor, "is_vpn", False)
         ):
             # reduce risk for real users
-            if self.score < 45:
-                self.score *= 0.55
+            if self.score < 35:
+                self.score *= 0.70
 
         # =========================================
         # FINAL HARD RULES
@@ -198,7 +198,11 @@ class BotClassifier:
 
         if getattr(self.visitor, "is_datacenter", False) and "selenium" in ua:
             self.score = max(self.score, 95)
+        if getattr(self.visitor, "is_tor", False):
+            self.score = 100
 
+        if getattr(self.visitor, "is_proxy", False):
+            self.score = max(self.score, 85)
         # -----------------------------
         # NORMALIZE
         # -----------------------------
@@ -209,10 +213,10 @@ class BotClassifier:
     def classify(self):
         score = self.calculate()
 
-        if score >= 80:
+        if score >= 75:
             return "bot"
 
-        elif score >= 45:
+        elif score >= 40:
             return "suspicious"
 
         return "human"

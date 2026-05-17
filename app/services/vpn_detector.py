@@ -41,6 +41,10 @@ PROXY_KEYWORDS = [
     "vps",
     "virtual",
     "instance",
+    "hostroyale",
+    "digi",
+    "m247",
+    "choopa",
 ]
 
 
@@ -157,12 +161,14 @@ def detect_vpn(ip, org=None, asn=None):
         # ----------------------
         if any(safe in org_norm for safe in SAFE_ISP):
 
-            result["confidence"] = 0
-            result["is_proxy"] = False
-            result["is_vpn"] = False
-            result["is_residential_proxy"] = False
+            # only trust if NOT already strong proxy/datacenter signal
+            if result["confidence"] < 60:
+                result["confidence"] = 0
+                result["is_proxy"] = False
+                result["is_vpn"] = False
+                result["is_residential_proxy"] = False
 
-            return result
+                return result
 
         # ----------------------
         # VPN KEYWORD MATCH

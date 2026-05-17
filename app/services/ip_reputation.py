@@ -38,10 +38,10 @@ def increase_ip_risk(ip: str, amount: int = 10):
         current = get_ip_reputation(ip)
 
         # 🔥 adaptive growth
-        if current >= 80:
-            amount = int(amount * 1.5)
+        if current >= 70:
+            amount = int(amount * 2)
         elif current <= 20:
-            amount = int(amount * 0.7)
+            amount = int(amount * 0.9)
 
         new_score = current + amount
 
@@ -82,8 +82,8 @@ def decay_ip_reputation(ip: str):
             diff = now - last
 
             # every 1 hour decay
-            if diff > 3600:
-                decrease_ip_risk(ip, 5)
+            if diff > 7600:
+                decrease_ip_risk(ip, 3)
                 redis_client.set(key, now)
 
         else:
@@ -98,6 +98,6 @@ def decay_ip_reputation(ip: str):
 # =========================================
 def is_high_risk(ip: str) -> bool:
     try:
-        return get_ip_reputation(ip) >= 70
+        return get_ip_reputation(ip) >= 60
     except Exception:
         return False

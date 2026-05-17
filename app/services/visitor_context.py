@@ -1,7 +1,8 @@
 import hashlib
 from fastapi import Request
 from user_agents import parse
-import random
+
+# import random
 from urllib.parse import parse_qs
 import json
 from app.services.redis_client import redis_client
@@ -337,7 +338,7 @@ class VisitorContext:
             self.reasons.append("automation_detected")
         # 🔥 AUTOMATION HARD FORCE
         if self.is_automation:
-            self.bot_score += 40
+            self.bot_score += 20
 
         if any(k in ua_lower for k in bot_keywords):
 
@@ -415,6 +416,8 @@ class VisitorContext:
             "google",
             "gcp",
             "microsoft",
+            "gtt communications",
+            "hostroyale",
             "azure",
             "oracle",
             "cloudflare",
@@ -754,38 +757,38 @@ class VisitorContext:
         # DEFAULT IP TYPE
         # ================================
 
-        if self.ip_type == "unknown":
+        # if self.ip_type == "unknown":
 
-            self.ip_type = "residential"
-            self.connection_type = "residential"
-            # 🔥 REAL USER SAFE (RESIDENTIAL)
-            # if self.connection_type == "residential" and not self.is_automation:
-            #     if self.bot_score < 80:
-            #         self.bot_score *= 0.6
-            # 🔥 SAFE REAL USER PROTECTION (SMART)
-            if (
-                self.connection_type == "residential"
-                and not self.is_vpn
-                and not self.is_proxy
-                and not self.is_datacenter
-                and not self.is_automation
-            ):
-                if self.bot_score < 70:
-                    self.bot_score *= 0.7
+        #     self.ip_type = "residential"
+        #     self.connection_type = "residential"
+        #     🔥 REAL USER SAFE (RESIDENTIAL)
+        #     if self.connection_type == "residential" and not self.is_automation:
+        #         if self.bot_score < 80:
+        #             self.bot_score *= 0.6
+        #     🔥 SAFE REAL USER PROTECTION (SMART)
+        #     if (
+        #         self.connection_type == "residential"
+        #         and not self.is_vpn
+        #         and not self.is_proxy
+        #         and not self.is_datacenter
+        #         and not self.is_automation
+        #     ):
+        #         if self.bot_score < 70:
+        #             self.bot_score *= 0.7
 
         # ================================
         # 🔥 REAL USER HARD PROTECTION
         # ================================
 
-        if (
-            self.connection_type == "residential"
-            and not self.is_vpn
-            and not self.is_proxy
-            and not self.is_datacenter
-            and not self.is_automation
-        ):
-            if self.bot_score < 40:
-                self.bot_score *= 0.7
+        # if (
+        #     self.connection_type == "residential"
+        #     and not self.is_vpn
+        #     and not self.is_proxy
+        #     and not self.is_datacenter
+        #     and not self.is_automation
+        # ):
+        #     if self.bot_score < 40:
+        #         self.bot_score *= 0.7
         # ================================
         # TRAFFIC SOURCE
         # ================================
@@ -870,9 +873,9 @@ class VisitorContext:
             suspicion += 1
 
         # 🔥 apply only if already suspicious
-        if suspicion >= 2:
+        if suspicion >= 3:
             self.is_bot = True
-            self.bot_score += 25
+            self.bot_score += 15
             self.reasons.append("unknown_bot_pattern")
 
         # ================================
@@ -956,8 +959,8 @@ class VisitorContext:
             if trust:
                 trust = int(trust)
 
-                if trust > 5:
-                    self.bot_score -= 10
+                # if trust > 5:
+                #     self.bot_score -= 10
 
             else:
                 redis_client.setex(trust_key, 3600, 1)
@@ -966,7 +969,7 @@ class VisitorContext:
             pass
         # 🔥 FORCE HIGH SCORE FOR DATACENTER
         if self.is_datacenter:
-            self.bot_score = max(self.bot_score, 40)
+            self.bot_score = max(self.bot_score, 65)
 
         # ================================
         # 🔥 AI RISK BOOST (SAFE VERSION)
@@ -1083,12 +1086,12 @@ class VisitorContext:
             "airtel africa",
             "vodacom",
             "safaricom",
-            "biglobe",
-            "k-opticom",
+            # "biglobe",
+            # "k-opticom",
             "matsusaka",
             "ocn",
             "open computer network",
-            "starcat",
+            # "starcat",
             "stnet",
             "koshinomiyako",
             "community network center",
@@ -1101,7 +1104,7 @@ class VisitorContext:
             and not self.is_vpn
             and not self.is_datacenter
         ):
-            self.bot_score -= 25
+            self.bot_score -= 10
 
         # ================================
         # 🔥 CONFIDENCE SYSTEM (VERY IMPORTANT)
@@ -1125,12 +1128,12 @@ class VisitorContext:
         self.signal_strength = signals
 
         # 🔥 weak signal → reduce score
-        if self.signal_strength <= 1:
-            self.bot_score *= 0.85
+        # if self.signal_strength <= 1:
+        #     self.bot_score *= 0.85
 
         # 🔥 strong signal → boost
         if signals >= 3:
-            self.bot_score += 15
+            self.bot_score += 8
         # ================================
         # 🔥 MICRO VARIATION (ANTI PATTERN)
         # ================================
@@ -1190,8 +1193,8 @@ class VisitorContext:
                 if hits == 1:
                     redis_client.expire(key, 300)
 
-                if hits > 10:
-                    self.bot_score += 35
+                if hits > 15:
+                    self.bot_score += 20
                     self.reasons.append("fp_abuse")
         except Exception:
             pass
@@ -1232,6 +1235,34 @@ class VisitorContext:
         #     and self.bot_score > 70
         # ):
         #     self.bot_score = 50
+
+        # =========================================
+        # FINAL CONNECTION TYPE RESOLUTION
+        # =========================================
+
+        if self.is_tor:
+            self.connection_type = "tor"
+            self.ip_type = "tor"
+
+        elif self.is_proxy:
+            self.connection_type = "proxy"
+            self.ip_type = "proxy"
+
+        elif self.is_vpn:
+            self.connection_type = "vpn"
+            self.ip_type = "vpn"
+
+        elif self.is_datacenter:
+            self.connection_type = "datacenter"
+            self.ip_type = "datacenter"
+
+        else:
+            self.connection_type = "residential"
+            self.ip_type = "residential"
+        # =========================================
+        # FINAL HARD RULES
+        # =========================================
+
         # =========================================
         # FINAL HARD RULES
         # =========================================
@@ -1240,26 +1271,40 @@ class VisitorContext:
             self.bot_score = 100
 
         elif self.is_automation:
-            self.bot_score = max(self.bot_score, 90)
+            self.bot_score = max(self.bot_score, 95)
 
-        elif self.is_proxy and self.signal_strength >= 2:
-            self.bot_score = max(self.bot_score, 70)
+        elif self.is_proxy:
+            self.bot_score = max(self.bot_score, 85)
 
-        elif self.is_vpn and self.signal_strength >= 2:
-            self.bot_score = max(self.bot_score, 55)
+        elif self.is_vpn:
+            self.bot_score = max(self.bot_score, 65)
+
+        elif self.is_datacenter:
+            self.bot_score = max(self.bot_score, 80)
+
+        # HARD FAILSAFE
+
+        if self.is_tor or self.is_proxy:
+            self.traffic_quality = "fraud"
+
+        elif self.is_vpn:
+            self.traffic_quality = "high_risk"
+
+        elif self.is_datacenter:
+            self.traffic_quality = "high_risk"
 
         # =========================================
         # REAL USER HARD PROTECTION
         # =========================================
 
-        if (
-            self.connection_type == "residential"
-            and not self.is_proxy
-            and not self.is_vpn
-            and not self.is_tor
-            and not self.is_automation
-        ):
-            self.bot_score *= 0.30
+        # if (
+        #     self.connection_type == "residential"
+        #     and not self.is_proxy
+        #     and not self.is_vpn
+        #     and not self.is_tor
+        #     and not self.is_automation
+        # ):
+        #     self.bot_score *= 0.30
 
         # =========================================
         # FINGERPRINT CONSISTENCY

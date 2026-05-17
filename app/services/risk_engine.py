@@ -40,10 +40,12 @@ class RiskEngine:
                 not getattr(self.visitor, "is_proxy", False)
                 and not getattr(self.visitor, "is_datacenter", False)
                 and not getattr(self.visitor, "is_vpn", False)
-                and getattr(self.visitor, "bot_score", 0) < 10
+                and not getattr(self.visitor, "is_tor", False)
+                and getattr(self.visitor, "bot_score", 0) < 15
                 and getattr(self.visitor, "traffic_quality", "") == "clean"
+                and getattr(self.visitor, "ip_type", "") == "residential"
             ):
-                return getattr(self.visitor, "bot_score", 0)
+                return min(getattr(self.visitor, "bot_score", 0), 10)
         except Exception:
             pass
 
@@ -112,7 +114,7 @@ class RiskEngine:
         # DATACENTER
         # ---------------------------------
         if getattr(self.visitor, "is_datacenter", False):
-            self.score += 60
+            self.score += 85
 
         # ---------------------------------
         # VPN / PROXY (SAFE CACHE)
@@ -132,13 +134,13 @@ class RiskEngine:
                 self.score = 100
 
             if vpn_info.get("is_vpn"):
-                self.score += 55
+                self.score += 80
 
             if vpn_info.get("is_proxy"):
-                self.score += 65
+                self.score += 90
 
             if vpn_info.get("is_residential_proxy"):
-                self.score += 75
+                self.score += 95
 
         except Exception:
             pass
@@ -394,7 +396,7 @@ class RiskEngine:
                 )
 
                 if clean_residential and self.score < 70:
-                    self.score *= 0.45
+                    self.score *= 0.35
         except Exception:
             pass
 

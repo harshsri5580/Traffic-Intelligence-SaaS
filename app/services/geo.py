@@ -32,18 +32,53 @@ except Exception:
 # =====================================
 
 DATACENTER_KEYWORDS = [
+    # CLOUD
     "amazon",
     "aws",
     "google",
+    "gcp",
+    "microsoft",
+    "azure",
+    "oracle",
+    "cloudflare",
+    # VPS / HOSTING
     "digitalocean",
     "linode",
+    "gtt communications",
+    "hostroyale",
     "ovh",
     "hetzner",
     "vultr",
-    "microsoft",
-    "oracle",
-    "cloudflare",
+    "contabo",
     "scaleway",
+    "leaseweb",
+    "choopa",
+    "m247",
+    "psychz",
+    "quadranet",
+    "multacom",
+    "xtom",
+    "zenlayer",
+    "hostroyale",
+    "digi vps",
+    # VPN / PROXY
+    "vpn",
+    "proxy",
+    "anonymous",
+    "tunnel",
+    "nordvpn",
+    "surfshark",
+    "expressvpn",
+    "mullvad",
+    "protonvpn",
+    # RESIDENTIAL PROXY NETWORKS
+    "brightdata",
+    "oxylabs",
+    "smartproxy",
+    "soax",
+    "netnut",
+    "packetstream",
+    "honeygain",
 ]
 
 
@@ -128,6 +163,7 @@ def get_asn_data(ip_address: str):
         if org:
 
             org_lower = org.lower()
+            org_lower = org_lower.replace(".", " ").replace(",", " ")
 
             for keyword in DATACENTER_KEYWORDS:
 

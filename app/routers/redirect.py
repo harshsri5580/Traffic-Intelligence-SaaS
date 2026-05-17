@@ -413,7 +413,7 @@ async def redirect_campaign(
         and not challenge_pass
         and not is_bot_traffic
         and (
-            visitor.bot_score >= 45
+            visitor.bot_score >= 60
             or visitor.connection_type in ["vpn", "datacenter"]
             or visitor.is_bot
         )
