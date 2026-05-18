@@ -769,11 +769,8 @@ async def redirect_campaign(
         if (
             campaign.block_proxy
             and visitor.is_proxy
-            and (
-                visitor.signal_strength >= 2
-                or visitor.bot_score >= 70
-                or visitor.ip_type != "residential"
-            )
+            and visitor.signal_strength >= 2
+            and (visitor.bot_score >= 25 or visitor.ip_type != "residential")
         ):
             decision = "blocked"
             reason = "Proxy Block"
@@ -1157,7 +1154,7 @@ async def redirect_campaign(
 
     # normalize bot influence
     if visitor.bot_score >= 80 and risk_score < 60:
-        risk_score = visitor.bot_score
+        risk_score = max(risk_score, 60)
 
     # 🔥 HIGH RISK BLOCK
     if risk_score >= 90 and visitor.signal_strength >= 2:

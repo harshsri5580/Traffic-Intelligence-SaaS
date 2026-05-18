@@ -514,6 +514,9 @@ class VisitorContext:
             "aws",
             "google",
             "gcp",
+            "cyberology",
+            "church of cyberology",
+            "iway",
             "microsoft",
             "azure",
             "oracle",
@@ -988,8 +991,8 @@ class VisitorContext:
         except Exception:
             pass
         # 🔥 FORCE HIGH SCORE FOR DATACENTER
-        if self.is_datacenter and self.signal_strength >= 2:
-            self.bot_score = max(self.bot_score, 65)
+        if self.is_datacenter:
+            self.bot_score = max(self.bot_score, 70 + (self.signal_strength * 5))
 
         # ================================
         # 🔥 AI RISK BOOST (SAFE VERSION)
@@ -1155,6 +1158,9 @@ class VisitorContext:
 
         # 🔥 strong signal → boost
         if signals >= 3:
+            self.bot_score += 15
+
+        elif signals >= 2:
             self.bot_score += 8
         # ================================
         # 🔥 MICRO VARIATION (ANTI PATTERN)
@@ -1322,8 +1328,8 @@ class VisitorContext:
         ):
             self.bot_score = max(self.bot_score, 85)
 
-        elif self.is_vpn:
-            self.bot_score = max(self.bot_score, 65)
+        elif self.is_vpn and self.signal_strength >= 2:
+            self.bot_score = max(self.bot_score, 72)
 
         elif self.is_datacenter and self.signal_strength >= 2:
             self.bot_score = max(self.bot_score, 80)
