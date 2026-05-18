@@ -38,21 +38,9 @@ export default function Home() {
   return (
     <div className="bg-black text-white min-h-screen">
 
-      {/* NAVBAR */}
-      {/* <div className="flex justify-between items-center px-8 py-5 border-b border-white/10">
-        <h1 className="text-xl font-bold">TrafficIntel AI</h1>
-        <div className="space-x-6 hidden md:block">
-          <a href="#features">Features</a>
-          <a href="#pricing">Pricing</a>
-          <Link href="/login">Login</Link>
-          <Link href="/register" className="bg-indigo-600 px-4 py-2 rounded-lg">
-            Get Started
-          </Link>
-        </div>
-      </div> */}
 
       {/* HERO */}
-      <div className="relative text-center py-28 md:py-36 px-6 overflow-hidden">
+      <div className="relative text-center py-20 py-12 py-14 md:py-16 px-6 overflow-hidden">
 
         {/* MULTI LAYER BACKGROUND */}
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 via-purple-600/10 to-transparent blur-3xl"></div>
@@ -91,38 +79,66 @@ export default function Home() {
           </p>
 
           {/* BUTTONS */}
-          <div className="mt-10 flex justify-center gap-4 flex-wrap">
+          {/* CTA */}
+          <div className="mt-10 flex flex-col items-center">
 
+            {/* BUTTON */}
             <Link
               href="/register"
               className="
-          bg-gradient-to-r from-indigo-600 to-purple-600
-          px-8 py-3.5 rounded-xl font-medium
-          shadow-lg shadow-indigo-600/30
-          hover:scale-105 hover:shadow-indigo-500/40
-          transition duration-300
-        "
+      bg-gradient-to-r from-indigo-600 to-purple-600
+      px-10 py-4 rounded-2xl font-semibold text-lg
+      shadow-2xl shadow-indigo-600/30
+      hover:scale-105 hover:shadow-indigo-500/50
+      transition duration-300
+    "
             >
-              Start Free Trial
+              Start 7-Day Free Trial
             </Link>
 
-            {/* <Link
-              href="/login"
-              className="
-          border border-white/20
-          px-8 py-3.5 rounded-xl
-          hover:bg-white/10
-          transition duration-300
-        "
-            >
-              View Demo
-            </Link> */}
+            {/* SMALL TRUST TEXT */}
+            <div className="mt-4 text-sm text-gray-500">
+              No Credit Card Required
+            </div>
+
+            {/* FEATURE BAR */}
+            <div className="
+    mt-8
+    flex flex-wrap justify-center gap-3
+    max-w-4xl
+  ">
+
+              <div className="bg-white/5 border border-white/10 rounded-2xl px-5 py-3 text-sm text-gray-300">
+                🚀 3 Campaigns
+              </div>
+
+              <div className="bg-white/5 border border-white/10 rounded-2xl px-5 py-3 text-sm text-gray-300">
+                ⚡ 100K Clicks
+              </div>
+
+              <div className="bg-white/5 border border-white/10 rounded-2xl px-5 py-3 text-sm text-gray-300">
+                🛡️ AI Bot Detection
+              </div>
+
+              <div className="bg-white/5 border border-white/10 rounded-2xl px-5 py-3 text-sm text-gray-300">
+                📊 Real-time Analytics
+              </div>
+
+            </div>
 
           </div>
 
           {/* TRUST */}
-          <div className="mt-12 text-sm text-gray-500">
-            Trusted by marketers & agencies worldwide
+          {/* TRUST + FREE TRIAL BENEFITS */}
+          <div className="mt-14 flex flex-col items-center">
+
+            {/* SOCIAL PROOF */}
+            <div className="text-sm text-gray-500 mb-6">
+              Trusted by marketers & agencies worldwide
+            </div>
+
+
+
           </div>
 
         </div>
@@ -330,9 +346,49 @@ export default function Home() {
             Simple & Transparent Pricing 💎
           </h2>
 
-          <p className="text-gray-400 text-center mb-16 max-w-2xl mx-auto">
-            Choose the plan that fits your needs. No hidden fees. Cancel anytime.
-          </p>
+          <div className="text-center mb-16">
+
+            <p className="text-gray-400 max-w-2xl mx-auto">
+              Choose the perfect plan for your traffic infrastructure.
+              No hidden fees. Cancel anytime.
+            </p>
+
+            {/* FREE TRIAL BOX */}
+            <div className="
+    mt-8 inline-flex flex-wrap items-center justify-center gap-3
+    bg-gradient-to-r from-indigo-600/20 to-purple-600/20
+    border border-indigo-500/20
+    px-5 py-3 rounded-2xl
+    backdrop-blur shadow-lg
+  ">
+
+              <div className="
+      bg-green-500/20 text-green-400
+      px-3 py-1 rounded-full
+      text-xs font-bold uppercase tracking-wide
+    ">
+                7 Days Free Trial
+              </div>
+
+              <div className="text-sm text-gray-300">
+                ✔ 3 Campaigns
+              </div>
+
+              <div className="text-sm text-gray-300">
+                ✔ 100K Free Clicks
+              </div>
+
+              <div className="text-sm text-gray-300">
+                ✔ AI Bot Detection
+              </div>
+
+              <div className="text-sm text-gray-300">
+                ✔ Real-time Analytics
+              </div>
+
+            </div>
+
+          </div>
 
           {/* CARDS */}
           <div className="grid md:grid-cols-3 gap-10">
@@ -363,10 +419,43 @@ export default function Home() {
                   </h3>
 
                   {/* PRICE */}
-                  <p className="text-center text-5xl my-6 font-extrabold">
-                    ${p.price}
-                    <span className="text-sm text-gray-400 font-medium"> /month</span>
-                  </p>
+                  {/* PRICE */}
+                  <div className="text-center my-6">
+
+                    {/* DISCOUNT */}
+                    {popular && (
+                      <div className="flex items-center justify-center gap-3 mb-3">
+
+                        <span className="text-2xl font-semibold text-gray-500 line-through opacity-70">
+                          $79
+                        </span>
+
+                        <div className="
+        bg-gradient-to-r from-red-500 to-pink-500
+        text-white text-[11px] font-bold
+        px-3 py-1 rounded-full
+        shadow-lg uppercase tracking-wide
+      ">
+                          Save 13%
+                        </div>
+
+                      </div>
+                    )}
+
+                    {/* MAIN PRICE */}
+                    <div className="flex items-end justify-center gap-1">
+
+                      <span className="text-6xl font-semibold tracking-tight">
+                        ${p.price}
+                      </span>
+
+                      <span className="text-lg text-gray-400 font-medium mb-2">
+                        /mo
+                      </span>
+
+                    </div>
+
+                  </div>
 
                   {/* FEATURES */}
                   <div className="space-y-3 text-gray-300 text-sm mb-8">

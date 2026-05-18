@@ -178,10 +178,31 @@ export default function PricingPage() {
                 {planName}
               </h2>
 
-              <p className="text-center text-4xl font-extrabold my-6">
-                ${p.price}
-                <span className="text-sm text-gray-500"> /mo</span>
-              </p>
+              <div className="text-center my-6">
+
+                {isPopular && (
+                  <div className="flex items-center justify-center gap-3 mb-3">
+
+                    <span className="text-2xl font-semibold text-gray-400 line-through opacity-80">
+                      $79
+                    </span>
+
+                    <div className="bg-gradient-to-r from-red-500 to-pink-500 text-white text-[11px] font-bold px-3 py-1 rounded-full shadow-lg uppercase tracking-wide">
+                      Save 13%
+                    </div>
+
+                  </div>
+                )}
+
+                <p className="text-5xl font-extrabold text-gray-900">
+                  ${p.price}
+
+                  <span className="text-lg text-gray-500 font-semibold">
+                    /mo
+                  </span>
+                </p>
+
+              </div>
 
               <div className="space-y-2 text-gray-600 text-sm">
 
@@ -253,7 +274,7 @@ ${isCurrent && daysLeft > 0
                 {isCurrent && daysLeft > 0
                   ? "Current Plan"
                   : isCurrent && daysLeft <= 0
-                    ? "Renew Plan"
+                    ? "Choose Plan"
                     : "Choose Plan"}
               </button>
 
