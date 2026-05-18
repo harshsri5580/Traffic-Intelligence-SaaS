@@ -46,6 +46,7 @@ DATACENTER_KEYWORDS = [
     "linode",
     "gtt communications",
     "hostroyale",
+    "cyber folks",
     "ovh",
     "hetzner",
     "vultr",
@@ -59,7 +60,6 @@ DATACENTER_KEYWORDS = [
     "multacom",
     "xtom",
     "zenlayer",
-    "hostroyale",
     "digi vps",
     # VPN / PROXY
     "vpn",

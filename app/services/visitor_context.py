@@ -418,6 +418,7 @@ class VisitorContext:
             "microsoft",
             "gtt communications",
             "hostroyale",
+            "cyber_folks",
             "azure",
             "oracle",
             "cloudflare",

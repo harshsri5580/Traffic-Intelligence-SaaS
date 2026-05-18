@@ -93,6 +93,7 @@ PROXY_KEYWORDS = [
     "quadranet",
     "colocrossing",
     "hostroyale",
+    "cyber folks",
     "digi",
     "xtom",
     "aeza",
