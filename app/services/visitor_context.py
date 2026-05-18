@@ -740,10 +740,19 @@ class VisitorContext:
             self.reasons.append("tor_network")
 
         elif self.is_proxy:
+
             self.connection_type = "proxy"
             self.ip_type = "proxy"
 
-            self.bot_score += 40
+            if (
+                self.is_datacenter
+                or self.is_vpn
+                or self.is_automation
+                or self.signal_strength >= 3
+            ):
+                self.bot_score += 40
+            else:
+                self.bot_score += 10
             self.reasons.append("proxy_network")
 
         elif self.is_datacenter:
@@ -1302,7 +1311,15 @@ class VisitorContext:
 
         # HARD FAILSAFE
 
-        if self.is_tor or self.is_proxy:
+        if self.is_tor:
+            self.traffic_quality = "fraud"
+
+        elif self.is_proxy and (
+            self.is_datacenter
+            or self.is_vpn
+            or self.is_automation
+            or self.signal_strength >= 3
+        ):
             self.traffic_quality = "fraud"
 
         elif self.is_vpn:
