@@ -149,10 +149,18 @@ class RiskEngine:
                 self.score = 100
 
             if vpn_info.get("is_vpn"):
-                self.score += 80
+
+                if getattr(self.visitor, "signal_strength", 0) >= 2:
+                    self.score += 80
+                else:
+                    self.score += 25
 
             if vpn_info.get("is_proxy"):
-                self.score += 90
+
+                if getattr(self.visitor, "signal_strength", 0) >= 2:
+                    self.score += 90
+                else:
+                    self.score += 30
 
             if vpn_info.get("is_residential_proxy"):
                 self.score += 95
@@ -249,7 +257,7 @@ class RiskEngine:
                 if hits == 1:
                     redis_client.expire(key, 300)
 
-                if hits > 20:
+                if hits > 30:
                     self.score += 20
 
         except Exception:
@@ -284,7 +292,7 @@ class RiskEngine:
                 redis_client.expire(human_key, 10)
 
             # 🔥 too fast = bot
-            if hits > 5 and getattr(self.visitor, "signal_strength", 0) >= 1:
+            if hits > 10 and getattr(self.visitor, "signal_strength", 0) >= 2:
                 self.score += 15
 
         except Exception:
@@ -342,7 +350,7 @@ class RiskEngine:
 
         # 🔥 strong signal → boost
         if signals >= 3:
-            self.score += 15
+            self.score += 25
         # ================================
         # 🔥 DYNAMIC BEHAVIOR SIGNAL
         # ================================
@@ -423,4 +431,4 @@ class RiskEngine:
     # =========================================
 
     def is_high_risk(self):
-        return self.calculate() >= 50
+        return self.calculate() >= 70

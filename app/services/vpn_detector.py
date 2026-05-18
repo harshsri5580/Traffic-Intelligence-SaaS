@@ -272,6 +272,14 @@ SAFE_ISP = [
     "bell canada",
     "shaw",
     "vodafone india",
+    "salt",
+    "bluewin",
+    "sunrise",
+    "swisscom",
+    "telecom",
+    "mobile",
+    "broadband",
+    "fiber",
 ]
 
 
@@ -339,10 +347,11 @@ def detect_vpn(ip, org=None, asn=None):
         # ----------------------
         # ISP SAFE OVERRIDE
         # ----------------------
-        if any(safe in org_norm for safe in SAFE_ISP) and asn_str not in DATACENTER_ASN:
+        if any(safe in org_norm for safe in SAFE_ISP):
 
-            # only trust if NOT already strong proxy/datacenter signal
-            if result["confidence"] < 60:
+            # protect real ISPs unless VERY strong evidence
+            if result["confidence"] < 80:
+
                 result["confidence"] = 0
                 result["is_proxy"] = False
                 result["is_vpn"] = False

@@ -1102,7 +1102,7 @@ async def redirect_campaign(
         if bot_type == "bot" and visitor.bot_score >= 80:
             is_bot_traffic = True
             decision = set_decision(decision, "blocked")
-            reason = "ai_bot_detected"
+            reason = "AI Bot Detected"
 
             # 🔥 BOT → ALWAYS BOT URL
             redirect_url = campaign.bot_url or "/decoy"

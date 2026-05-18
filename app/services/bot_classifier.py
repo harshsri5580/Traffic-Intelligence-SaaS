@@ -104,7 +104,7 @@ class BotClassifier:
         if len(ua) < 20 and "mozilla" not in ua:
             self.score += 12
 
-        if "mozilla" not in ua:
+        if "mozilla" not in ua and len(ua) < 40:
             self.score += 10
 
         # -----------------------------
@@ -117,7 +117,11 @@ class BotClassifier:
         # 4. NETWORK QUALITY
         # -----------------------------
         if getattr(self.visitor, "is_datacenter", False):
-            self.score += 65  # stronger
+
+            if getattr(self.visitor, "signal_strength", 0) >= 2:
+                self.score += 65
+            else:
+                self.score += 25  # stronger
 
         if getattr(self.visitor, "is_proxy", False):
             self.score += 40
@@ -201,7 +205,10 @@ class BotClassifier:
         if getattr(self.visitor, "is_tor", False):
             self.score = 100
 
-        if getattr(self.visitor, "is_proxy", False):
+        if (
+            getattr(self.visitor, "is_proxy", False)
+            and getattr(self.visitor, "signal_strength", 0) >= 2
+        ):
             self.score = max(self.score, 85)
         # -----------------------------
         # NORMALIZE

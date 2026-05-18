@@ -418,7 +418,7 @@ class VisitorContext:
             "microsoft",
             "gtt communications",
             "hostroyale",
-            "cyber_folks",
+            "cyber folks",
             "azure",
             "oracle",
             "cloudflare",
@@ -1288,13 +1288,13 @@ class VisitorContext:
         elif self.is_automation:
             self.bot_score = max(self.bot_score, 95)
 
-        elif self.is_proxy:
+        elif self.is_proxy and self.signal_strength >= 2:
             self.bot_score = max(self.bot_score, 85)
 
         elif self.is_vpn:
             self.bot_score = max(self.bot_score, 65)
 
-        elif self.is_datacenter:
+        elif self.is_datacenter and self.signal_strength >= 2:
             self.bot_score = max(self.bot_score, 80)
 
         # HARD FAILSAFE
