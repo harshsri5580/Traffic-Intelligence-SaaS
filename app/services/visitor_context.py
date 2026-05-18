@@ -700,26 +700,26 @@ class VisitorContext:
         # VPN DETECTION
         # ================================
 
-        if self.org:
-            vpn_keywords = [
-                "vpn",
-                "proxy",
-                "nordvpn",
-                "surfshark",
-                "expressvpn",
-                "mullvad",
-                "ipvanish",
-                "protonvpn",
-                "server",
-                "tunnel",
-                "hosting",
-            ]
+        # if self.org:
+        #     vpn_keywords = [
+        #         "vpn",
+        #         "proxy",
+        #         "nordvpn",
+        #         "surfshark",
+        #         "expressvpn",
+        #         "mullvad",
+        #         "ipvanish",
+        #         "protonvpn",
+        #         "server",
+        #         "tunnel",
+        #         "hosting",
+        #     ]
 
-            if any(k in self.org.lower() for k in vpn_keywords):
-                self.connection_type = "vpn"
-                self.is_vpn = True
-                self.bot_score += 40  # 🔥 from 15 → 40
-                self.reasons.append("vpn_detected")
+        #     if any(k in self.org.lower() for k in vpn_keywords):
+        #         self.connection_type = "vpn"
+        #         self.is_vpn = True
+        #         self.bot_score += 40
+        #         self.reasons.append("vpn_detected")
 
         # ================================
         # VPN / PROXY / TOR DETECTION
@@ -730,7 +730,16 @@ class VisitorContext:
         vpn_info = detect_vpn(self.ip, org=self.org, asn=self.asn)
 
         self.is_vpn = self.is_vpn or vpn_info.get("is_vpn", False)
-        self.is_proxy = self.is_proxy or vpn_info.get("is_proxy", False)
+        vpn_proxy = vpn_info.get("is_proxy", False)
+
+        # ONLY accept proxy if stronger evidence exists
+        if vpn_proxy and (
+            self.is_datacenter
+            or self.is_vpn
+            or self.is_automation
+            or vpn_info.get("confidence", 0) >= 85
+        ):
+            self.is_proxy = True
         self.is_tor = self.is_tor or vpn_info.get("is_tor", False)
 
         # 🔥 HARD BOT BOOST (DC / PROXY / TOR)
@@ -979,7 +988,7 @@ class VisitorContext:
         except Exception:
             pass
         # 🔥 FORCE HIGH SCORE FOR DATACENTER
-        if self.is_datacenter:
+        if self.is_datacenter and self.signal_strength >= 2:
             self.bot_score = max(self.bot_score, 65)
 
         # ================================
@@ -1257,7 +1266,12 @@ class VisitorContext:
             self.connection_type = "tor"
             self.ip_type = "tor"
 
-        elif self.is_proxy:
+        if self.is_proxy and (
+            self.is_datacenter
+            or self.is_vpn
+            or self.is_automation
+            or self.signal_strength >= 3
+        ):
             self.connection_type = "proxy"
             self.ip_type = "proxy"
 
@@ -1300,7 +1314,12 @@ class VisitorContext:
         elif self.is_automation:
             self.bot_score = max(self.bot_score, 95)
 
-        elif self.is_proxy and self.signal_strength >= 2:
+        elif self.is_proxy and (
+            self.is_datacenter
+            or self.is_vpn
+            or self.is_automation
+            or self.signal_strength >= 3
+        ):
             self.bot_score = max(self.bot_score, 85)
 
         elif self.is_vpn:
