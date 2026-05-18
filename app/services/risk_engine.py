@@ -20,7 +20,7 @@ class RiskEngine:
 
     def calculate(self):
         self.score = 0  # 🔥 MUST FIX (no side effect)
-        self.score = self.visitor.bot_score * 0.6
+        # self.score = self.visitor.bot_score * 0.6
 
         ip = getattr(self.visitor, "ip", None)
 
@@ -114,8 +114,14 @@ class RiskEngine:
         # ---------------------------------
         # DATACENTER
         # ---------------------------------
-        if getattr(self.visitor, "is_datacenter", False):
-            self.score += 85
+        if getattr(self.visitor, "is_datacenter", False) and (
+            not self.campaign or getattr(self.campaign, "block_datacenter", True)
+        ):
+
+            if getattr(self.visitor, "signal_strength", 0) >= 2:
+                self.score += 85
+            else:
+                self.score += 15
 
         # ---------------------------------
         # FIREHOL THREAT FEED
@@ -145,24 +151,38 @@ class RiskEngine:
                 if vpn_info:
                     redis_client.setex(cache_key, 3600, json.dumps(vpn_info))
 
-            if vpn_info.get("is_tor"):
+            if vpn_info.get("is_tor") and (
+                not self.campaign or getattr(self.campaign, "block_tor", True)
+            ):
                 self.score = 100
 
-            if vpn_info.get("is_vpn"):
+            if vpn_info.get("is_vpn") and (
+                not self.campaign or getattr(self.campaign, "block_vpn", True)
+            ):
 
-                if getattr(self.visitor, "signal_strength", 0) >= 2:
+                if (
+                    getattr(self.visitor, "signal_strength", 0) >= 2
+                    and getattr(self.visitor, "ip_type", "") != "residential"
+                ):
                     self.score += 80
-                else:
-                    self.score += 25
 
-            if vpn_info.get("is_proxy"):
+            if vpn_info.get("is_proxy") and (
+                not self.campaign or getattr(self.campaign, "block_proxy", True)
+            ):
 
                 if getattr(self.visitor, "signal_strength", 0) >= 2:
                     self.score += 90
-                else:
-                    self.score += 30
 
-            if vpn_info.get("is_residential_proxy"):
+                elif (
+                    getattr(self.visitor, "ip_type", "") != "residential"
+                    and getattr(self.visitor, "bot_score", 0) >= 40
+                ):
+                    self.score += 20
+
+            if (
+                vpn_info.get("is_residential_proxy")
+                and getattr(self.visitor, "signal_strength", 0) >= 2
+            ):
                 self.score += 95
 
         except Exception:
@@ -232,7 +252,10 @@ class RiskEngine:
             # 🔥 APPLY FINGERPRINT (SAFE)
             if fp:
 
-                if str(fp.get("webdriver")).lower() == "true":
+                if str(fp.get("webdriver")).lower() == "true" and (
+                    not self.campaign
+                    or getattr(self.campaign, "block_automation", True)
+                ):
                     self.score += 50
 
                 if fp.get("screen") == "0x0":
@@ -257,7 +280,9 @@ class RiskEngine:
                 if hits == 1:
                     redis_client.expire(key, 300)
 
-                if hits > 30:
+                if hits > 50 and (
+                    not self.campaign or getattr(self.campaign, "block_canvas", True)
+                ):
                     self.score += 20
 
         except Exception:
@@ -346,7 +371,7 @@ class RiskEngine:
 
         # 🔥 weak signal → reduce
         if signals <= 1 and self.score < 80:
-            self.score *= 0.6
+            self.score *= 0.35
 
         # 🔥 strong signal → boost
         if signals >= 3:
@@ -419,7 +444,7 @@ class RiskEngine:
                 )
 
                 if clean_residential and self.score < 70:
-                    self.score *= 0.35
+                    self.score *= 0.25
         except Exception:
             pass
 

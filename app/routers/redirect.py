@@ -754,7 +754,11 @@ async def redirect_campaign(
 
     try:
         # VPN
-        if campaign.block_vpn and visitor.is_vpn:
+        if (
+            campaign.block_vpn
+            and visitor.is_vpn
+            and (visitor.signal_strength >= 2 or visitor.bot_score >= 70)
+        ):
             decision = "blocked"
             reason = "vpn_block"
             redirect_url = campaign.safe_page_url or "/decoy"
@@ -762,7 +766,15 @@ async def redirect_campaign(
             is_blocked_final = True
 
         # PROXY
-        if campaign.block_proxy and visitor.is_proxy:
+        if (
+            campaign.block_proxy
+            and visitor.is_proxy
+            and (
+                visitor.signal_strength >= 2
+                or visitor.bot_score >= 70
+                or visitor.ip_type != "residential"
+            )
+        ):
             decision = "blocked"
             reason = "Proxy Block"
             redirect_url = campaign.safe_page_url or "/decoy"
@@ -778,7 +790,15 @@ async def redirect_campaign(
             is_blocked_final = True
 
         # DATACENTER
-        if campaign.block_datacenter and visitor.is_datacenter:
+        if (
+            campaign.block_datacenter
+            and visitor.is_datacenter
+            and (
+                visitor.signal_strength >= 2
+                or visitor.bot_score >= 75
+                or visitor.ip_type != "residential"
+            )
+        ):
             decision = "blocked"
             reason = "datacenter_block"
             redirect_url = campaign.safe_page_url or "/decoy"
@@ -786,8 +806,13 @@ async def redirect_campaign(
             is_blocked_final = True
 
         # AUTOMATION (HEADLESS)
-        if campaign.block_automation and visitor.is_bot:
-            if visitor.bot_score >= 70:
+        if campaign.block_automation:
+
+            if (
+                visitor.is_bot
+                and visitor.bot_score >= 80
+                and visitor.signal_strength >= 2
+            ):
                 decision = "blocked"
                 reason = "automation_block"
                 redirect_url = campaign.safe_page_url or "/decoy"

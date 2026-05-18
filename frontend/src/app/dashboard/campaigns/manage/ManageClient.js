@@ -719,62 +719,152 @@ shadow-[0_20px_60px_rgba(15,23,42,0.45)]
 
 
 </div>
-<div className="bg-gradient-to-br from-[#0b1020] via-[#111827] to-[#1a1f35] rounded-3xl p-7 mt-10 shadow-xl border border-slate-700">
 
-<div className="mb-6">
-  <h2 className="text-2xl font-bold text-white">
-    Traffic Protection
-  </h2>
 
-  <p className="text-sm text-gray-400 mt-1">
-    Advanced protection layers for filtering unsafe and automated traffic.
-  </p>
-</div>
+<div className="bg-gradient-to-br from-[#0B1120] via-[#111827] to-[#1B2335] rounded-[32px] p-7 mt-10 border border-[#273041] shadow-2xl shadow-black/20">
 
-<div className="grid sm:grid-cols-2 gap-4">
+  {/* HEADER */}
+  <div className="flex items-start justify-between gap-4 mb-7">
 
-  {[
-    { key: "block_vpn", label: "VPN Detection" },
-    { key: "block_proxy", label: "Proxy Detection" },
-    { key: "block_tor", label: "Tor Network Block" },
-    { key: "block_datacenter", label: "Datacenter ASN Block" },
-    { key: "block_automation", label: "Headless Browser Detection" },
-    { key: "block_canvas", label: "Canvas Fingerprint Detection" },
-  ].map((item) => (
+    <div>
 
-    <div
-      key={item.key}
-      className="flex items-center justify-between 
-      bg-[#1f2937]/70 border border-[#374151] backdrop-blur-xl rounded-xl px-4 py-3
-      hover:shadow-sm transition"
-    >
+      <h2 className="text-[26px] font-bold tracking-tight text-white">
+        Traffic Protection
+      </h2>
 
-      {/* LABEL */}
-      <span className="text-sm font-medium text-white">
-        {item.label}
-      </span>
-
-      {/* SWITCH */}
-      <button
-        onClick={() => toggleProtection(item.key)}
-        className={`relative w-12 h-6 flex items-center rounded-full p-1 transition-all duration-300
-        ${protection[item.key]
-  ? "bg-gradient-to-r from-indigo-500 to-violet-500"
-  : "bg-gray-600"}`}
-      >
-        <div
-          className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-all duration-300
-          ${protection[item.key] ? "translate-x-6" : "translate-x-0"}`}
-        />
-      </button>
+      <p className="text-sm text-gray-400 mt-2 leading-relaxed max-w-2xl">
+        Control how suspicious traffic is filtered. 
+        Disabled protections are ignored in scoring, while all other active protections still protect your campaigns.
+      </p>
 
     </div>
 
-  ))}
+    <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
+
+      <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+
+      <span className="text-sm font-medium text-emerald-300">
+        Protection Active
+      </span>
+
+    </div>
+
+  </div>
+
+  {/* CARDS */}
+  <div className="grid xl:grid-cols-2 gap-5">
+
+    {[
+      {
+        key: "block_vpn",
+        label: "VPN Detection",
+        desc: "Detects traffic coming from VPN services like NordVPN, ProtonVPN, Surfshark and similar providers."
+      },
+      {
+        key: "block_proxy",
+        label: "Proxy Detection",
+        desc: "Blocks residential, rotating and anonymous proxy traffic commonly used for cloaking and bot activity."
+      },
+      {
+        key: "block_tor",
+        label: "TOR Network Block",
+        desc: "Filters visitors coming from the TOR anonymity network and hidden relay nodes."
+      },
+      {
+        key: "block_datacenter",
+        label: "Datacenter ASN Block",
+        desc: "Detects VPS and server traffic from AWS, OVH, Vultr, Hetzner, M247 and other hosting providers."
+      },
+      {
+        key: "block_automation",
+        label: "Headless Browser Detection",
+        desc: "Detects Selenium, Puppeteer, Playwright, webdriver automation and hidden headless browsers."
+      },
+      {
+        key: "block_canvas",
+        label: "Canvas Fingerprint Detection",
+        desc: "Analyzes browser fingerprint mismatches, anti-detect browsers and spoofed device environments."
+      },
+    ].map((item) => (
+
+      <div
+        key={item.key}
+        className="group relative overflow-hidden rounded-2xl border border-[#313B4F] bg-[#131A2B]/90 backdrop-blur-xl p-5 transition-all duration-300 hover:border-indigo-500/40 hover:shadow-lg hover:shadow-indigo-500/10"
+      >
+
+        {/* TOP */}
+        <div className="flex items-start justify-between gap-4">
+
+          <div className="flex-1">
+
+            <h3 className="text-[15px] font-semibold text-white tracking-wide">
+              {item.label}
+            </h3>
+
+            <p className="text-sm text-gray-400 leading-relaxed mt-2">
+              {item.desc}
+            </p>
+
+          </div>
+
+          {/* SWITCH */}
+          <button
+            onClick={() => toggleProtection(item.key)}
+            className={`relative w-[54px] h-[30px] rounded-full p-1 transition-all duration-300 shrink-0 ${
+              protection[item.key]
+                ? "bg-gradient-to-r from-indigo-500 to-violet-500 shadow-lg shadow-indigo-500/30"
+                : "bg-[#374151]"
+            }`}
+          >
+
+            <div
+              className={`w-5 h-5 bg-white rounded-full transition-all duration-300 shadow-md ${
+                protection[item.key]
+                  ? "translate-x-6"
+                  : "translate-x-0"
+              }`}
+            />
+
+          </button>
+
+        </div>
+
+        {/* STATUS */}
+        <div className="mt-5 flex items-center justify-between">
+
+          <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-medium ${
+            protection[item.key]
+              ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/20"
+              : "bg-gray-500/10 text-gray-400 border-gray-500/20"
+          }`}>
+
+            <div className={`w-2 h-2 rounded-full ${
+              protection[item.key]
+                ? "bg-emerald-400"
+                : "bg-gray-500"
+            }`} />
+
+            {protection[item.key]
+              ? "Protection Enabled"
+              : "Ignored In Scoring"}
+
+          </div>
+
+          <span className="text-[11px] uppercase tracking-[0.18em] text-gray-500">
+            Security Layer
+          </span>
+
+        </div>
+
+      </div>
+
+    ))}
+
+  </div>
 
 </div>
 
-</div>
+
 </div>
 
 {deleteModal.open && (
