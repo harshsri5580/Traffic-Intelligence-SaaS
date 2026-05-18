@@ -276,10 +276,6 @@ SAFE_ISP = [
     "bluewin",
     "sunrise",
     "swisscom",
-    "telecom",
-    "mobile",
-    "broadband",
-    "fiber",
 ]
 
 
@@ -375,7 +371,7 @@ def detect_vpn(ip, org=None, asn=None):
         for keyword in PROXY_KEYWORDS:
             if keyword in org_norm:
                 result["is_proxy"] = True
-                result["confidence"] += 30
+                result["confidence"] += 18
                 break
 
         # ----------------------
@@ -396,10 +392,12 @@ def detect_vpn(ip, org=None, asn=None):
         # FINAL DECISION LOGIC
         # ----------------------
 
-        if result["confidence"] >= 60:
+        if result["confidence"] >= 85 and (
+            result["is_vpn"] or result["is_datacenter"] or result["is_tor"]
+        ):
             result["is_proxy"] = True
 
-        if result["confidence"] >= 88:
+        if result["confidence"] >= 92:
             result["is_vpn"] = True
 
         # residential proxy protection

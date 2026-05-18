@@ -124,10 +124,18 @@ class BotClassifier:
                 self.score += 25  # stronger
 
         if getattr(self.visitor, "is_proxy", False):
-            self.score += 40
+
+            if getattr(self.visitor, "signal_strength", 0) >= 2:
+                self.score += 48
+            else:
+                self.score += 16
 
         if getattr(self.visitor, "is_vpn", False):
-            self.score += 45
+
+            if getattr(self.visitor, "signal_strength", 0) >= 2:
+                self.score += 52
+            else:
+                self.score += 18
 
         # -----------------------------
         # 5. VELOCITY CHECK (IMPROVED)
@@ -185,8 +193,8 @@ class BotClassifier:
             and not getattr(self.visitor, "is_vpn", False)
         ):
             # reduce risk for real users
-            if self.score < 35:
-                self.score *= 0.70
+            if self.score < 45:
+                self.score *= 0.50
 
         # =========================================
         # FINAL HARD RULES
@@ -197,11 +205,18 @@ class BotClassifier:
         ):
             self.score = max(self.score, 75)
 
-        if getattr(self.visitor, "is_proxy", False) and "headless" in ua:
-            self.score = max(self.score, 90)
+        if getattr(self.visitor, "is_proxy", False) and (
+            "headless" in ua
+            or "selenium" in ua
+            or "playwright" in ua
+            or "puppeteer" in ua
+        ):
+            self.score = max(self.score, 94)
 
-        if getattr(self.visitor, "is_datacenter", False) and "selenium" in ua:
-            self.score = max(self.score, 95)
+        if getattr(self.visitor, "is_datacenter", False) and (
+            "selenium" in ua or "playwright" in ua or "puppeteer" in ua
+        ):
+            self.score = max(self.score, 98)
         if getattr(self.visitor, "is_tor", False):
             self.score = 100
 
@@ -210,6 +225,10 @@ class BotClassifier:
             and getattr(self.visitor, "signal_strength", 0) >= 2
         ):
             self.score = max(self.score, 85)
+
+        import random
+
+        self.score += random.uniform(-2.7, 4.2)
         # -----------------------------
         # NORMALIZE
         # -----------------------------

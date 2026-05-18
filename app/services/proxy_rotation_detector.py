@@ -3,7 +3,7 @@ from app.services.redis_client import redis_client
 
 MAX_IPS_PER_DEVICE = 5
 WINDOW_SECONDS = 600
-MIN_ROTATION_TIME = 15
+MIN_ROTATION_TIME = 8
 
 
 def detect_proxy_rotation(visitor):
@@ -84,7 +84,11 @@ def detect_proxy_rotation(visitor):
         # EXTREME ROTATION
         # =========================================
 
-        if ip_count >= 8:
+        if ip_count >= 10 and (
+            getattr(visitor, "is_proxy", False)
+            or getattr(visitor, "is_vpn", False)
+            or getattr(visitor, "is_datacenter", False)
+        ):
             return True
 
     except Exception:

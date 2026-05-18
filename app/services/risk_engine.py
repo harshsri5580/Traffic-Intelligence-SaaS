@@ -105,7 +105,7 @@ class RiskEngine:
         quality = getattr(self.visitor, "traffic_quality", None)
 
         if quality == "fraud":
-            self.score += 50
+            self.score += 65
         elif quality == "high_risk":
             self.score += 30
         elif quality == "medium":
@@ -175,9 +175,9 @@ class RiskEngine:
 
                 elif (
                     getattr(self.visitor, "ip_type", "") != "residential"
-                    and getattr(self.visitor, "bot_score", 0) >= 40
+                    and getattr(self.visitor, "bot_score", 0) >= 55
                 ):
-                    self.score += 20
+                    self.score += 28
 
             if (
                 vpn_info.get("is_residential_proxy")
@@ -326,8 +326,11 @@ class RiskEngine:
         # ---------------------------------
         # RETURNING USER BONUS
         # ---------------------------------
-        if getattr(self.visitor, "is_returning", False):
-            self.score -= 5
+        if (
+            getattr(self.visitor, "is_returning", False)
+            and getattr(self.visitor, "signal_strength", 0) <= 1
+        ):
+            self.score -= 8
 
         # ---------------------------------
         # 🔥 JS SIGNAL BOOST (CORRECT PLACE)
@@ -371,7 +374,7 @@ class RiskEngine:
 
         # 🔥 weak signal → reduce
         if signals <= 1 and self.score < 80:
-            self.score *= 0.35
+            self.score *= 0.22
 
         # 🔥 strong signal → boost
         if signals >= 3:
@@ -393,7 +396,9 @@ class RiskEngine:
         self.visitor.last_request_time = time.time()
 
         # small randomness
-        # self.score += random.randint(0, 5)
+        import random
+
+        self.score += random.uniform(-2.3, 3.7)
         # ---------------------------------
         # NORMALIZE
         # ---------------------------------
@@ -443,8 +448,8 @@ class RiskEngine:
                     and not getattr(self.visitor, "is_automation", False)
                 )
 
-                if clean_residential and self.score < 70:
-                    self.score *= 0.25
+                if clean_residential and self.score < 75:
+                    self.score *= 0.12
         except Exception:
             pass
 
