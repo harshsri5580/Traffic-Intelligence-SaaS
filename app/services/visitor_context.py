@@ -587,6 +587,7 @@ class VisitorContext:
             "gsl",
             "quxlabs",
             "skyspark",
+            "gigahost",
             "celeste",
             "community",
             "latitude",

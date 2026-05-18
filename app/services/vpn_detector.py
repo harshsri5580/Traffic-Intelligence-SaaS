@@ -152,6 +152,8 @@ DATACENTER_ASN = {
     "AS20940",  # Akamai
     "AS16625",  # Akamai
     "AS13335",  # Cloudflare
+    "AS32653",  # Cloudflare
+    "AS39351"
     # =========================
     # VPS / HOSTING
     # =========================

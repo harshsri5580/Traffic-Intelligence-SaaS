@@ -92,10 +92,11 @@ class RiskEngine:
             return 100
 
         elif bot_score >= 70:
-            if getattr(self.visitor, "ip_type", "") != "residential":
-                self.score += 40
+
+            if getattr(self.visitor, "signal_strength", 0) >= 2:
+                self.score += 65
             else:
-                self.score += 20  # 🔥 residential safe
+                self.score += 35  # 🔥 residential safe
 
         elif bot_score >= 60:
             self.score += 30
@@ -177,7 +178,7 @@ class RiskEngine:
                     getattr(self.visitor, "ip_type", "") != "residential"
                     and getattr(self.visitor, "bot_score", 0) >= 55
                 ):
-                    self.score += 28
+                    self.score += 55
 
             if (
                 vpn_info.get("is_residential_proxy")
@@ -373,8 +374,12 @@ class RiskEngine:
             signals += 1
 
         # 🔥 weak signal → reduce
-        if signals <= 1 and self.score < 80:
-            self.score *= 0.22
+        if (
+            signals == 0
+            and self.score < 35
+            and getattr(self.visitor, "ip_type", "") == "residential"
+        ):
+            self.score *= 0.55
 
         # 🔥 strong signal → boost
         if signals >= 3:
@@ -396,9 +401,26 @@ class RiskEngine:
         self.visitor.last_request_time = time.time()
 
         # small randomness
-        import random
+        # HARD SECURITY FLOOR
 
-        self.score += random.uniform(-2.3, 3.7)
+        hard_floor = 0
+
+        if getattr(self.visitor, "is_tor", False):
+            hard_floor = max(hard_floor, 100)
+
+        if getattr(self.visitor, "is_proxy", False):
+            hard_floor = max(hard_floor, 65)
+
+        if getattr(self.visitor, "is_vpn", False):
+            hard_floor = max(hard_floor, 75)
+
+        if getattr(self.visitor, "is_datacenter", False):
+            hard_floor = max(hard_floor, 70)
+
+        if getattr(self.visitor, "is_automation", False):
+            hard_floor = max(hard_floor, 90)
+
+        self.score = max(self.score, hard_floor)
         # ---------------------------------
         # NORMALIZE
         # ---------------------------------
@@ -448,8 +470,8 @@ class RiskEngine:
                     and not getattr(self.visitor, "is_automation", False)
                 )
 
-                if clean_residential and self.score < 75:
-                    self.score *= 0.12
+                if clean_residential and self.score < 25:
+                    self.score *= 0.7
         except Exception:
             pass
 

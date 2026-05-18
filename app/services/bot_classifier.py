@@ -35,7 +35,7 @@ class BotClassifier:
 
                 # only suspicious if absolutely dead session
                 if mouse == 0 and scroll == 0 and clicks == 0:
-                    interaction_score += 10
+                    interaction_score += 18
 
                 self.score += interaction_score
 
@@ -125,10 +125,14 @@ class BotClassifier:
 
         if getattr(self.visitor, "is_proxy", False):
 
-            if getattr(self.visitor, "signal_strength", 0) >= 2:
-                self.score += 48
+            if getattr(self.visitor, "signal_strength", 0) >= 3:
+                self.score += 45
+
+            elif getattr(self.visitor, "signal_strength", 0) >= 2:
+                self.score += 22
+
             else:
-                self.score += 16
+                self.score += 6
 
         if getattr(self.visitor, "is_vpn", False):
 
@@ -166,7 +170,7 @@ class BotClassifier:
             self.score += 35
 
         elif bot_score >= 65:
-            self.score += 20
+            self.score += 12
 
         elif bot_score >= 45:
             self.score += 8
@@ -226,9 +230,29 @@ class BotClassifier:
         ):
             self.score = max(self.score, 85)
 
-        import random
+        # STRONG BOT CONFIDENCE
+        signals = 0
 
-        self.score += random.uniform(-2.7, 4.2)
+        if getattr(self.visitor, "is_proxy", False):
+            signals += 1
+
+        if getattr(self.visitor, "is_datacenter", False):
+            signals += 1
+
+        if getattr(self.visitor, "is_vpn", False):
+            signals += 1
+
+        if "selenium" in ua or "playwright" in ua or "puppeteer" in ua:
+            signals += 2
+
+        if mouse == 0 and scroll == 0 and clicks == 0:
+            signals += 1
+
+        if signals >= 4:
+            self.score = max(self.score, 90)
+
+        elif signals >= 3:
+            self.score = max(self.score, 72)
         # -----------------------------
         # NORMALIZE
         # -----------------------------
